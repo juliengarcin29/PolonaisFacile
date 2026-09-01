@@ -4,9 +4,8 @@
 // ============================================================
 // ✅ CORRECT (Imports direct de fichier à fichier)
 import { useUserStore } from '@/store/userStore';
-
 import { CONTENT_LIMITS } from '@/constants';
-
+import { FEATURE_FLAGS } from '@/config/featureFlags';
 import { router } from 'expo-router';
 import { useCallback } from 'react';
 
@@ -14,7 +13,10 @@ type GateContext = 'lesson' | 'flashcard' | 'dictation' | 'offline' | 'quiz' | '
 
 export function usePremiumGate() {
   const { user } = useUserStore();
-  const isPremium = user?.premium ?? false;
+
+  // Le statut Premium est effectif si l'utilisateur est abonné
+  // OU si la phase "Tout Gratuit" est activée.
+  const isPremium = (user?.premium ?? false) || FEATURE_FLAGS.FREE_ALL_LESSONS;
 
   // ── Vérifier et rediriger vers le paywall si besoin ──────
   const requirePremium = useCallback((

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
+import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useGamification } from '@/hooks/useGamification';
 import { useWeeklyReview } from '@/hooks/useWeeklyReview';
 import { useSync } from '@/hooks/useSync';
@@ -22,7 +23,7 @@ import { getStreakEmoji, formatNumber, getXPProgress } from '@/utils';
 // ── Mot du jour (rotatif) ─────────────────────────────────────
 const WORDS_OF_DAY = [
   { pl: 'Dziękuję', fr: 'Merci', phonetic: '[dʑɛŋkujɛ]', example: 'Bardzo dziękuję!', exampleFr: 'Merci beaucoup !' },
-  { pl: 'Przepraszam', fr: 'Pardon', phonetic: '[pʂɛpraʂam]', example: 'Przepraszam, gdzie jest...?', exampleFr: 'Excusez-moi, où est... ?' },
+  { pl: 'Przepraszam', fr: 'Pardon', phonetic: '[pʂɛpraʂam]', example: 'Przepraszam, où est...?', exampleFr: 'Excusez-moi, où est... ?' },
   { pl: 'Proszę', fr: 'S\'il vous plaît', phonetic: '[prɔʂɛ]', example: 'Poproszę kawę.', exampleFr: 'Un café, s\'il vous plaît.' },
   { pl: 'Dobrze', fr: 'Bien / D\'accord', phonetic: '[dɔbʐɛ]', example: 'Dobrze, rozumiem.', exampleFr: 'Bien, je comprends.' },
   { pl: 'Tak', fr: 'Oui', phonetic: '[tak]', example: 'Tak, oczywiście!', exampleFr: 'Oui, bien sûr !' },
@@ -40,6 +41,7 @@ function getTodayWord() {
 // ── Composant principal ──────────────────────────────────────
 export default function HomeScreen() {
   const { user } = useUserStore();
+  const { isPremium } = usePremiumGate();
   const { checkAndUpdateStreak, getDailyProgress } = useGamification();
   const { weeklyData, recommendations, showReviewModal, dismissReview } = useWeeklyReview();
   const { triggerSync, isSyncing } = useSync();
@@ -87,7 +89,7 @@ export default function HomeScreen() {
       label: 'Parler',
       sublabel: 'IA',
       color: '#8B5CF6',
-      route: user?.premium ? '/conversation' : '/paywall?reason=default',
+      route: isPremium ? '/conversation' : '/paywall?reason=default',
     },
   ];
 
@@ -121,9 +123,9 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/profile')}
           >
             <Text style={s.avatarEmoji}>
-              {user?.premium ? '👑' : '👤'}
+              {isPremium ? '👑' : '👤'}
             </Text>
-            {user?.premium && (
+            {isPremium && (
               <View style={s.premiumDot} />
             )}
           </TouchableOpacity>
@@ -229,7 +231,7 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Upsell Premium (si pas Premium) ── */}
-        {!user?.premium && (
+        {!isPremium && (
           <TouchableOpacity
             style={s.premiumBanner}
             onPress={() => router.push('/paywall?reason=default')}
