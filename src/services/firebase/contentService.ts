@@ -14,7 +14,7 @@ import type { Lesson, Module, Flashcard, Quiz } from '@/types';
 // Fallback local si pas de réseau
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
 import { QUIZZES } from '@/content/quizzes/quizzes';
-import { MODULE_1_LESSONS } from '@/content/lessons/module1';
+import { getLessonsByModule, getLessonById } from '@/content/lessons';
 
 export const contentService = {
 
@@ -27,6 +27,27 @@ export const contentService = {
       return snap.docs.map(d => ({ id: d.id, ...d.data() } as Module));
     } catch {
       return []; // fallback silencieux
+    }
+  },
+
+  // ── Un module spécifique ─────────────────────────────────
+  getModuleById: async (moduleId: string): Promise<Module | null> => {
+    try {
+      const snap = await getDoc(doc(db, FIREBASE_COLLECTIONS.MODULES, moduleId));
+      if (!snap.exists()) throw new Error('not found');
+      return { id: snap.id, ...snap.data() } as Module;
+    } catch {
+      // Pour les modules locaux, on simule le titre car ils ne sont pas tous exportés
+      const modules: Record<string, string> = {
+        module_1: 'Alphabet & Prononciation',
+        module_2: 'Salutations',
+        module_3: 'Chiffres',
+        module_4: 'Famille',
+        module_5: 'Nourriture & Boissons',
+        module_6: 'Ville & Transport',
+        module_7: 'Temps & Dates',
+      };
+      return { id: moduleId, title: modules[moduleId] ?? 'Module' } as any;
     }
   },
 
@@ -44,7 +65,7 @@ export const contentService = {
       return snap.docs.map(d => ({ id: d.id, ...d.data() } as Lesson));
     } catch {
       // Fallback contenu local
-      return MODULE_1_LESSONS.filter(l => l.moduleId === moduleId);
+      return getLessonsByModule(moduleId);
     }
   },
 
@@ -55,7 +76,7 @@ export const contentService = {
       if (!snap.exists()) throw new Error('not found');
       return { id: snap.id, ...snap.data() } as Lesson;
     } catch {
-      return MODULE_1_LESSONS.find(l => l.id === lessonId) ?? null;
+      return getLessonById(lessonId) ?? null;
     }
   },
 

@@ -24,7 +24,11 @@ export default function ModuleScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    contentService.getLessonsForModule(id).then(ls => {
+    Promise.all([
+      contentService.getModuleById(id),
+      contentService.getLessonsForModule(id)
+    ]).then(([mod, ls]) => {
+      setModule(mod);
       setLessons(ls);
       setIsLoading(false);
     });
@@ -50,7 +54,7 @@ export default function ModuleScreen() {
         <TO2 onPress={() => r2.back()}>
           <Text style={m.backTxt}>← Retour</Text>
         </TO2>
-        <Text style={m.headerTitle}>Module</Text>
+        <Text style={m.headerTitle}>{module?.title ?? 'Module'}</Text>
         <View style={{ width: 60 }} />
       </View>
 

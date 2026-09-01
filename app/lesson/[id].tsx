@@ -5,7 +5,8 @@
 
 import { BORDER_RADIUS, COLORS, GAMIFICATION, SPACING } from '@/constants';
 import { useUserStore } from '@/store/userStore';
-import type { Exercise, ExerciseAnswer } from '@/types';
+import { getLessonById } from '@/content/lessons';
+import type { Exercise, ExerciseAnswer, Lesson } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -17,72 +18,21 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-// ── DONNÉES DE DÉMO (remplacées par Firebase à l'étape 4) ────
-const DEMO_EXERCISES: Exercise[] = [
-  {
-    id: 'ex_demo_1',
-    type: 'multiple_choice',
-    question: 'Comment dit-on "Bonjour" (formel) en polonais ?',
-    correctAnswer: 'Dzień dobry',
-    options: ['Cześć', 'Dzień dobry', 'Do widzenia', 'Dobranoc'],
-    explanation: '"Dzień dobry" = Bon jour. Utilisez-le dans un contexte formel.',
-    xpReward: 10,
-  },
-  {
-    id: 'ex_demo_2',
-    type: 'translation_fr_pl',
-    question: 'Traduisez en polonais : "Merci beaucoup"',
-    correctAnswer: 'Bardzo dziękuję',
-    options: ['Proszę bardzo', 'Bardzo dziękuję', 'Dziękuję pana', 'Wielkie dzięki'],
-    explanation: '"Bardzo dziękuję" = Merci beaucoup. "Bardzo" = beaucoup.',
-    xpReward: 10,
-  },
-  {
-    id: 'ex_demo_3',
-    type: 'fill_blank',
-    question: 'Complétez : "Jak się _____ ?" (Comment allez-vous ?)',
-    correctAnswer: 'masz',
-    options: ['masz', 'jest', 'mam', 'masz'],
-    explanation: '"Jak się masz ?" = Comment vas-tu ? (informel)',
-    xpReward: 10,
-  },
-  {
-    id: 'ex_demo_4',
-    type: 'matching',
-    question: 'Associez chaque mot à sa traduction',
-    correctAnswer: 'correct',
-    pairs: [
-      { left: 'Dziękuję', right: 'Merci' },
-      { left: 'Przepraszam', right: 'Pardon' },
-      { left: 'Proszę', right: 'S\'il vous plaît' },
-      { left: 'Dobrze', right: 'Bien' },
-    ],
-    xpReward: 20,
-  },
-  {
-    id: 'ex_demo_5',
-    type: 'word_order',
-    question: 'Remettez les mots dans l\'ordre pour former : "Je m\'appelle Anna"',
-    correctAnswer: 'Nazywam się Anna',
-    words: ['się', 'Nazywam', 'Anna'],
-    explanation: 'En polonais : Verbe + się + Prénom. "Nazywam się" = je m\'appelle.',
-    xpReward: 15,
-  },
-];
-
-type LessonPhase = 'exercise' | 'feedback_correct' | 'feedback_wrong' | 'completed';
+type LessonPhase = 'loading' | 'error' | 'exercise' | 'feedback_correct' | 'feedback_wrong' | 'completed';
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { addXP, loseHeart, user } = useUserStore();
+  const { addXP, user } = useUserStore();
 
+  const [lesson, setLesson] = useState<Lesson | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<LessonPhase>('exercise');
+  const [phase, setPhase] = useState<LessonPhase>('loading');
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [score, setScore] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
@@ -97,9 +47,22 @@ export default function LessonScreen() {
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const feedbackAnim = useRef(new Animated.Value(0)).current;
 
-  const exercises = DEMO_EXERCISES;
+  // ── Charger la leçon ──────────────────────────────────────
+  useEffect(() => {
+    if (id) {
+      const data = getLessonById(id);
+      if (data) {
+        setLesson(data);
+        setPhase('exercise');
+      } else {
+        setPhase('error');
+      }
+    }
+  }, [id]);
+
+  const exercises = lesson?.exercises ?? [];
   const current = exercises[currentIndex];
-  const progress = (currentIndex / exercises.length) * 100;
+  const progress = exercises.length > 0 ? (currentIndex / exercises.length) * 100 : 0;
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -107,7 +70,7 @@ export default function LessonScreen() {
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [currentIndex]);
+  }, [currentIndex, progress]);
 
   useEffect(() => {
     if (current?.type === 'word_order' && current.words) {
@@ -118,7 +81,7 @@ export default function LessonScreen() {
       setMatchSelected({});
       setMatchedPairs([]);
     }
-  }, [currentIndex]);
+  }, [currentIndex, current]);
 
   const shake = () => {
     const isNative = Platform.OS !== 'web';
@@ -131,6 +94,7 @@ export default function LessonScreen() {
   };
 
   const checkAnswer = (answer: string) => {
+    if (!current) return;
     const isCorrect = answer.trim().toLowerCase() === current.correctAnswer.trim().toLowerCase();
 
     const answerRecord: ExerciseAnswer = {
@@ -174,8 +138,34 @@ export default function LessonScreen() {
     }
   };
 
+  if (phase === 'loading') {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Chargement de la leçon...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (phase === 'error' || !current) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.centered}>
+          <Text style={styles.errorEmoji}>🛰️</Text>
+          <Text style={styles.errorTitle}>Leçon introuvable</Text>
+          <Text style={styles.errorDesc}>Désolé, nous n'avons pas pu charger le contenu de cette leçon.</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backBtnText}>Retourner aux modules</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (phase === 'completed') {
-    return <CompletedScreen score={score} total={exercises.length} xpEarned={xpEarned} />;
+    return <CompletedScreen score={score} total={exercises.length} xpEarned={xpEarned} lessonId={id} />;
   }
 
   const progressWidth = progressAnim.interpolate({
@@ -566,7 +556,7 @@ const wo = StyleSheet.create({
 });
 
 // ── ÉCRAN RÉSULTAT ───────────────────────────────────────────
-function CompletedScreen({ score, total, xpEarned }: { score: number; total: number; xpEarned: number }) {
+function CompletedScreen({ score, total, xpEarned, lessonId }: { score: number; total: number; xpEarned: number; lessonId: string }) {
   const percentage = Math.round((score / total) * 100);
   const isPerfect = score === total;
 
@@ -602,7 +592,7 @@ function CompletedScreen({ score, total, xpEarned }: { score: number; total: num
         <TouchableOpacity style={res.homeBtn} onPress={() => router.replace('/(tabs)')}>
           <Text style={res.homeBtnText}>Retour à l'accueil →</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={res.replayBtn} onPress={() => router.replace('/lesson/demo')}>
+        <TouchableOpacity style={res.replayBtn} onPress={() => router.replace(`/lesson/${lessonId}`)}>
           <Text style={res.replayBtnText}>Rejouer la leçon</Text>
         </TouchableOpacity>
       </View>
@@ -660,6 +650,13 @@ function getTypeLabel(type: Exercise['type']): string {
 // ── STYLES PRINCIPAUX ────────────────────────────────────────
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  loadingText: { marginTop: SPACING.md, fontSize: 16, color: COLORS.textSecondary, fontWeight: '600' },
+  errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
+  errorTitle: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.sm },
+  errorDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', marginBottom: SPACING.xl },
+  backBtn: { backgroundColor: COLORS.primary, paddingVertical: 14, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.full },
+  backBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
 
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

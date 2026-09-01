@@ -14,130 +14,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useUserStore } from '@/store/userStore';
 import { useGamification } from '@/hooks/useGamification';
+import { getDictationById, DictationExercise, DictationSentence } from '@/content/dictations/dictations';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 
-// ── Contenu des dictées ──────────────────────────────────────
-interface DictationExercise {
-  id: string;
-  title: string;
-  difficulty: 'A1' | 'A2' | 'B1';
-  sentences: DictationSentence[];
-  xpReward: number;
-}
-
-interface DictationSentence {
-  id: string;
-  text: string;           // Texte polonais à dicter
-  translation: string;    // Traduction française (indice)
-  hint?: string;          // Indice optionnel
-}
-
-const DICTATIONS: DictationExercise[] = [
-  {
-    id: 'dictation_01',
-    title: 'Salutations du quotidien',
-    difficulty: 'A1',
-    xpReward: 100,
-    sentences: [
-      {
-        id: 'd01_s1',
-        text: 'Dzień dobry, jak się pan miewa?',
-        translation: 'Bonjour, comment allez-vous ?',
-        hint: 'Formule de politesse formelle',
-      },
-      {
-        id: 'd01_s2',
-        text: 'Dziękuję bardzo za pomoc.',
-        translation: 'Merci beaucoup pour l\'aide.',
-        hint: 'Expression de gratitude',
-      },
-      {
-        id: 'd01_s3',
-        text: 'Przepraszam, gdzie jest toaleta?',
-        translation: 'Excusez-moi, où sont les toilettes ?',
-        hint: 'Demander son chemin',
-      },
-      {
-        id: 'd01_s4',
-        text: 'Do widzenia, do zobaczenia jutro!',
-        translation: 'Au revoir, à demain !',
-        hint: 'Formule d\'adieu',
-      },
-      {
-        id: 'd01_s5',
-        text: 'Miło mi pana poznać.',
-        translation: 'Enchanté de faire votre connaissance.',
-        hint: 'Formule de présentation',
-      },
-    ],
-  },
-  {
-    id: 'dictation_02',
-    title: 'Au café polonais',
-    difficulty: 'A1',
-    xpReward: 120,
-    sentences: [
-      {
-        id: 'd02_s1',
-        text: 'Poproszę jedną kawę z mlekiem.',
-        translation: 'Un café au lait, s\'il vous plaît.',
-        hint: 'Commander au café',
-      },
-      {
-        id: 'd02_s2',
-        text: 'Ile to kosztuje?',
-        translation: 'Combien ça coûte ?',
-        hint: 'Demander le prix',
-      },
-      {
-        id: 'd02_s3',
-        text: 'Poproszę rachunek, proszę.',
-        translation: 'L\'addition, s\'il vous plaît.',
-        hint: 'Demander l\'addition',
-      },
-      {
-        id: 'd02_s4',
-        text: 'Czy jest tu wolne miejsce?',
-        translation: 'Est-ce qu\'il y a une place libre ici ?',
-        hint: 'Chercher une table',
-      },
-    ],
-  },
-  {
-    id: 'dictation_03',
-    title: 'Se présenter',
-    difficulty: 'A1',
-    xpReward: 150,
-    sentences: [
-      {
-        id: 'd03_s1',
-        text: 'Nazywam się Marie Dupont.',
-        translation: 'Je m\'appelle Marie Dupont.',
-        hint: 'Donner son nom',
-      },
-      {
-        id: 'd03_s2',
-        text: 'Jestem z Francji, z Paryża.',
-        translation: 'Je suis de France, de Paris.',
-        hint: 'Dire d\'où on vient',
-      },
-      {
-        id: 'd03_s3',
-        text: 'Uczę się polskiego od trzech miesięcy.',
-        translation: 'J\'apprends le polonais depuis trois mois.',
-        hint: 'Parler de son apprentissage',
-      },
-      {
-        id: 'd03_s4',
-        text: 'Mój mąż jest Polakiem.',
-        translation: 'Mon mari est polonais.',
-        hint: 'Parler de sa famille',
-      },
-    ],
-  },
-];
-
-type DictationPhase = 'intro' | 'listening' | 'writing' | 'feedback' | 'completed';
+type DictationPhase = 'loading' | 'error' | 'intro' | 'listening' | 'writing' | 'feedback' | 'completed';
 
 // ── Vérification de la réponse ────────────────────────────────
 function checkAnswer(userAnswer: string, correctAnswer: string): {
@@ -186,10 +66,9 @@ export default function DictationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { awardXP } = useGamification();
 
-  const dictation = DICTATIONS.find(d => d.id === id) ?? DICTATIONS[0];
-
+  const [dictation, setDictation] = useState<DictationExercise | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<DictationPhase>('intro');
+  const [phase, setPhase] = useState<DictationPhase>('loading');
   const [userInput, setUserInput] = useState('');
   const [playCount, setPlayCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -206,12 +85,24 @@ export default function DictationScreen() {
   const successAnim = useRef(new Animated.Value(0)).current;
   const inputRef = useRef<TextInput>(null);
 
-  const current = dictation.sentences[currentIndex];
-  const maxPlays = 3; // Maximum 3 écoutes par phrase
+  // Charger la dictée
+  useEffect(() => {
+    if (id) {
+      const data = getDictationById(id);
+      if (data) {
+        setDictation(data);
+        setPhase('intro');
+      } else {
+        setPhase('error');
+      }
+    }
+  }, [id]);
 
-  // Lire la phrase en TTS
+  const current = dictation?.sentences[currentIndex];
+  const maxPlays = 3;
+
   const playSentence = useCallback(async (speed = 1.0) => {
-    if (isPlaying || playCount >= maxPlays) return;
+    if (!current || isPlaying || playCount >= maxPlays) return;
 
     setIsPlaying(true);
     setPlayCount(prev => prev + 1);
@@ -237,31 +128,20 @@ export default function DictationScreen() {
   };
 
   const handleSubmit = () => {
-    if (!userInput.trim()) return;
+    if (!userInput.trim() || !current) return;
 
-    const { isCorrect, score, errors } = checkAnswer(userInput, current.text);
-
-    const result = {
-      sentence: current,
-      userAnswer: userInput.trim(),
-      score,
-      isCorrect,
-    };
-
+    const { isCorrect, score } = checkAnswer(userInput, current.text);
+    const result = { sentence: current, userAnswer: userInput.trim(), score, isCorrect };
     setResults(prev => [...prev, result]);
 
-    // XP selon le score
     const xpEarned = Math.round((score / 100) * 30);
     setTotalXP(prev => prev + xpEarned);
 
     if (isCorrect) {
-      Animated.spring(successAnim, {
-        toValue: 1, friction: 5, useNativeDriver: true,
-      }).start();
+      Animated.spring(successAnim, { toValue: 1, friction: 5, useNativeDriver: true }).start();
     } else {
       shake();
     }
-
     setPhase('feedback');
   };
 
@@ -271,8 +151,8 @@ export default function DictationScreen() {
     setPlayCount(0);
     setShowHint(false);
 
-    if (currentIndex + 1 >= dictation.sentences.length) {
-      awardXP(totalXP + dictation.xpReward);
+    if (currentIndex + 1 >= (dictation?.sentences.length ?? 0)) {
+      awardXP(totalXP + (dictation?.xpReward ?? 0));
       setPhase('completed');
     } else {
       setCurrentIndex(prev => prev + 1);
@@ -280,56 +160,40 @@ export default function DictationScreen() {
     }
   };
 
-  // ── Écran d'intro ──────────────────────────────────────────
-  if (phase === 'intro') {
+  if (phase === 'loading') {
     return (
       <SafeAreaView style={s.safe}>
-        <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={s.backTxt}>✕</Text>
-          </TouchableOpacity>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={s.loadingText}>Chargement de la dictée...</Text>
         </View>
-        <View style={s.introWrap}>
-          <Text style={s.introEmoji}>🎤</Text>
-          <Text style={s.introTitle}>{dictation.title}</Text>
-          <Text style={s.introDiff}>{dictation.difficulty} · {dictation.sentences.length} phrases</Text>
-          <View style={s.introRules}>
-            {[
-              '🔊 Écoutez la phrase en polonais',
-              '✍️ Écrivez ce que vous entendez',
-              `🔁 Maximum ${maxPlays} écoutes par phrase`,
-              '💡 Un indice disponible si besoin',
-              `⭐ Jusqu\'à ${dictation.xpReward} XP à gagner`,
-            ].map((rule) => (
-              <View key={rule} style={s.introRule}>
-                <Text style={s.introRuleTxt}>{rule}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity
-            style={s.startBtn}
-            onPress={() => setPhase('listening')}
-          >
-            <Text style={s.startBtnTxt}>Commencer la dictée →</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (phase === 'error' || !dictation) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <Text style={s.errorEmoji}>🛰️</Text>
+          <Text style={s.errorTitle}>Dictée introuvable</Text>
+          <Text style={s.errorDesc}>Désolé, nous n'avons pas pu charger cette dictée.</Text>
+          <TouchableOpacity style={s.backBtnFull} onPress={() => router.back()}>
+            <Text style={s.backBtnText}>Retourner apprendre</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  // ── Écran résultats ────────────────────────────────────────
   if (phase === 'completed') {
-    const avgScore = Math.round(
-      results.reduce((sum, r) => sum + r.score, 0) / results.length
-    );
+    const avgScore = Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length);
     const perfectCount = results.filter(r => r.score === 100).length;
 
     return (
       <SafeAreaView style={s.safe}>
         <ScrollView contentContainerStyle={s.completedWrap}>
-          <Text style={s.completedEmoji}>
-            {avgScore >= 90 ? '🏆' : avgScore >= 70 ? '⭐' : '💪'}
-          </Text>
+          <Text style={s.completedEmoji}>{avgScore >= 90 ? '🏆' : avgScore >= 70 ? '⭐' : '💪'}</Text>
           <Text style={s.completedTitle}>Dictée terminée !</Text>
           <Text style={s.completedScore}>{avgScore}%</Text>
           <Text style={s.completedSub}>Score moyen</Text>
@@ -349,15 +213,12 @@ export default function DictationScreen() {
             </View>
           </View>
 
-          {/* Détail par phrase */}
           <Text style={s.detailTitle}>Détail des phrases</Text>
           {results.map((result, i) => (
             <View key={i} style={[s.resultRow, { borderLeftColor: result.isCorrect ? COLORS.success : COLORS.error }]}>
               <View style={s.resultHeader}>
                 <Text style={s.resultNum}>Phrase {i + 1}</Text>
-                <Text style={[s.resultScore, { color: result.isCorrect ? COLORS.success : COLORS.error }]}>
-                  {result.score}%
-                </Text>
+                <Text style={[s.resultScore, { color: result.isCorrect ? COLORS.success : COLORS.error }]}>{result.score}%</Text>
               </View>
               <Text style={s.resultCorrect}>{result.sentence.text}</Text>
               <Text style={s.resultUser}>Votre réponse : {result.userAnswer}</Text>
@@ -381,26 +242,15 @@ export default function DictationScreen() {
     );
   }
 
-  // ── Exercice principal ─────────────────────────────────────
-  const feedbackResult = phase === 'feedback' && results.length > 0
-    ? results[results.length - 1]
-    : null;
+  const feedbackResult = phase === 'feedback' && results.length > 0 ? results[results.length - 1] : null;
 
   return (
     <SafeAreaView style={s.safe}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        {/* Header */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={s.backTxt}>✕</Text>
-          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()}><Text style={s.backTxt}>✕</Text></TouchableOpacity>
           <View style={s.progressTrack}>
-            <View style={[s.progressFill, {
-              width: `${((currentIndex) / dictation.sentences.length) * 100}%`,
-            }]} />
+            <View style={[s.progressFill, { width: `${((currentIndex) / dictation.sentences.length) * 100}%` }]} />
           </View>
           <Text style={s.progressTxt}>{currentIndex + 1}/{dictation.sentences.length}</Text>
         </View>
@@ -412,28 +262,20 @@ export default function DictationScreen() {
              phase === 'feedback' ? (feedbackResult?.isCorrect ? '✅ Correct !' : '❌ Pas tout à fait...') : ''}
           </Text>
 
-          {/* Compteur d'écoutes */}
           <View style={s.playCountRow}>
             {Array.from({ length: maxPlays }).map((_, i) => (
-              <View
-                key={i}
-                style={[s.playDot, i < playCount && s.playDotUsed]}
-              />
+              <View key={i} style={[s.playDot, i < playCount && s.playDotUsed]} />
             ))}
             <Text style={s.playCountTxt}>{playCount}/{maxPlays} écoutes</Text>
           </View>
 
-          {/* Boutons d'écoute */}
           <View style={s.playButtons}>
             <TouchableOpacity
               style={[s.playBtn, (isPlaying || playCount >= maxPlays) && s.playBtnDisabled]}
               onPress={() => playSentence(1.0)}
               disabled={isPlaying || playCount >= maxPlays || phase === 'feedback'}
             >
-              {isPlaying
-                ? <ActivityIndicator color={COLORS.white} />
-                : <Text style={s.playBtnTxt}>🔊 Écouter</Text>
-              }
+              {isPlaying ? <ActivityIndicator color={COLORS.white} /> : <Text style={s.playBtnTxt}>🔊 Écouter</Text>}
             </TouchableOpacity>
 
             {playCount > 0 && phase === 'writing' && (
@@ -447,30 +289,19 @@ export default function DictationScreen() {
             )}
           </View>
 
-          {/* Indice */}
-          {phase === 'writing' && (
+          {phase === 'writing' && current && (
             <View style={s.hintWrap}>
-              <TouchableOpacity
-                style={s.hintBtn}
-                onPress={() => setShowHint(true)}
-              >
-                <Text style={s.hintBtnTxt}>
-                  {showHint ? `💡 ${current.translation}` : '💡 Voir l\'indice (-5 XP)'}
-                </Text>
+              <TouchableOpacity style={s.hintBtn} onPress={() => setShowHint(true)}>
+                <Text style={s.hintBtnTxt}>{showHint ? `💡 ${current.translation}` : '💡 Voir l\'indice (-5 XP)'}</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Zone de saisie */}
           {(phase === 'writing' || phase === 'feedback') && (
             <Animated.View style={[s.inputWrap, { transform: [{ translateX: shakeAnim }] }]}>
               <TextInput
                 ref={inputRef}
-                style={[
-                  s.textInput,
-                  phase === 'feedback' && feedbackResult?.isCorrect && s.textInputCorrect,
-                  phase === 'feedback' && !feedbackResult?.isCorrect && s.textInputWrong,
-                ]}
+                style={[s.textInput, phase === 'feedback' && feedbackResult?.isCorrect && s.textInputCorrect, phase === 'feedback' && !feedbackResult?.isCorrect && s.textInputWrong]}
                 value={userInput}
                 onChangeText={setUserInput}
                 placeholder="Écrivez la phrase en polonais..."
@@ -483,13 +314,8 @@ export default function DictationScreen() {
             </Animated.View>
           )}
 
-          {/* Feedback */}
           {phase === 'feedback' && feedbackResult && (
-            <Animated.View style={[
-              s.feedbackBox,
-              feedbackResult.isCorrect ? s.feedbackCorrect : s.feedbackWrong,
-              { transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] },
-            ]}>
+            <Animated.View style={[s.feedbackBox, feedbackResult.isCorrect ? s.feedbackCorrect : s.feedbackWrong, { transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }]}>
               <Text style={s.feedbackScore}>Score : {feedbackResult.score}%</Text>
               <Text style={s.feedbackLabel}>Réponse correcte :</Text>
               <Text style={s.feedbackText}>{feedbackResult.sentence.text}</Text>
@@ -497,24 +323,15 @@ export default function DictationScreen() {
             </Animated.View>
           )}
 
-          {/* Bouton valider / continuer */}
           {phase === 'writing' && (
-            <TouchableOpacity
-              style={[s.submitBtn, !userInput.trim() && s.submitBtnDisabled]}
-              onPress={handleSubmit}
-              disabled={!userInput.trim()}
-            >
+            <TouchableOpacity style={[s.submitBtn, !userInput.trim() && s.submitBtnDisabled]} onPress={handleSubmit} disabled={!userInput.trim()}>
               <Text style={s.submitBtnTxt}>Vérifier →</Text>
             </TouchableOpacity>
           )}
 
           {phase === 'feedback' && (
             <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
-              <Text style={s.nextBtnTxt}>
-                {currentIndex + 1 >= dictation.sentences.length
-                  ? '🏁 Voir les résultats'
-                  : 'Phrase suivante →'}
-              </Text>
+              <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Voir les résultats' : 'Phrase suivante →'}</Text>
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -523,108 +340,65 @@ export default function DictationScreen() {
   );
 }
 
+// ── STYLES ───────────────────────────────────────────────────
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
-
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  loadingText: { marginTop: SPACING.md, fontSize: 16, color: COLORS.textSecondary, fontWeight: '600' },
+  errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
+  errorTitle: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.sm },
+  errorDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', marginBottom: SPACING.xl },
+  backBtnFull: { backgroundColor: COLORS.primary, paddingVertical: 14, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.full },
+  backBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     padding: SPACING.md, backgroundColor: COLORS.white,
     borderBottomWidth: 1, borderBottomColor: COLORS.surfaceAlt,
   },
   backTxt: { fontSize: 16, color: COLORS.textSecondary, fontWeight: '700', width: 32 },
-  progressTrack: {
-    flex: 1, height: 8, backgroundColor: COLORS.surfaceAlt,
-    borderRadius: BORDER_RADIUS.full, overflow: 'hidden',
-  },
+  progressTrack: { flex: 1, height: 8, backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full },
   progressTxt: { fontSize: 12, color: COLORS.textMuted, fontWeight: '700' },
-
   introWrap: { flex: 1, alignItems: 'center', padding: SPACING.xl, gap: SPACING.md },
   introEmoji: { fontSize: 64 },
   introTitle: { fontSize: 26, fontWeight: '900', color: COLORS.textPrimary, textAlign: 'center' },
   introDiff: { fontSize: 13, color: COLORS.textMuted },
   introRules: { width: '100%', gap: 10, marginVertical: SPACING.md },
-  introRule: {
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md, borderWidth: 1, borderColor: COLORS.surfaceAlt,
-  },
+  introRule: { backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.surfaceAlt },
   introRuleTxt: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '500' },
-  startBtn: {
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, paddingHorizontal: SPACING.xl, width: '100%', alignItems: 'center',
-  },
+  startBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, paddingHorizontal: SPACING.xl, width: '100%', alignItems: 'center' },
   startBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
-
   exerciseWrap: { padding: SPACING.lg, gap: SPACING.lg, paddingBottom: 40 },
   phaseLabel: { fontSize: 18, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center' },
-
   playCountRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
-  playDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: COLORS.surfaceAlt, borderWidth: 1.5, borderColor: '#D1D5DB',
-  },
+  playDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.surfaceAlt, borderWidth: 1.5, borderColor: '#D1D5DB' },
   playDotUsed: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   playCountTxt: { fontSize: 12, color: COLORS.textMuted, fontWeight: '600', marginLeft: 4 },
-
   playButtons: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
-  playBtn: {
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 14, paddingHorizontal: SPACING.xl,
-    minWidth: 140, alignItems: 'center',
-    shadowColor: COLORS.primary, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
-  },
-  playBtnSlow: {
-    backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 14, paddingHorizontal: SPACING.lg,
-    borderWidth: 1.5, borderColor: COLORS.primary + '40',
-  },
-  playBtnDisabled: { opacity: 0.4, shadowOpacity: 0 },
+  playBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 14, paddingHorizontal: SPACING.xl, minWidth: 140, alignItems: 'center', elevation: 4 },
+  playBtnSlow: { backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full, paddingVertical: 14, paddingHorizontal: SPACING.lg, borderWidth: 1.5, borderColor: COLORS.primary + '40' },
+  playBtnDisabled: { opacity: 0.4 },
   playBtnTxt: { color: COLORS.white, fontSize: 15, fontWeight: '800' },
   playBtnSlowTxt: { color: COLORS.primary, fontSize: 14, fontWeight: '700' },
-
   hintWrap: { alignItems: 'center' },
-  hintBtn: {
-    backgroundColor: COLORS.warningLight, borderRadius: BORDER_RADIUS.lg,
-    paddingVertical: 10, paddingHorizontal: SPACING.lg,
-    borderWidth: 1, borderColor: COLORS.warning + '40',
-  },
+  hintBtn: { backgroundColor: COLORS.warningLight, borderRadius: BORDER_RADIUS.lg, paddingVertical: 10, paddingHorizontal: SPACING.lg, borderWidth: 1, borderColor: COLORS.warning + '40' },
   hintBtnTxt: { fontSize: 13, color: COLORS.warning, fontWeight: '600' },
-
   inputWrap: { width: '100%' },
-  textInput: {
-    backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.md, fontSize: 16, color: COLORS.textPrimary,
-    minHeight: 100, textAlignVertical: 'top', lineHeight: 24,
-    borderWidth: 2, borderColor: COLORS.surfaceAlt,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
-  },
+  textInput: { backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.xl, padding: SPACING.md, fontSize: 16, color: COLORS.textPrimary, minHeight: 100, textAlignVertical: 'top', borderWidth: 2, borderColor: COLORS.surfaceAlt },
   textInputCorrect: { borderColor: COLORS.success, backgroundColor: COLORS.successLight },
   textInputWrong: { borderColor: COLORS.error, backgroundColor: COLORS.errorLight },
-
-  feedbackBox: {
-    borderRadius: BORDER_RADIUS.xl, padding: SPACING.lg, gap: 6,
-    borderWidth: 1,
-  },
+  feedbackBox: { borderRadius: BORDER_RADIUS.xl, padding: SPACING.lg, gap: 6, borderWidth: 1 },
   feedbackCorrect: { backgroundColor: COLORS.successLight, borderColor: COLORS.success + '40' },
   feedbackWrong: { backgroundColor: COLORS.errorLight, borderColor: COLORS.error + '40' },
   feedbackScore: { fontSize: 16, fontWeight: '900', color: COLORS.textPrimary },
   feedbackLabel: { fontSize: 12, color: COLORS.textMuted, fontWeight: '700', marginTop: 4 },
   feedbackText: { fontSize: 17, fontWeight: '700', color: COLORS.textPrimary, lineHeight: 24 },
   feedbackTranslation: { fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic' },
-
-  submitBtn: {
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, alignItems: 'center',
-  },
+  submitBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   submitBtnDisabled: { opacity: 0.4 },
   submitBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
-
-  nextBtn: {
-    backgroundColor: COLORS.success, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, alignItems: 'center',
-  },
+  nextBtn: { backgroundColor: COLORS.success, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   nextBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
-
   completedWrap: { padding: SPACING.xl, gap: SPACING.md, alignItems: 'center' },
   completedEmoji: { fontSize: 72 },
   completedTitle: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary },
@@ -634,31 +408,16 @@ const s = StyleSheet.create({
   completedStat: { alignItems: 'center', gap: 4 },
   completedStatVal: { fontSize: 32, fontWeight: '900' },
   completedStatLabel: { fontSize: 12, color: COLORS.textMuted },
-  detailTitle: {
-    fontSize: 17, fontWeight: '800', color: COLORS.textPrimary,
-    alignSelf: 'flex-start', marginTop: SPACING.md,
-  },
-  resultRow: {
-    width: '100%', backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg, padding: SPACING.md,
-    borderLeftWidth: 4, gap: 4,
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-  },
+  detailTitle: { fontSize: 17, fontWeight: '800', color: COLORS.textPrimary, alignSelf: 'flex-start', marginTop: SPACING.md },
+  resultRow: { width: '100%', backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.lg, padding: SPACING.md, borderLeftWidth: 4, gap: 4 },
   resultHeader: { flexDirection: 'row', justifyContent: 'space-between' },
   resultNum: { fontSize: 12, color: COLORS.textMuted, fontWeight: '700' },
   resultScore: { fontSize: 13, fontWeight: '800' },
   resultCorrect: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
   resultUser: { fontSize: 13, color: COLORS.textSecondary },
   resultTranslation: { fontSize: 12, color: COLORS.textMuted, fontStyle: 'italic' },
-  homeBtn: {
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, paddingHorizontal: SPACING.xl,
-    width: '100%', alignItems: 'center', marginTop: SPACING.md,
-  },
+  homeBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, paddingHorizontal: SPACING.xl, width: '100%', alignItems: 'center', marginTop: SPACING.md },
   homeBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
-  retryBtn: {
-    backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 14, width: '100%', alignItems: 'center',
-  },
+  retryBtn: { backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full, paddingVertical: 14, width: '100%', alignItems: 'center' },
   retryBtnTxt: { color: COLORS.textSecondary, fontSize: 15, fontWeight: '600' },
 });

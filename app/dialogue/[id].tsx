@@ -3,7 +3,7 @@
 // Écran de dialogue — conversations interactives polonaises
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
   ScrollView, Animated, ActivityIndicator,
@@ -11,115 +11,18 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
+import { getDialogueById, DialogueLine, Dialogue } from '@/content/dialogues/dialogues';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 
-// ── Types ────────────────────────────────────────────────────
-interface DialogueLine {
-  id: string;
-  speaker: 'A' | 'B';
-  speakerName: string;
-  text: string;
-  translation: string;
-  phonetic?: string;
-}
-
-interface Dialogue {
-  id: string;
-  title: string;
-  context: string;
-  emoji: string;
-  difficulty: 'A1' | 'A2' | 'B1';
-  xpReward: number;
-  lines: DialogueLine[];
-  vocabulary: Array<{ pl: string; fr: string }>;
-}
-
-// ── Contenu des dialogues ────────────────────────────────────
-const DIALOGUES: Dialogue[] = [
-  {
-    id: 'dialogue_01',
-    title: 'Première rencontre',
-    context: 'Anna et Piotr se rencontrent pour la première fois à Varsovie.',
-    emoji: '🤝',
-    difficulty: 'A1',
-    xpReward: 80,
-    vocabulary: [
-      { pl: 'Nazywam się', fr: 'Je m\'appelle' },
-      { pl: 'Skąd jesteś?', fr: 'D\'où es-tu ?' },
-      { pl: 'Jestem z...', fr: 'Je suis de...' },
-      { pl: 'Miło mi', fr: 'Enchanté(e)' },
-    ],
-    lines: [
-      { id: 'l1', speaker: 'A', speakerName: 'Anna', text: 'Cześć! Jestem Anna. Jak masz na imię?', translation: 'Salut ! Je suis Anna. Comment tu t\'appelles ?', phonetic: '[tʂɛɕtɕ | ˈjɛstem ˈanna | jak maʂ na ˈimjɛ]' },
-      { id: 'l2', speaker: 'B', speakerName: 'Piotr', text: 'Cześć, Anna! Nazywam się Piotr. Miło mi!', translation: 'Salut, Anna ! Je m\'appelle Piotr. Enchanté !', phonetic: '[ˈnazɨvam ɕɛ ˈpjɔtr | ˈmiwɔ mi]' },
-      { id: 'l3', speaker: 'A', speakerName: 'Anna', text: 'Skąd jesteś, Piotr?', translation: 'D\'où es-tu, Piotr ?', phonetic: '[skɔnt ˈjɛstɛɕ]' },
-      { id: 'l4', speaker: 'B', speakerName: 'Piotr', text: 'Jestem z Krakowa. A ty?', translation: 'Je suis de Cracovie. Et toi ?', phonetic: '[ˈjɛstem s ˈkrakɔva | a tɨ]' },
-      { id: 'l5', speaker: 'A', speakerName: 'Anna', text: 'Ja jestem z Warszawy. Uczę się polskiego!', translation: 'Moi, je suis de Varsovie. J\'apprends le polonais !', phonetic: '[ja ˈjɛstem s varˈʂavɨ | ˈutʂɛ ɕɛ pɔlˈskiɛgɔ]' },
-      { id: 'l6', speaker: 'B', speakerName: 'Piotr', text: 'Naprawdę? Świetnie mówisz po polsku!', translation: 'Vraiment ? Tu parles très bien polonais !', phonetic: '[naˈpravdɛ | ˈɕfjɛtɲɛ ˈmuviʂ pɔ ˈpɔlsku]' },
-      { id: 'l7', speaker: 'A', speakerName: 'Anna', text: 'Dziękuję! Uczę się dopiero trzy miesiące.', translation: 'Merci ! J\'apprends depuis seulement trois mois.', phonetic: '[dʑɛŋˈkujɛ | ˈutʂɛ ɕɛ dɔˈpjɛrɔ tʂɨ ˈmjɛɕɔntse]' },
-    ],
-  },
-  {
-    id: 'dialogue_02',
-    title: 'Au restaurant',
-    context: 'Marie commande un repas dans un restaurant polonais.',
-    emoji: '🍽️',
-    difficulty: 'A1',
-    xpReward: 100,
-    vocabulary: [
-      { pl: 'Poproszę', fr: 'Je voudrais / S\'il vous plaît' },
-      { pl: 'Ile kosztuje?', fr: 'Combien ça coûte ?' },
-      { pl: 'Czy jest...?', fr: 'Est-ce qu\'il y a... ?' },
-      { pl: 'Rachunek', fr: 'L\'addition' },
-    ],
-    lines: [
-      { id: 'l1', speaker: 'A', speakerName: 'Kelner', text: 'Dzień dobry! Co mogę przynieść?', translation: 'Bonjour ! Qu\'est-ce que je peux apporter ?' },
-      { id: 'l2', speaker: 'B', speakerName: 'Marie', text: 'Dzień dobry! Poproszę kartę, proszę.', translation: 'Bonjour ! Le menu, s\'il vous plaît.' },
-      { id: 'l3', speaker: 'A', speakerName: 'Kelner', text: 'Proszę bardzo. Czy ma pani jakieś pytania?', translation: 'Voici. Avez-vous des questions ?' },
-      { id: 'l4', speaker: 'B', speakerName: 'Marie', text: 'Tak. Czy są wegetariańskie pierogi?', translation: 'Oui. Est-ce qu\'il y a des pierogis végétariens ?' },
-      { id: 'l5', speaker: 'A', speakerName: 'Kelner', text: 'Oczywiście! Mamy pierogi z kapustą i grzybami.', translation: 'Bien sûr ! Nous avons des pierogis à la choucroute et aux champignons.' },
-      { id: 'l6', speaker: 'B', speakerName: 'Marie', text: 'Poproszę pierogi i wodę mineralną.', translation: 'Je voudrais les pierogis et une eau minérale.' },
-      { id: 'l7', speaker: 'A', speakerName: 'Kelner', text: 'Doskonały wybór! Coś jeszcze?', translation: 'Excellent choix ! Autre chose ?' },
-      { id: 'l8', speaker: 'B', speakerName: 'Marie', text: 'Nie, dziękuję. Ile to kosztuje?', translation: 'Non, merci. Combien ça coûte ?' },
-      { id: 'l9', speaker: 'A', speakerName: 'Kelner', text: 'Dwadzieścia pięć złotych. Poproszę chwilę.', translation: 'Vingt-cinq zlotys. Un moment, s\'il vous plaît.' },
-    ],
-  },
-  {
-    id: 'dialogue_03',
-    title: 'Dans le bus',
-    context: 'Thomas demande son chemin dans un bus à Cracovie.',
-    emoji: '🚌',
-    difficulty: 'A2',
-    xpReward: 120,
-    vocabulary: [
-      { pl: 'Przepraszam', fr: 'Excusez-moi' },
-      { pl: 'Czy jedzie...?', fr: 'Est-ce que ça va à... ?' },
-      { pl: 'Gdzie wysiadać?', fr: 'Où descendre ?' },
-      { pl: 'Następny przystanek', fr: 'Le prochain arrêt' },
-    ],
-    lines: [
-      { id: 'l1', speaker: 'A', speakerName: 'Thomas', text: 'Przepraszam! Czy ten autobus jedzie do Rynku?', translation: 'Excusez-moi ! Ce bus va-t-il à la place du marché ?' },
-      { id: 'l2', speaker: 'B', speakerName: 'Pani', text: 'Tak, ten autobus jedzie do centrum.', translation: 'Oui, ce bus va au centre-ville.' },
-      { id: 'l3', speaker: 'A', speakerName: 'Thomas', text: 'Gdzie powinienem wysiąść na Rynek Główny?', translation: 'Où dois-je descendre pour la Grand-Place ?' },
-      { id: 'l4', speaker: 'B', speakerName: 'Pani', text: 'Trzecia stacja stąd. Przystanek Teatr Słowackiego.', translation: 'Troisième arrêt d\'ici. Arrêt Théâtre Słowacki.' },
-      { id: 'l5', speaker: 'A', speakerName: 'Thomas', text: 'Dziękuję bardzo! Jak długo jedzie?', translation: 'Merci beaucoup ! Combien de temps dure le trajet ?' },
-      { id: 'l6', speaker: 'B', speakerName: 'Pani', text: 'Około dziesięciu minut. To niedaleko.', translation: 'Environ dix minutes. Ce n\'est pas loin.' },
-      { id: 'l7', speaker: 'A', speakerName: 'Thomas', text: 'Wspaniale! Dziękuję za pomoc!', translation: 'Super ! Merci pour l\'aide !' },
-      { id: 'l8', speaker: 'B', speakerName: 'Pani', text: 'Nie ma za co! Miłego pobytu w Krakowie!', translation: 'De rien ! Bon séjour à Cracovie !' },
-    ],
-  },
-];
-
-type DialogueMode = 'read' | 'quiz' | 'completed';
+type DialogueMode = 'loading' | 'error' | 'read' | 'quiz' | 'completed';
 
 // ── Composant principal ──────────────────────────────────────
 export default function DialogueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { awardXP } = useGamification();
 
-  const dialogue = DIALOGUES.find(d => d.id === id) ?? DIALOGUES[0];
-
-  const [mode, setMode] = useState<DialogueMode>('read');
+  const [dialogue, setDialogue] = useState<Dialogue | null>(null);
+  const [mode, setMode] = useState<DialogueMode>('loading');
   const [revealedLines, setRevealedLines] = useState<number>(0);
   const [showTranslations, setShowTranslations] = useState(true);
   const [showPhonetics, setShowPhonetics] = useState(false);
@@ -128,14 +31,41 @@ export default function DialogueScreen() {
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
 
   const scrollRef = useRef<ScrollView>(null);
 
+  // Charger le dialogue
+  useEffect(() => {
+    if (id) {
+      const data = getDialogueById(id);
+      if (data) {
+        setDialogue(data);
+        setMode('read');
+        // Générer les questions du quiz une fois les données chargées
+        setQuizQuestions(data.lines.slice(0, 4).map(line => {
+          const wrongAnswers = data.lines
+            .filter(l => l.id !== line.id)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(l => l.translation);
+          const options = [...wrongAnswers, line.translation]
+            .sort(() => Math.random() - 0.5);
+          return { line, options };
+        }));
+      } else {
+        setMode('error');
+      }
+    }
+  }, [id]);
+
   // Scroll automatique quand une nouvelle ligne est révélée
   useEffect(() => {
-    setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 300);
+    if (revealedLines > 0) {
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 300);
+    }
   }, [revealedLines]);
 
   // Lire une ligne
@@ -158,6 +88,7 @@ export default function DialogueScreen() {
 
   // Lire tout le dialogue
   const playAll = async () => {
+    if (!dialogue) return;
     if (isPlaying) { Speech.stop(); setIsPlaying(false); return; }
     setIsPlaying(true);
 
@@ -176,24 +107,8 @@ export default function DialogueScreen() {
     setPlayingLineId(null);
   };
 
-  // Générer les questions du quiz
-  const generateQuizQuestions = () => {
-    return dialogue.lines.slice(0, 4).map(line => {
-      const wrongAnswers = dialogue.lines
-        .filter(l => l.id !== line.id)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map(l => l.translation);
-      const options = [...wrongAnswers, line.translation]
-        .sort(() => Math.random() - 0.5);
-      return { line, options };
-    });
-  };
-
-  const [quizQuestions] = useState(generateQuizQuestions);
-
   const handleQuizAnswer = (answer: string) => {
-    if (selectedAnswer) return;
+    if (selectedAnswer || !dialogue) return;
     setSelectedAnswer(answer);
     if (answer === quizQuestions[quizIndex].line.translation) {
       setQuizScore(prev => prev + 1);
@@ -208,6 +123,32 @@ export default function DialogueScreen() {
       }
     }, 1200);
   };
+
+  if (mode === 'loading') {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={s.loadingText}>Chargement du dialogue...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (mode === 'error' || !dialogue) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <Text style={s.errorEmoji}>🛰️</Text>
+          <Text style={s.errorTitle}>Dialogue introuvable</Text>
+          <Text style={s.errorDesc}>Désolé, nous n'avons pas pu charger ce dialogue.</Text>
+          <TouchableOpacity style={s.backBtnFull} onPress={() => router.back()}>
+            <Text style={s.backBtnText}>Retourner apprendre</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // ── Mode lecture ─────────────────────────────────────────
   if (mode === 'read') {
@@ -336,7 +277,7 @@ export default function DialogueScreen() {
 
           {/* Options */}
           <View style={s.quizOptions}>
-            {question.options.map((option) => {
+            {question.options.map((option: string) => {
               const isSelected = selectedAnswer === option;
               const isCorrect = option === question.line.translation;
               const showResult = selectedAnswer !== null;
@@ -477,6 +418,14 @@ const db = StyleSheet.create({
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
+  loadingText: { marginTop: SPACING.md, fontSize: 16, color: COLORS.textSecondary, fontWeight: '600' },
+  errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
+  errorTitle: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.sm },
+  errorDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', marginBottom: SPACING.xl },
+  backBtnFull: { backgroundColor: COLORS.primary, paddingVertical: 14, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.full },
+  backBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     padding: SPACING.md, backgroundColor: COLORS.white,
@@ -504,7 +453,7 @@ const s = StyleSheet.create({
   vocabChip: {
     backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.border ?? '#E5E7EB',
+    borderWidth: 1, borderColor: '#E5E7EB',
   },
   vocabPl: { fontSize: 13, fontWeight: '800', color: COLORS.primary },
   vocabFr: { fontSize: 11, color: COLORS.textMuted },

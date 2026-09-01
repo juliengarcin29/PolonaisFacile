@@ -130,7 +130,8 @@ export default function LearnScreen() {
                   if (!mod.free && !isPremium) {
                     router.push('/paywall?reason=lesson');
                   } else {
-                    router.push(`/lesson/${mod.id}_lesson_1`);
+                    const moduleNum = mod.id.split('_')[1];
+                    router.push(`/lesson/lesson_${moduleNum}_1`);
                   }
                 }}
                 activeOpacity={0.8}
