@@ -6,8 +6,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   ScrollView, View, Text, TouchableOpacity,
-  StyleSheet, SafeAreaView, RefreshControl,
+  StyleSheet, RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';

@@ -5,9 +5,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
+  View, Text, StyleSheet, TouchableOpacity,
   ScrollView, Animated, ActivityIndicator, Alert,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PackageInfo } from '@/services/revenue/subscriptionService';
@@ -53,6 +54,7 @@ const FEATURES = [
 ];
 
 export default function PaywallScreen() {
+  const insets = useSafeAreaInsets();
   const { reason = 'default' } = useLocalSearchParams<{ reason?: string }>();
   const {
     packages, purchase, restore,
@@ -113,129 +115,137 @@ export default function PaywallScreen() {
   // ── Écran de succès ──────────────────────────────────────
   if (showSuccess) {
     return (
-      <SafeAreaView style={s.successSafe}>
+      <View style={[s.successSafe, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <Animated.View style={[s.successBox, { transform: [{ scale: successScale }] }]}>
           <Text style={s.successEmoji}>🎉</Text>
           <Text style={s.successTitle}>Bienvenue Premium !</Text>
           <Text style={s.successSub}>Tout le contenu est maintenant débloqué.</Text>
         </Animated.View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={s.safe}>
+    <View style={s.container}>
       {/* Bouton fermer */}
-      <TouchableOpacity style={s.closeBtn} onPress={() => router.back()}>
+      <TouchableOpacity
+        style={[s.closeBtn, { top: Math.max(insets.top, 16) }]}
+        onPress={() => router.back()}
+      >
         <Text style={s.closeTxt}>✕</Text>
       </TouchableOpacity>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + SPACING.xl }}
+      >
+        <View style={{ paddingTop: insets.top }}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-          {/* ── Hero contextuel ── */}
-          <View style={s.hero}>
-            <Text style={s.heroEmoji}>{upsell.emoji}</Text>
-            <Text style={s.heroTitle}>{upsell.title}</Text>
-            <Text style={s.heroDesc}>{upsell.desc}</Text>
-          </View>
+            {/* ── Hero contextuel ── */}
+            <View style={s.hero}>
+              <Text style={s.heroEmoji}>{upsell.emoji}</Text>
+              <Text style={s.heroTitle}>{upsell.title}</Text>
+              <Text style={s.heroDesc}>{upsell.desc}</Text>
+            </View>
 
-          {/* ── Packages de prix ── */}
-          <View style={s.packagesWrap}>
-            {isLoadingPackages ? (
-              <View style={s.loadingWrap}>
-                <ActivityIndicator color={COLORS.primary} size="large" />
-                <Text style={s.loadingTxt}>Chargement des offres...</Text>
-              </View>
-            ) : packages.length > 0 ? (
-              packages
-                .sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0))
-                .map((pkg) => (
-                  <PackageCard
-                    key={pkg.id}
-                    pkg={pkg}
-                    isSelected={selectedPkg?.id === pkg.id}
-                    onSelect={() => setSelectedPkg(pkg)}
-                  />
-                ))
-            ) : (
-              // Fallback si RevenueCat n'est pas configuré
-              <FallbackPricing onSelect={setSelectedPkg} selectedId={selectedPkg?.id} />
-            )}
-          </View>
-
-          {/* ── Bouton d'achat principal ── */}
-          <View style={s.ctaWrap}>
-            <TouchableOpacity
-              style={[s.ctaBtn, isPurchasing && s.ctaBtnDisabled]}
-              onPress={handlePurchase}
-              disabled={isPurchasing || !selectedPkg}
-            >
-              {isPurchasing ? (
-                <ActivityIndicator color={COLORS.white} />
+            {/* ── Packages de prix ── */}
+            <View style={s.packagesWrap}>
+              {isLoadingPackages ? (
+                <View style={s.loadingWrap}>
+                  <ActivityIndicator color={COLORS.primary} size="large" />
+                  <Text style={s.loadingTxt}>Chargement des offres...</Text>
+                </View>
+              ) : packages.length > 0 ? (
+                packages
+                  .sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0))
+                  .map((pkg) => (
+                    <PackageCard
+                      key={pkg.id}
+                      pkg={pkg}
+                      isSelected={selectedPkg?.id === pkg.id}
+                      onSelect={() => setSelectedPkg(pkg)}
+                    />
+                  ))
               ) : (
-                <>
-                  <Text style={s.ctaBtnTxt}>
-                    {selectedPkg?.id?.includes('yearly')
-                      ? '🎯 Essayer 7 jours gratuits'
-                      : '→ Commencer maintenant'}
-                  </Text>
-                  {selectedPkg?.id?.includes('yearly') && (
-                    <Text style={s.ctaBtnSub}>
-                      Puis {selectedPkg?.price} / an — annulable à tout moment
-                    </Text>
-                  )}
-                </>
+                // Fallback si RevenueCat n'est pas configuré
+                <FallbackPricing onSelect={setSelectedPkg} selectedId={selectedPkg?.id} />
               )}
-            </TouchableOpacity>
+            </View>
 
-            {error && (
-              <View style={s.errorBox}>
-                <Text style={s.errorTxt}>⚠️ {error}</Text>
-              </View>
-            )}
-          </View>
+            {/* ── Bouton d'achat principal ── */}
+            <View style={s.ctaWrap}>
+              <TouchableOpacity
+                style={[s.ctaBtn, isPurchasing && s.ctaBtnDisabled]}
+                onPress={handlePurchase}
+                disabled={isPurchasing || !selectedPkg}
+              >
+                {isPurchasing ? (
+                  <ActivityIndicator color={COLORS.white} />
+                ) : (
+                  <>
+                    <Text style={s.ctaBtnTxt}>
+                      {selectedPkg?.id?.includes('yearly')
+                        ? '🎯 Essayer 7 jours gratuits'
+                        : '→ Commencer maintenant'}
+                    </Text>
+                    {selectedPkg?.id?.includes('yearly') && (
+                      <Text style={s.ctaBtnSub}>
+                        Puis {selectedPkg?.price} / an — annulable à tout moment
+                      </Text>
+                    )}
+                  </>
+                )}
+              </TouchableOpacity>
 
-          {/* ── Fonctionnalités incluses ── */}
-          <Text style={s.featuresTitle}>Tout ce qui est inclus</Text>
-          <View style={s.featuresList}>
-            {FEATURES.map((f) => (
-              <View key={f.text} style={s.featureRow}>
-                <Text style={s.featureEmoji}>{f.emoji}</Text>
-                <Text style={s.featureTxt}>{f.text}</Text>
-              </View>
-            ))}
-          </View>
+              {error && (
+                <View style={s.errorBox}>
+                  <Text style={s.errorTxt}>⚠️ {error}</Text>
+                </View>
+              )}
+            </View>
 
-          {/* ── Témoignages ── */}
-          <View style={s.testimonialsWrap}>
-            {TESTIMONIALS.map((t) => (
-              <View key={t.name} style={s.testimonialCard}>
-                <Text style={s.testimonialStars}>⭐⭐⭐⭐⭐</Text>
-                <Text style={s.testimonialText}>"{t.text}"</Text>
-                <Text style={s.testimonialName}>— {t.name}</Text>
-              </View>
-            ))}
-          </View>
+            {/* ── Fonctionnalités incluses ── */}
+            <Text style={s.featuresTitle}>Tout ce qui est inclus</Text>
+            <View style={s.featuresList}>
+              {FEATURES.map((f) => (
+                <View key={f.text} style={s.featureRow}>
+                  <Text style={s.featureEmoji}>{f.emoji}</Text>
+                  <Text style={s.featureTxt}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
 
-          {/* ── Actions secondaires ── */}
-          <View style={s.secondaryActions}>
-            <TouchableOpacity onPress={handleRestore}>
-              <Text style={s.restoreTxt}>Restaurer mes achats</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={s.skipTxt}>Non merci, continuer gratuitement</Text>
-            </TouchableOpacity>
-          </View>
+            {/* ── Témoignages ── */}
+            <View style={s.testimonialsWrap}>
+              {TESTIMONIALS.map((t) => (
+                <View key={t.name} style={s.testimonialCard}>
+                  <Text style={s.testimonialStars}>⭐⭐⭐⭐⭐</Text>
+                  <Text style={s.testimonialText}>"{t.text}"</Text>
+                  <Text style={s.testimonialName}>— {t.name}</Text>
+                </View>
+              ))}
+            </View>
 
-          {/* ── Mentions légales ── */}
-          <Text style={s.legal}>
-            L'abonnement se renouvelle automatiquement sauf résiliation au moins 24h avant la fin de la période. Gérez vos abonnements dans les paramètres de votre compte store.
-          </Text>
+            {/* ── Actions secondaires ── */}
+            <View style={s.secondaryActions}>
+              <TouchableOpacity onPress={handleRestore}>
+                <Text style={s.restoreTxt}>Restaurer mes achats</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Text style={s.skipTxt}>Non merci, continuer gratuitement</Text>
+              </TouchableOpacity>
+            </View>
 
-        </Animated.View>
+            {/* ── Mentions légales ── */}
+            <Text style={s.legal}>
+              L'abonnement se renouvelle automatiquement sauf résiliation au moins 24h avant la fin de la période. Gérez vos abonnements dans les paramètres de votre compte store.
+            </Text>
+
+          </Animated.View>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -346,7 +356,7 @@ const TESTIMONIALS = [
 
 // ── Styles ───────────────────────────────────────────────────
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.white },
+  container: { flex: 1, backgroundColor: COLORS.white },
   successSafe: {
     flex: 1, backgroundColor: COLORS.primary,
     alignItems: 'center', justifyContent: 'center',
@@ -357,7 +367,7 @@ const s = StyleSheet.create({
   successSub: { fontSize: 16, color: 'rgba(255,255,255,0.75)', textAlign: 'center' },
 
   closeBtn: {
-    position: 'absolute', top: 56, right: SPACING.lg, zIndex: 10,
+    position: 'absolute', right: SPACING.lg, zIndex: 10,
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: COLORS.surfaceAlt,
     alignItems: 'center', justifyContent: 'center',

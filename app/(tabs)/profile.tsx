@@ -6,8 +6,9 @@
 import { useState, useEffect } from 'react';
 import {
   ScrollView, View, Text, TouchableOpacity, StyleSheet,
-  SafeAreaView, Switch, Alert, ActivityIndicator,
+  Switch, Alert, ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
@@ -31,7 +32,50 @@ export default function ProfileScreen() {
   const [notifStreak, setNotifStreak] = useState(true);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
-  // ... (rest of the logic remains same)
+  // Charger les préférences de notifications
+  useEffect(() => {
+    loadSettings().then(s => {
+      setNotifDaily(s.dailyReminder);
+      setNotifStreak(s.streakAlert);
+      setSettingsLoaded(true);
+    });
+  }, []);
+
+  const handleNotifDaily = async (value: boolean) => {
+    setNotifDaily(value);
+    await saveSettings({ dailyReminder: value });
+    if (value) {
+      await scheduleDailyReminder('09:00');
+    } else {
+      await cancelNotification('daily_reminder');
+    }
+  };
+
+  const handleNotifStreak = async (value: boolean) => {
+    setNotifStreak(value);
+    await saveSettings({ streakAlert: value });
+    if (!value) await cancelNotification('streak_alert');
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Se déconnecter',
+      isAnonymous
+        ? '⚠️ Votre progression sera perdue si vous n\'avez pas créé de compte. Continuer ?'
+        : 'Voulez-vous vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Se déconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/onboarding');
+          },
+        },
+      ]
+    );
+  };
 
   // Badges débloqués
   const unlockedIds = user?.achievements ?? [];

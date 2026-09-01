@@ -7,8 +7,9 @@
 import { useState } from 'react';
 import {
   ScrollView, View, Text, StyleSheet,
-  TouchableOpacity, SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
