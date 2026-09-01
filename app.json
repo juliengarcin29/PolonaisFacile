@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "Polonais Facile",
+    "slug": "Polonais-facile",
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "owner": "polonais-facile",
+    "version": "1.0.0",
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "polonaisfacile",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.polonaisfacile.learn",
+      "icon": "./assets/images/icon.png",
+      "deploymentTarget": "16.4"
+    },
+    "android": {
+      "package": "com.polonaisfacile.learn",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#208AEF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-font",
+      "expo-status-bar",
+      "expo-audio",
+      "expo-video",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            //"compileSdkVersion": 36,
+            //"targetSdkVersion": 36,
+            //"minSdkVersion": 24,
+            //"buildToolsVersion": "36.0.0",
+            "newArchEnabled": false,
+            "kotlinVersion": "2.1.20",
+            "extraKotlinCompilerArgs": ["-Xskip-metadata-version-check", "-Xsuppress-version-warnings"],
+            //"ndkVersion": "26.1.10909125"
+          },
+          "ios": {
+            "newArchEnabled": false
+          }
+        }
+      ],
+      "expo-localization",
+      "expo-sqlite",
+      "expo-image",
+      "expo-web-browser",
+      "expo-asset",
+      "expo-notifications",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d3ea15f2-e0c2-4970-84ee-0d59791a3a71"
+      }
+    }
+  }
+}

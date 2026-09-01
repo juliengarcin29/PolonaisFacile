@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1031043440051",
+    "project_id": "polonais-facile",
+    "storage_bucket": "polonais-facile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031043440051:android:e7845280e53eb9fcfeffc6",
+        "android_client_info": {
+          "package_name": "com.polonaisfacile.learn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1031043440051-ln0m6ipe4gtupn1u1kbgk5pc45iu9pl2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXVrC9vmUcg8XcdRlU_F2wbLUnBkFN4sQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1031043440051-ln0m6ipe4gtupn1u1kbgk5pc45iu9pl2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
