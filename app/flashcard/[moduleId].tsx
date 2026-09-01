@@ -6,8 +6,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, Animated, Dimensions, ActivityIndicator,
+  Animated, Dimensions, ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
@@ -18,6 +19,7 @@ const { width } = Dimensions.get('window');
 type FlashcardPhase = 'intro' | 'card' | 'completed';
 
 export default function FlashcardScreen() {
+  const insets = useSafeAreaInsets();
   const { moduleId } = useLocalSearchParams<{ moduleId: string }>();
 
   // Filtrer les cartes initiales pour ce module
@@ -100,13 +102,13 @@ export default function FlashcardScreen() {
   // ── PHASE 1 : INTRO ──────────────────────────────────────
   if (phase === 'intro') {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.header}>
+      <View style={s.safe}>
+        <View style={[s.header, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
             <Text style={s.backText}>✕</Text>
           </TouchableOpacity>
         </View>
-        <View style={s.introWrap}>
+        <View style={[s.introWrap, { paddingBottom: insets.bottom + 20 }]}>
           <Text style={s.introEmoji}>🧠</Text>
           <Text style={s.introTitle}>Révision Flashcards</Text>
           <Text style={s.introDesc}>
@@ -122,15 +124,15 @@ export default function FlashcardScreen() {
             <Text style={s.startBtnTxt}>Commencer la révision →</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // ── PHASE 3 : COMPLETED ───────────────────────────────────
   if (phase === 'completed') {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.completedWrap}>
+      <View style={s.safe}>
+        <View style={[s.completedWrap, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>
           <Text style={s.completedEmoji}>🎉</Text>
           <Text style={s.completedTitle}>Session terminée !</Text>
           <Text style={s.completedSub}>Vous avez révisé {sessionCards.length} cartes.</Text>
@@ -138,7 +140,7 @@ export default function FlashcardScreen() {
             <Text style={s.homeBtnTxt}>Retour à l'accueil</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -146,9 +148,9 @@ export default function FlashcardScreen() {
   const mastery = getCardMastery(current.id);
 
   return (
-    <SafeAreaView style={s.safe}>
+    <View style={s.safe}>
       {/* Header */}
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
           <Text style={s.backText}>✕</Text>
         </TouchableOpacity>
@@ -191,22 +193,24 @@ export default function FlashcardScreen() {
         </Animated.View>
       </Animated.View>
 
-      {/* Buttons */}
-      {!showRating ? (
-        <TouchableOpacity style={s.flipBtn} onPress={handleFlip}>
-          <Text style={s.flipBtnText}>🔄 Retourner la carte</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={s.ratingWrap}>
-          <Text style={s.ratingLabel}>Connaissiez-vous ce mot ?</Text>
-          <View style={s.ratingRow}>
-            <RatingBtn emoji="😔" label="Non" sub="Bientôt" color={COLORS.error} onPress={() => handleRate(0)} />
-            <RatingBtn emoji="🤔" label="Moyen" sub="Quelques jours" color={COLORS.warning} onPress={() => handleRate(3)} />
-            <RatingBtn emoji="😄" label="Oui !" sub="Longtemps" color={COLORS.success} onPress={() => handleRate(5)} />
+      {/* Footer Area */}
+      <View style={{ paddingBottom: insets.bottom + 16 }}>
+        {!showRating ? (
+          <TouchableOpacity style={s.flipBtn} onPress={handleFlip}>
+            <Text style={s.flipBtnText}>🔄 Retourner la carte</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={s.ratingWrap}>
+            <Text style={s.ratingLabel}>Connaissiez-vous ce mot ?</Text>
+            <View style={s.ratingRow}>
+              <RatingBtn emoji="😔" label="Non" sub="Bientôt" color={COLORS.error} onPress={() => handleRate(0)} />
+              <RatingBtn emoji="🤔" label="Moyen" sub="Quelques jours" color={COLORS.warning} onPress={() => handleRate(3)} />
+              <RatingBtn emoji="😄" label="Oui !" sub="Longtemps" color={COLORS.success} onPress={() => handleRate(5)} />
+            </View>
           </View>
-        </View>
-      )}
-    </SafeAreaView>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -223,7 +227,13 @@ function RatingBtn({ emoji, label, sub, color, onPress }: any) {
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: SPACING.lg },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
+  },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '700' },
   progressWrap: { flex: 1, gap: 6 },

@@ -4,22 +4,15 @@
 // ============================================================
 
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants';
 
-interface TabIconProps {
-  emoji: string;
-  label: string;
-  focused: boolean;
-}
-
-function TabIcon({ emoji, label, focused }: TabIconProps) {
+function TabIcon({ emoji, focused, size }: { emoji: string; focused: boolean; size: number }) {
   return (
-    <View style={styles.tabItem}>
-      <Text style={[styles.tabEmoji, focused && styles.tabEmojiFocused]}>{emoji}</Text>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
-    </View>
+    <Text style={{ fontSize: size, opacity: focused ? 1 : 0.45 }}>
+      {emoji}
+    </Text>
   );
 }
 
@@ -30,34 +23,52 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: [
-          styles.tabBar,
-          { height: 64 + insets.bottom, paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }
-        ],
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: '#E53935',
+        tabBarInactiveTintColor: '#757575',
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E0E0E0',
+          height: 65 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
+          paddingTop: 8,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
+          tabBarLabel: 'Accueil',
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🏠" label="Accueil" focused={focused} />
+            <TabIcon emoji="🏠" focused={focused} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="learn"
         options={{
+          tabBarLabel: 'Apprendre',
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="📚" label="Apprendre" focused={focused} />
+            <TabIcon emoji="📚" focused={focused} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="review"
         options={{
+          tabBarLabel: 'Réviser',
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🔄" label="Réviser" focused={focused} />
+            <TabIcon emoji="🔄" focused={focused} size={24} />
           ),
         }}
       />
@@ -66,16 +77,18 @@ export default function TabsLayout() {
         name="premium"
         options={{
           href: null,
+          tabBarLabel: 'Premium',
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="⭐" label="Premium" focused={focused} />
+            <TabIcon emoji="⭐" focused={focused} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
+          tabBarLabel: 'Profil',
           tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="👤" label="Profil" focused={focused} />
+            <TabIcon emoji="👤" focused={focused} size={24} />
           ),
         }}
       />
