@@ -13,7 +13,6 @@ import {
   Animated,
   Dimensions,
   KeyboardAvoidingView, Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,12 +20,14 @@ import {
   View,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 type LessonPhase = 'loading' | 'error' | 'exercise' | 'feedback_correct' | 'feedback_wrong' | 'completed';
 
 export default function LessonScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addXP, user } = useUserStore();
 
@@ -174,13 +175,13 @@ export default function LessonScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header : progression + vies + fermer */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
             <Text style={styles.closeBtnText}>✕</Text>
           </TouchableOpacity>
@@ -281,7 +282,7 @@ export default function LessonScreen() {
           </Animated.View>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

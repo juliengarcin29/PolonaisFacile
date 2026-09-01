@@ -61,9 +61,11 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/* Masqué pour la V1 */}
       <Tabs.Screen
         name="premium"
         options={{
+          href: null,
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="⭐" label="Premium" focused={focused} />
           ),

@@ -3,104 +3,82 @@
 // Écran flashcards — retournement animé + SRS SM-2
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, Animated, Dimensions, PanResponder,
+  SafeAreaView, Animated, Dimensions, ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
-import { calculateNextReview, getDefaultReview } from '@/utils/srs';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
-import type { FlashcardReview, Flashcard } from '@/types';
+import { useFlashcards } from '@/hooks/useFlashcards';
 
-const { width, height } = Dimensions.get('window');
-const STORAGE_KEY = 'flashcard_reviews';
+const { width } = Dimensions.get('window');
 
-type SRSRating = 0 | 3 | 5;
+type FlashcardPhase = 'intro' | 'card' | 'completed';
 
 export default function FlashcardScreen() {
   const { moduleId } = useLocalSearchParams<{ moduleId: string }>();
 
-  const cards = moduleId === 'all'
-    ? FLASHCARDS
-    : FLASHCARDS.filter(f => f.moduleId === moduleId);
+  // Filtrer les cartes initiales pour ce module
+  const initialCards = useMemo(() => {
+    return moduleId === 'all'
+      ? FLASHCARDS
+      : FLASHCARDS.filter(f => f.moduleId === moduleId);
+  }, [moduleId]);
 
-  const [index, setIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [reviews, setReviews] = useState<Record<string, FlashcardReview>>({});
-  const [sessionDone, setSessionDone] = useState<string[]>([]);
-  const [phase, setPhase] = useState<'card' | 'rating' | 'completed'>('card');
+  // Hook SRS centralisé
+  const {
+    current, currentIndex, isFlipped, sessionCards,
+    sessionProgress, startSession, flip, rateCard,
+    getCardMastery, isLoading,
+  } = useFlashcards(initialCards);
+
+  const [phase, setPhase] = useState<FlashcardPhase>('intro');
+  const [showRating, setShowRating] = useState(false);
 
   const flipAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
-  const current = cards[index];
-
-  // Charger les révisions sauvegardées
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then(data => {
-      if (data) setReviews(JSON.parse(data));
-    });
-  }, []);
-
-  // Sauvegarder les révisions
-  const saveReviews = async (updated: Record<string, FlashcardReview>) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  };
-
   // Animation flip
-  const flip = () => {
+  const handleFlip = () => {
     const toValue = isFlipped ? 0 : 1;
     Animated.spring(flipAnim, {
       toValue, useNativeDriver: true, friction: 8, tension: 40,
     }).start();
-    setIsFlipped(!isFlipped);
-    if (!isFlipped) setPhase('rating');
+    flip();
+    if (!isFlipped) setShowRating(true);
   };
 
-  // Animation slide-out puis slide-in
-  const slideToNext = (direction: 'left' | 'right') => {
-    const dir = direction === 'left' ? -width : width;
-    Animated.parallel([
-      Animated.timing(slideAnim, { toValue: dir, duration: 200, useNativeDriver: true }),
-      Animated.timing(opacityAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start(() => {
-      slideAnim.setValue(direction === 'left' ? width : -width);
-      flipAnim.setValue(0);
-      setIsFlipped(false);
-      setPhase('card');
+  // Passer à la suivante avec animation slide
+  const handleRate = async (rating: 0 | 3 | 5) => {
+    setShowRating(false);
+    const result = await rateCard(rating);
 
-      if (index + 1 >= cards.length) {
+    const direction = rating >= 3 ? -width : width;
+
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: direction, duration: 250, useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => {
+      if (result === 'completed') {
         setPhase('completed');
       } else {
-        setIndex(prev => prev + 1);
-      }
+        slideAnim.setValue(-direction);
+        flipAnim.setValue(0);
 
-      Animated.parallel([
-        Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, friction: 8 }),
-        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
+        Animated.parallel([
+          Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, friction: 8 }),
+          Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        ]).start();
+      }
     });
   };
 
-  // Notation SRS
-  const rateCard = async (rating: SRSRating) => {
-    const existing = reviews[current.id] ?? getDefaultReview(current.id, 'local');
-    const updated = calculateNextReview(existing, rating);
-    const newReview: FlashcardReview = {
-      ...existing, ...updated,
-      lastReviewDate: new Date(),
-      totalReviews: (existing.totalReviews ?? 0) + 1,
-      correctReviews: rating >= 3 ? (existing.correctReviews ?? 0) + 1 : (existing.correctReviews ?? 0),
-    };
-    const newReviews = { ...reviews, [current.id]: newReview };
-    setReviews(newReviews);
-    await saveReviews(newReviews);
-    setSessionDone(prev => [...prev, current.id]);
-    slideToNext(rating >= 3 ? 'left' : 'right');
+  const handleStart = () => {
+    startSession();
+    setPhase('card');
   };
 
   // Interpolations flip
@@ -109,122 +87,122 @@ export default function FlashcardScreen() {
   const frontOpacity = flipAnim.interpolate({ inputRange: [0.4, 0.5], outputRange: [1, 0] });
   const backOpacity = flipAnim.interpolate({ inputRange: [0.4, 0.5], outputRange: [0, 1] });
 
-  if (phase === 'completed' || index >= cards.length) {
-    return <CompletedView total={cards.length} done={sessionDone.length} onBack={() => router.back()} />;
+  if (isLoading) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── PHASE 1 : INTRO ──────────────────────────────────────
+  if (phase === 'intro') {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.header}>
+          <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+            <Text style={s.backText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={s.introWrap}>
+          <Text style={s.introEmoji}>🧠</Text>
+          <Text style={s.introTitle}>Révision Flashcards</Text>
+          <Text style={s.introDesc}>
+            {moduleId === 'all' ? 'Toutes vos cartes' : `Thème : ${initialCards[0]?.tags[0] || 'Général'}`}
+          </Text>
+          <View style={s.introStats}>
+            <View style={s.introStat}>
+              <Text style={s.introStatVal}>{initialCards.length}</Text>
+              <Text style={s.introStatLabel}>Cartes totales</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={s.startBtn} onPress={handleStart}>
+            <Text style={s.startBtnTxt}>Commencer la révision →</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── PHASE 3 : COMPLETED ───────────────────────────────────
+  if (phase === 'completed') {
+    return (
+      <SafeAreaView style={s.safe}>
+        <View style={s.completedWrap}>
+          <Text style={s.completedEmoji}>🎉</Text>
+          <Text style={s.completedTitle}>Session terminée !</Text>
+          <Text style={s.completedSub}>Vous avez révisé {sessionCards.length} cartes.</Text>
+          <TouchableOpacity style={s.homeBtn} onPress={() => router.replace('/(tabs)')}>
+            <Text style={s.homeBtnTxt}>Retour à l'accueil</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (!current) return null;
-
-  const reviewData = reviews[current.id];
-  const masteryLevel = reviewData
-    ? reviewData.repetitions >= 5 ? 'maîtrisé' : reviewData.repetitions >= 2 ? 'en cours' : 'nouveau'
-    : 'nouveau';
+  const mastery = getCardMastery(current.id);
 
   return (
-    <SafeAreaView style={styles.safe}>
-
+    <SafeAreaView style={s.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>✕</Text>
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+          <Text style={s.backText}>✕</Text>
         </TouchableOpacity>
-        <View style={styles.progressWrap}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${((index) / cards.length) * 100}%` }]} />
+        <View style={s.progressWrap}>
+          <View style={s.progressTrack}>
+            <View style={[s.progressFill, { width: `${sessionProgress}%` }]} />
           </View>
-          <Text style={styles.progressText}>{index + 1} / {cards.length}</Text>
+          <Text style={s.progressText}>{currentIndex + 1} / {sessionCards.length}</Text>
         </View>
       </View>
 
-      {/* Badge maîtrise */}
-      <View style={styles.masteryRow}>
-        <View style={[styles.masteryBadge, {
-          backgroundColor: masteryLevel === 'maîtrisé' ? COLORS.successLight
-            : masteryLevel === 'en cours' ? COLORS.warningLight : COLORS.surfaceAlt,
-        }]}>
-          <Text style={styles.masteryText}>
-            {masteryLevel === 'maîtrisé' ? '✅' : masteryLevel === 'en cours' ? '🔄' : '🆕'} {masteryLevel}
+      {/* Mastery Badge */}
+      <View style={s.masteryRow}>
+        <View style={[s.masteryBadge, { backgroundColor: mastery === 'mastered' ? COLORS.successLight : mastery === 'learning' ? COLORS.warningLight : COLORS.surfaceAlt }]}>
+          <Text style={s.masteryText}>
+            {mastery === 'mastered' ? '✅ Maîtrisé' : mastery === 'learning' ? '🔄 En cours' : '🆕 Nouveau'}
           </Text>
         </View>
-        {reviewData && (
-          <Text style={styles.nextReview}>
-            Prochaine révision : {new Date(reviewData.nextReviewDate).toLocaleDateString('fr-FR')}
-          </Text>
-        )}
       </View>
 
-      {/* Carte flip */}
-      <Animated.View style={[styles.cardWrap, {
-        transform: [{ translateX: slideAnim }],
-        opacity: opacityAnim,
-      }]}>
-        {/* Face avant (polonais) */}
-        <Animated.View style={[styles.card, styles.cardFront, {
-          transform: [{ rotateY: frontRotate }],
-          opacity: frontOpacity,
-        }]}>
-          <Text style={styles.cardHint}>🇵🇱 Polonais</Text>
-          <Text style={styles.cardWord}>{current.front}</Text>
-          <Text style={styles.cardPhonetic}>{current.phonetic}</Text>
-          <View style={styles.cardDivider} />
-          <Text style={styles.cardExample} numberOfLines={2}>{current.examplePl}</Text>
-          <TouchableOpacity style={styles.tapHint} onPress={flip}>
-            <Text style={styles.tapHintText}>Appuyez pour révéler →</Text>
+      {/* Card */}
+      <Animated.View style={[s.cardWrap, { transform: [{ translateX: slideAnim }], opacity: opacityAnim }]}>
+        <Animated.View style={[s.card, s.cardFront, { transform: [{ rotateY: frontRotate }], opacity: frontOpacity }]}>
+          <Text style={s.cardHint}>🇵🇱 Polonais</Text>
+          <Text style={s.cardWord}>{current.front}</Text>
+          <Text style={s.cardPhonetic}>{current.phonetic}</Text>
+          <View style={s.cardDivider} />
+          <Text style={s.cardExample}>{current.examplePl}</Text>
+          <TouchableOpacity style={s.tapHint} onPress={handleFlip}>
+            <Text style={s.tapHintText}>Appuyez pour révéler →</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Face arrière (français) */}
-        <Animated.View style={[styles.card, styles.cardBack, {
-          transform: [{ rotateY: backRotate }],
-          opacity: backOpacity,
-        }]}>
-          <Text style={styles.cardHint}>🇫🇷 Français</Text>
-          <Text style={styles.cardWordBack}>{current.back}</Text>
-          <View style={styles.cardDivider} />
-          <Text style={styles.cardWord} numberOfLines={1}>{current.front}</Text>
-          <Text style={styles.cardPhonetic}>{current.phonetic}</Text>
-          <Text style={styles.cardExample} numberOfLines={2}>{current.exampleFr}</Text>
+        <Animated.View style={[s.card, s.cardBack, { transform: [{ rotateY: backRotate }], opacity: backOpacity }]}>
+          <Text style={s.cardHint}>🇫🇷 Français</Text>
+          <Text style={s.cardWordBack}>{current.back}</Text>
+          <View style={s.cardDivider} />
+          <Text style={s.cardWordSmall}>{current.front}</Text>
+          <Text style={s.cardExample}>{current.exampleFr}</Text>
         </Animated.View>
       </Animated.View>
 
-      {/* Bouton retourner (si pas encore retourné) */}
-      {phase === 'card' && (
-        <TouchableOpacity style={styles.flipBtn} onPress={flip}>
-          <Text style={styles.flipBtnText}>🔄 Retourner la carte</Text>
+      {/* Buttons */}
+      {!showRating ? (
+        <TouchableOpacity style={s.flipBtn} onPress={handleFlip}>
+          <Text style={s.flipBtnText}>🔄 Retourner la carte</Text>
         </TouchableOpacity>
-      )}
-
-      {/* Boutons de notation SRS (après retournement) */}
-      {phase === 'rating' && (
-        <View style={styles.ratingWrap}>
-          <Text style={styles.ratingLabel}>Vous connaissiez ce mot ?</Text>
-          <View style={styles.ratingRow}>
-            <TouchableOpacity
-              style={[styles.ratingBtn, styles.ratingBtnNo]}
-              onPress={() => rateCard(0)}
-            >
-              <Text style={styles.ratingBtnEmoji}>😔</Text>
-              <Text style={[styles.ratingBtnText, { color: COLORS.error }]}>Non</Text>
-              <Text style={styles.ratingBtnSub}>Revoir bientôt</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.ratingBtn, styles.ratingBtnAlmost]}
-              onPress={() => rateCard(3)}
-            >
-              <Text style={styles.ratingBtnEmoji}>🤔</Text>
-              <Text style={[styles.ratingBtnText, { color: COLORS.warning }]}>À peu près</Text>
-              <Text style={styles.ratingBtnSub}>Dans quelques jours</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.ratingBtn, styles.ratingBtnYes]}
-              onPress={() => rateCard(5)}
-            >
-              <Text style={styles.ratingBtnEmoji}>😄</Text>
-              <Text style={[styles.ratingBtnText, { color: COLORS.success }]}>Oui !</Text>
-              <Text style={styles.ratingBtnSub}>Dans longtemps</Text>
-            </TouchableOpacity>
+      ) : (
+        <View style={s.ratingWrap}>
+          <Text style={s.ratingLabel}>Connaissiez-vous ce mot ?</Text>
+          <View style={s.ratingRow}>
+            <RatingBtn emoji="😔" label="Non" sub="Bientôt" color={COLORS.error} onPress={() => handleRate(0)} />
+            <RatingBtn emoji="🤔" label="Moyen" sub="Quelques jours" color={COLORS.warning} onPress={() => handleRate(3)} />
+            <RatingBtn emoji="😄" label="Oui !" sub="Longtemps" color={COLORS.success} onPress={() => handleRate(5)} />
           </View>
         </View>
       )}
@@ -232,130 +210,70 @@ export default function FlashcardScreen() {
   );
 }
 
-// ── ÉCRAN FIN DE SESSION ─────────────────────────────────────
-function CompletedView({ total, done, onBack }: { total: number; done: number; onBack: () => void }) {
+function RatingBtn({ emoji, label, sub, color, onPress }: any) {
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={comp.container}>
-        <Text style={comp.emoji}>🎉</Text>
-        <Text style={comp.title}>Session terminée !</Text>
-        <Text style={comp.sub}>{done} cartes révisées sur {total}</Text>
-        <View style={comp.statsRow}>
-          <View style={comp.stat}>
-            <Text style={[comp.statVal, { color: COLORS.success }]}>{done}</Text>
-            <Text style={comp.statLabel}>Révisées</Text>
-          </View>
-          <View style={comp.stat}>
-            <Text style={[comp.statVal, { color: COLORS.primary }]}>{total - done}</Text>
-            <Text style={comp.statLabel}>Restantes</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={comp.btn} onPress={onBack}>
-          <Text style={comp.btnText}>Retour →</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <TouchableOpacity style={[s.ratingBtn, { borderColor: color + '40' }]} onPress={onPress}>
+      <Text style={s.ratingBtnEmoji}>{emoji}</Text>
+      <Text style={[s.ratingBtnText, { color }]}>{label}</Text>
+      <Text style={s.ratingBtnSub}>{sub}</Text>
+    </TouchableOpacity>
   );
 }
 
-const comp = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl },
-  emoji: { fontSize: 72, marginBottom: SPACING.md },
-  title: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary, marginBottom: 8 },
-  sub: { fontSize: 15, color: COLORS.textSecondary, marginBottom: SPACING.xl },
-  statsRow: { flexDirection: 'row', gap: 24, marginBottom: SPACING.xl },
-  stat: { alignItems: 'center' },
-  statVal: { fontSize: 36, fontWeight: '900' },
-  statLabel: { fontSize: 12, color: COLORS.textMuted, marginTop: 4 },
-  btn: {
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, paddingHorizontal: SPACING.xxl,
-  },
-  btnText: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
-});
-
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
-
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: SPACING.lg,
-  },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: COLORS.surfaceAlt,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: SPACING.lg },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '700' },
   progressWrap: { flex: 1, gap: 6 },
-  progressTrack: {
-    height: 6, backgroundColor: COLORS.surfaceAlt,
-    borderRadius: BORDER_RADIUS.full, overflow: 'hidden',
-  },
+  progressTrack: { height: 6, backgroundColor: COLORS.surfaceAlt, borderRadius: BORDER_RADIUS.full, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full },
   progressText: { fontSize: 11, color: COLORS.textMuted, textAlign: 'right' },
 
-  masteryRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg, marginBottom: SPACING.sm,
-  },
-  masteryBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: BORDER_RADIUS.full },
+  introWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.md },
+  introEmoji: { fontSize: 72 },
+  introTitle: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary, textAlign: 'center' },
+  introDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center' },
+  introStats: { marginVertical: SPACING.lg },
+  introStat: { alignItems: 'center' },
+  introStatVal: { fontSize: 48, fontWeight: '900', color: COLORS.primary },
+  introStatLabel: { fontSize: 12, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
+  startBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, paddingHorizontal: SPACING.xxl, width: '100%', alignItems: 'center' },
+  startBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
+
+  completedWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.md },
+  completedEmoji: { fontSize: 72 },
+  completedTitle: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary },
+  completedSub: { fontSize: 16, color: COLORS.textSecondary, marginBottom: SPACING.lg },
+  homeBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, paddingHorizontal: SPACING.xxl, width: '100%', alignItems: 'center' },
+  homeBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
+
+  masteryRow: { paddingHorizontal: SPACING.lg, marginBottom: SPACING.sm },
+  masteryBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: BORDER_RADIUS.full, alignSelf: 'flex-start' },
   masteryText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
-  nextReview: { fontSize: 11, color: COLORS.textMuted },
 
-  cardWrap: {
-    flex: 1, marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-
-  card: {
-    position: 'absolute', inset: 0,
-    backgroundColor: COLORS.white,
-    borderRadius: 24,
-    padding: SPACING.xl,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 16, elevation: 6,
-    backfaceVisibility: 'hidden',
-    gap: SPACING.sm,
-  },
+  cardWrap: { flex: 1, marginHorizontal: SPACING.lg, marginBottom: SPACING.md },
+  card: { position: 'absolute', inset: 0, backgroundColor: COLORS.white, borderRadius: 24, padding: SPACING.xl, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 16, elevation: 6, backfaceVisibility: 'hidden', gap: SPACING.sm },
   cardFront: { borderTopWidth: 4, borderTopColor: COLORS.primary },
   cardBack: { borderTopWidth: 4, borderTopColor: COLORS.success },
-
   cardHint: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600', letterSpacing: 0.5 },
   cardWord: { fontSize: 36, fontWeight: '900', color: COLORS.primary, textAlign: 'center' },
   cardWordBack: { fontSize: 32, fontWeight: '900', color: COLORS.success, textAlign: 'center' },
+  cardWordSmall: { fontSize: 18, color: COLORS.textMuted, fontWeight: '600' },
   cardPhonetic: { fontSize: 16, color: COLORS.textMuted, fontStyle: 'italic' },
   cardDivider: { width: '40%', height: 1, backgroundColor: COLORS.surfaceAlt, marginVertical: 4 },
   cardExample: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', fontStyle: 'italic', lineHeight: 20 },
-  tapHint: {
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.primary + '15',
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: BORDER_RADIUS.full,
-  },
+  tapHint: { marginTop: SPACING.md, backgroundColor: COLORS.primary + '15', paddingHorizontal: 16, paddingVertical: 8, borderRadius: BORDER_RADIUS.full },
   tapHintText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
 
-  flipBtn: {
-    marginHorizontal: SPACING.lg, marginBottom: SPACING.lg,
-    backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
-    paddingVertical: 16, alignItems: 'center',
-  },
+  flipBtn: { marginHorizontal: SPACING.lg, marginBottom: SPACING.lg, backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   flipBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
 
   ratingWrap: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
-  ratingLabel: {
-    fontSize: 14, color: COLORS.textSecondary, fontWeight: '600',
-    textAlign: 'center', marginBottom: SPACING.md,
-  },
+  ratingLabel: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center', marginBottom: SPACING.md },
   ratingRow: { flexDirection: 'row', gap: 10 },
-  ratingBtn: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    padding: SPACING.md, borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 2, gap: 4,
-  },
-  ratingBtnNo: { backgroundColor: COLORS.errorLight, borderColor: COLORS.error + '40' },
-  ratingBtnAlmost: { backgroundColor: COLORS.warningLight, borderColor: COLORS.warning + '40' },
-  ratingBtnYes: { backgroundColor: COLORS.successLight, borderColor: COLORS.success + '40' },
+  ratingBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.md, borderRadius: BORDER_RADIUS.xl, borderWidth: 2, gap: 4, backgroundColor: COLORS.white },
   ratingBtnEmoji: { fontSize: 24 },
   ratingBtnText: { fontSize: 13, fontWeight: '800' },
   ratingBtnSub: { fontSize: 10, color: COLORS.textMuted, textAlign: 'center' },

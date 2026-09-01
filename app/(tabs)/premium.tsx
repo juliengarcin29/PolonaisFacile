@@ -9,7 +9,6 @@ const FEATURES = [
   { emoji: '📵', title: 'Hors ligne complet', desc: 'Apprenez sans connexion internet' },
   { emoji: '🚫', title: 'Sans publicités', desc: 'Expérience fluide et immersive' },
   { emoji: '🎤', title: 'Dictées & Dialogues', desc: '20 dictées et 20 dialogues réels' },
-  { emoji: '🤖', title: 'IA conversationnelle', desc: 'Pratiquez avec un locuteur virtuel' },
   { emoji: '📊', title: 'Statistiques avancées', desc: 'Suivez précisément vos progrès' },
 ];
 

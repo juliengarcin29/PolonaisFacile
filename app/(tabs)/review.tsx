@@ -3,6 +3,7 @@
 // ============================================================
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 
 const SAMPLE_CARDS = [
@@ -24,7 +25,10 @@ export default function ReviewScreen() {
           <Text style={s.dueEmoji}>🧠</Text>
           <Text style={s.dueCount}>12</Text>
           <Text style={s.dueLabel}>cartes à réviser aujourd'hui</Text>
-          <TouchableOpacity style={s.startBtn}>
+          <TouchableOpacity
+            style={s.startBtn}
+            onPress={() => router.push('/flashcard/all')}
+          >
             <Text style={s.startBtnText}>Commencer la révision →</Text>
           </TouchableOpacity>
         </View>

@@ -6,9 +6,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, Animated, Dimensions,
+  Animated, Dimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/userStore';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { QUIZZES } from '@/content/quizzes/quizzes';
@@ -27,6 +28,7 @@ interface QuizState {
 }
 
 export default function QuizScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addXP } = useUserStore();
 
@@ -186,9 +188,9 @@ export default function QuizScreen() {
   const timerColor = timeLeft <= 5 ? COLORS.error : timeLeft <= 10 ? COLORS.warning : COLORS.primary;
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['left', 'right', 'bottom']}>
       {/* Header */}
-      <View style={s.header}>
+      <View style={[s.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={s.closeBtn} onPress={() => router.back()}>
           <Text style={s.closeTxt}>✕</Text>
         </TouchableOpacity>

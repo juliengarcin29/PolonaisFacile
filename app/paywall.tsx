@@ -48,7 +48,6 @@ const FEATURES = [
   { emoji: '📵', text: 'Mode hors ligne complet' },
   { emoji: '🚫', text: 'Zéro publicité' },
   { emoji: '🎤', text: '20 dictées et 20 dialogues réels' },
-  { emoji: '🤖', text: 'IA conversationnelle polonaise' },
   { emoji: '📊', text: 'Statistiques avancées' },
   { emoji: '🔊', text: 'Tous les audios natifs' },
 ];
