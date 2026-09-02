@@ -96,6 +96,32 @@ export const DIALOGUES: Dialogue[] = [
       { id: 'l8', speaker: 'B', speakerName: 'Pani', text: 'Nie ma za co! Miłego pobytu w Krakowie!', translation: 'De rien ! Bon séjour à Cracovie !' },
     ],
   },
+  {
+    id: 'dialogue_04',
+    title: 'À l\'hôtel',
+    context: 'Marek arrive à la réception d\'un hôtel à Cracovie pour s\'enregistrer.',
+    emoji: '🏨',
+    difficulty: 'A2',
+    xpReward: 110,
+    vocabulary: [
+      { pl: 'Rezerwacja', fr: 'Réservation' },
+      { pl: 'Pokój', fr: 'Chambre' },
+      { pl: 'Klucz', fr: 'Clé' },
+      { pl: 'Dowód osobisty', fr: 'Carte d\'identité' },
+    ],
+    lines: [
+      { id: 'l1', speaker: 'A', speakerName: 'Recepcjonistka', text: 'Dzień dobry! W czym mogę pomóc?', translation: 'Bonjour ! Comment puis-je vous aider ?' },
+      { id: 'l2', speaker: 'B', speakerName: 'Marek', text: 'Dzień dobry. Mam rezerwację na nazwisko Marek Nowak.', translation: 'Bonjour. J\'ai une réservation au nom de Marek Nowak.' },
+      { id: 'l3', speaker: 'A', speakerName: 'Recepcjonistka', text: 'Chwileczkę... Tak, zgadza się. Pokój jednoosobowy na dwie noce?', translation: 'Un instant... Oui, c\'est exact. Une chambre simple pour deux nuits ?' },
+      { id: 'l4', speaker: 'B', speakerName: 'Marek', text: 'Tak, zgadza się. Czy śniadanie jest wliczone w cenę?', translation: 'Oui, c\'est exact. Est-ce que le petit-déjeuner est inclus dans le prix ?' },
+      { id: 'l5', speaker: 'A', speakerName: 'Recepcjonistka', text: 'Tak, śniadanie serwujemy od siódmej do dziesiątej. Poproszę o dowód osobisty.', translation: 'Oui, nous servons le petit-déjeuner de 7h à 10h. Votre carte d\'identité, s\'il vous plaît.' },
+      { id: 'l6', speaker: 'B', speakerName: 'Marek', text: 'Proszę bardzo. Oto mój dowód.', translation: 'Voilà. Voici ma carte.' },
+      { id: 'l7', speaker: 'A', speakerName: 'Recepcjonistka', text: 'Dziękuję. To jest pana klucz. Pokój numer dwieście cztery na drugim piętrze.', translation: 'Merci. Voici votre clé. Chambre numéro 204 au deuxième étage.' },
+      { id: 'l8', speaker: 'B', speakerName: 'Marek', text: 'Dziękuję bardzo. Gdzie jest winda?', translation: 'Merci beaucoup. Où est l\'ascenseur ?' },
+      { id: 'l9', speaker: 'A', speakerName: 'Recepcjonistka', text: 'Winda jest po lewej stronie, za schodami.', translation: 'L\'ascenseur est sur la gauche, derrière les escaliers.' },
+      { id: 'l10', speaker: 'B', speakerName: 'Marek', text: 'Dziękuję, do widzenia.', translation: 'Merci, au revoir.' },
+    ],
+  },
 ];
 
 export function getDialogueById(id: string): Dialogue | undefined {

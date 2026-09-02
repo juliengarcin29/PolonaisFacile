@@ -190,7 +190,14 @@ export default function FlashcardScreen() {
             <View style={s.wordRow}>
               <Text style={s.cardWord}>{current.front}</Text>
               <TouchableOpacity
+<<<<<<< HEAD
                 onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
+=======
+                onPress={(e) => {
+                  e.stopPropagation();
+                  playAudio(current.front);
+                }}
+>>>>>>> 2ee42eb (save : version stable avec dialogue hotel)
                 style={s.audioBtnSmall}
               >
                 <Text style={{ fontSize: 24 }}>🔊</Text>
@@ -211,7 +218,14 @@ export default function FlashcardScreen() {
               <View style={s.wordRowSmall}>
                 <Text style={s.cardWordSmall}>{current.front}</Text>
                 <TouchableOpacity
+<<<<<<< HEAD
                   onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
+=======
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    playAudio(current.front);
+                  }}
+>>>>>>> 2ee42eb (save : version stable avec dialogue hotel)
                 >
                   <Text style={{ fontSize: 18 }}>🔊</Text>
                 </TouchableOpacity>
@@ -221,7 +235,14 @@ export default function FlashcardScreen() {
                 <View style={s.wordRowSmall}>
                   <Text style={s.cardExamplePl}>{current.examplePl}</Text>
                   <TouchableOpacity
+<<<<<<< HEAD
                     onPress={(e) => { e.stopPropagation(); playAudio(current.examplePl); }}
+=======
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      playAudio(current.examplePl);
+                    }}
+>>>>>>> 2ee42eb (save : version stable avec dialogue hotel)
                   >
                     <Text style={{ fontSize: 18 }}>🔊</Text>
                   </TouchableOpacity>

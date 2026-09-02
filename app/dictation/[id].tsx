@@ -202,10 +202,17 @@ export default function DictationScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
+<<<<<<< HEAD
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={s.exerciseWrap}
+=======
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={[s.exerciseWrap, { paddingBottom: insets.bottom + 40 }]}
+>>>>>>> 2ee42eb (save : version stable avec dialogue hotel)
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -255,6 +262,7 @@ export default function DictationScreen() {
               <Text style={s.feedbackTranslation}>{feedbackResult.sentence.translation}</Text>
             </Animated.View>
           )}
+<<<<<<< HEAD
         </ScrollView>
 
         {/* Footer fixe avec Safe Area */}
@@ -275,6 +283,28 @@ export default function DictationScreen() {
             </TouchableOpacity>
           )}
         </View>
+=======
+
+          {/* Boutons d'action déplacés ici (sous l'input) */}
+          <View style={s.actionArea}>
+            {phase === 'writing' && (
+              <TouchableOpacity
+                style={[s.submitBtn, userInput.trim().length === 0 && s.submitBtnDisabled]}
+                onPress={handleSubmit}
+                disabled={userInput.trim().length === 0}
+              >
+                <Text style={s.submitBtnTxt}>Vérifier →</Text>
+              </TouchableOpacity>
+            )}
+
+            {phase === 'feedback' && (
+              <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
+                <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Terminer' : 'Suivant →'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+>>>>>>> 2ee42eb (save : version stable avec dialogue hotel)
       </KeyboardAvoidingView>
     </View>
   );
@@ -323,12 +353,12 @@ const s = StyleSheet.create({
   feedbackText: { fontSize: 17, fontWeight: '700', color: COLORS.textPrimary },
   feedbackTranslation: { fontSize: 14, color: COLORS.textSecondary, fontStyle: 'italic' },
 
-  footer: { paddingHorizontal: SPACING.lg, backgroundColor: COLORS.white, borderTopWidth: 1, borderTopColor: COLORS.surfaceAlt },
-  submitBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center', marginTop: 12 },
+  actionArea: { marginTop: SPACING.md },
+  submitBtn: { backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
 
-  nextBtn: { backgroundColor: COLORS.success, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center', marginTop: 12 },
+  nextBtn: { backgroundColor: COLORS.success, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   nextBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
 
   completedWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.md },

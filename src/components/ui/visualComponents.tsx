@@ -327,7 +327,13 @@ export function WordCard({
           {phonetic && <Text style={wc.compactPhonetic}>{phonetic}</Text>}
         </View>
         <Text style={wc.compactFr}>{fr}</Text>
-        <TouchableOpacity style={wc.soundBtn} onPress={playWord}>
+        <TouchableOpacity
+          style={wc.soundBtn}
+          onPress={(e) => {
+            e.stopPropagation();
+            playWord();
+          }}
+        >
           <Text style={wc.soundIcon}>{isPlaying ? '🔉' : '🔊'}</Text>
         </TouchableOpacity>
         {isLearned && <Text style={wc.learnedBadge}>✓</Text>}
@@ -347,7 +353,13 @@ export function WordCard({
           <Text style={wc.plWord}>{pl}</Text>
           {phonetic && <Text style={wc.phoneticText}>{phonetic}</Text>}
         </View>
-        <TouchableOpacity style={wc.audioBtn} onPress={playWord}>
+        <TouchableOpacity
+          style={wc.audioBtn}
+          onPress={(e) => {
+            e.stopPropagation();
+            playWord();
+          }}
+        >
           <Text style={wc.audioIcon}>{isPlaying ? '🔉' : '🔊'}</Text>
         </TouchableOpacity>
       </View>

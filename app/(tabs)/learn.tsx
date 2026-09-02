@@ -13,6 +13,8 @@ import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { getLessonsByModule, ALL_LOCAL_LESSONS } from '@/content/lessons';
+import { DIALOGUES as DIALOGUE_DATA } from '@/content/dialogues/dialogues';
+import { DICTATIONS as DICTATION_DATA } from '@/content/dictations/dictations';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import type { DifficultyLevel } from '@/types';
 
@@ -69,6 +71,15 @@ export default function LearnScreen() {
   const totalLessons = ALL_LOCAL_LESSONS.length;
   const totalCompleted = user?.progress.completedLessons.length || 0;
   const globalProgress = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0;
+
+  // Filtrer uniquement les dialogues et dictées qui ont du contenu réel
+  const availableDialogues = useMemo(() => {
+    return DIALOGUES.filter(d => DIALOGUE_DATA.some(data => data.id === d.id));
+  }, []);
+
+  const availableDictations = useMemo(() => {
+    return DICTEES.filter(d => DICTATION_DATA.some(data => data.id === d.id));
+  }, []);
 
   const TABS: Array<{ id: LearnTab; label: string; emoji: string }> = [
     { id: 'modules', label: 'Leçons', emoji: '📚' },
@@ -172,7 +183,7 @@ export default function LearnScreen() {
         {/* ── DIALOGUES ── */}
         {activeTab === 'dialogues' && (
           <View style={s.content}>
-            {DIALOGUES.map((dlg) => (
+            {availableDialogues.map((dlg) => (
               <TouchableOpacity
                 key={dlg.id}
                 style={s.contentCard}
@@ -200,7 +211,7 @@ export default function LearnScreen() {
         {/* ── DICTÉES ── */}
         {activeTab === 'dictees' && (
           <View style={s.content}>
-            {DICTEES.map((dict) => (
+            {availableDictations.map((dict) => (
               <TouchableOpacity
                 key={dict.id}
                 style={s.contentCard}
