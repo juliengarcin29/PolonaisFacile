@@ -1,19 +1,50 @@
 // ============================================================
 // app/(tabs)/review.tsx — Onglet Réviser (SRS)
 // ============================================================
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
-
-const SAMPLE_CARDS = [
-  { pl: 'Dziękuję', phonetic: '[dʑɛŋkujɛ]', fr: 'Merci', emoji: '✅', color: COLORS.success },
-  { pl: 'Przepraszam', phonetic: '[pʂɛˈpraʂam]', fr: 'Pardon / Excusez-moi', emoji: '🔄', color: COLORS.warning },
-  { pl: 'Dobry wieczór', phonetic: '[ˈdɔbrɨ ˈvjɛtʂur]', fr: 'Bonsoir', emoji: '✅', color: COLORS.success },
-  { pl: 'Proszę', phonetic: '[ˈprɔʂɛ]', fr: 'S\'il vous plaît / Voici', emoji: '⚠️', color: COLORS.error },
-];
+import { useFlashcards } from '@/hooks/useFlashcards';
+import { FLASHCARDS } from '@/content/flashcards/flashcards';
 
 export default function ReviewScreen() {
+  const { getSessionStats, isLoading, reviews } = useFlashcards(FLASHCARDS);
+  const [stats, setStats] = useState({ dueCount: 0, newCount: 0, reviewCount: 0 });
+
+  // Rafraîchir les stats quand l'onglet gagne le focus
+  useFocusEffect(
+    useCallback(() => {
+      const s = getSessionStats();
+      setStats({
+        dueCount: s.dueCount,
+        newCount: s.newCount,
+        reviewCount: s.reviewCount
+      });
+    }, [getSessionStats, reviews])
+  );
+
+  // Calculer les compteurs demandés
+  const masteredCount = Object.values(reviews).filter(r => r.repetitions >= 5).length;
+  const inProgressCount = Object.values(reviews).filter(r => r.repetitions > 0 && r.repetitions < 5).length;
+  const toReviewCount = stats.dueCount;
+
+  // Flashcards récentes (5 dernières révisées)
+  const recentCards = Object.values(reviews)
+    .sort((a, b) => new Date(b.lastReviewDate).getTime() - new Date(a.lastReviewDate).getTime())
+    .slice(0, 5)
+    .map(r => FLASHCARDS.find(f => f.id === r.flashcardId))
+    .filter(Boolean);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={s.safe}>
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ flex: 1 }} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -21,22 +52,27 @@ export default function ReviewScreen() {
           <Text style={s.title}>Réviser</Text>
           <Text style={s.subtitle}>Répétition espacée intelligente (SM-2)</Text>
         </View>
+
         <View style={s.dueCard}>
           <Text style={s.dueEmoji}>🧠</Text>
-          <Text style={s.dueCount}>12</Text>
+          <Text style={s.dueCount}>{toReviewCount}</Text>
           <Text style={s.dueLabel}>cartes à réviser aujourd'hui</Text>
           <TouchableOpacity
-            style={s.startBtn}
-            onPress={() => router.push('/flashcard/all')}
+            style={[s.startBtn, toReviewCount === 0 && s.startBtnDisabled]}
+            onPress={() => toReviewCount > 0 && router.push('/flashcard/all')}
+            disabled={toReviewCount === 0}
           >
-            <Text style={s.startBtnText}>Commencer la révision →</Text>
+            <Text style={s.startBtnText}>
+              {toReviewCount > 0 ? 'Commencer la révision →' : 'Tout est à jour !'}
+            </Text>
           </TouchableOpacity>
         </View>
+
         <View style={s.statsRow}>
           {[
-            { label: 'Apprises', value: '48', emoji: '✅', color: COLORS.success },
-            { label: 'En cours', value: '23', emoji: '🔄', color: COLORS.warning },
-            { label: 'À revoir', value: '12', emoji: '⚠️', color: COLORS.error },
+            { label: 'Apprises', value: masteredCount, emoji: '✅', color: COLORS.success },
+            { label: 'En cours', value: inProgressCount, emoji: '🔄', color: COLORS.warning },
+            { label: 'À revoir', value: toReviewCount, emoji: '⚠️', color: COLORS.error },
           ].map((stat) => (
             <View key={stat.label} style={[s.statBox, { borderTopColor: stat.color }]}>
               <Text style={s.statEmoji}>{stat.emoji}</Text>
@@ -45,19 +81,24 @@ export default function ReviewScreen() {
             </View>
           ))}
         </View>
-        <Text style={s.sectionTitle}>📋 Flashcards récentes</Text>
-        {SAMPLE_CARDS.map((card) => (
-          <View key={card.pl} style={s.flashRow}>
-            <View style={s.flashLeft}>
-              <Text style={s.flashPl}>{card.pl}</Text>
-              <Text style={s.flashPhonetic}>{card.phonetic}</Text>
-            </View>
-            <Text style={s.flashFr}>{card.fr}</Text>
-            <View style={[s.flashStatus, { backgroundColor: card.color + '22' }]}>
-              <Text style={{ fontSize: 14 }}>{card.emoji}</Text>
-            </View>
-          </View>
-        ))}
+
+        {recentCards.length > 0 && (
+          <>
+            <Text style={s.sectionTitle}>📋 Flashcards récentes</Text>
+            {recentCards.map((card: any) => (
+              <View key={card.id} style={s.flashRow}>
+                <View style={s.flashLeft}>
+                  <Text style={s.flashPl}>{card.front}</Text>
+                  <Text style={s.flashPhonetic}>{card.phonetic}</Text>
+                </View>
+                <Text style={s.flashFr}>{card.back}</Text>
+                <View style={[s.flashStatus, { backgroundColor: COLORS.success + '22' }]}>
+                  <Text style={{ fontSize: 14 }}>✅</Text>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
         <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
@@ -79,6 +120,10 @@ const s = StyleSheet.create({
   startBtn: {
     backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.full,
     paddingVertical: 13, paddingHorizontal: SPACING.xl,
+  },
+  startBtnDisabled: {
+    opacity: 0.5,
+    backgroundColor: COLORS.surfaceAlt,
   },
   startBtnText: { color: COLORS.primary, fontSize: 15, fontWeight: '800' },
   statsRow: { flexDirection: 'row', gap: 12, marginHorizontal: SPACING.lg, marginBottom: SPACING.lg },

@@ -11,6 +11,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/userStore';
+import { useGamification } from '@/hooks/useGamification';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { QUIZZES } from '@/content/quizzes/quizzes';
 import type { QuizQuestion } from '@/types';
@@ -31,6 +32,7 @@ export default function QuizScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addXP } = useUserStore();
+  const { completeQuiz } = useGamification();
 
   // Trouver le quiz ou utiliser le premier par défaut
   const quiz = QUIZZES.find(q => q.id === id) ?? QUIZZES[0];
@@ -150,8 +152,9 @@ export default function QuizScreen() {
 
       if (currentIndex + 1 >= questions.length) {
         if (totalTimerRef.current) clearInterval(totalTimerRef.current);
-        setState(prev => ({ ...prev, timeSpent: totalTime }));
-        addXP(state.xpEarned);
+        const finalTime = totalTime;
+        setState(prev => ({ ...prev, timeSpent: finalTime }));
+        completeQuiz(quiz.id, state.correctCount, questions.length, finalTime);
         setPhase('completed');
       } else {
         setCurrentIndex(prev => prev + 1);

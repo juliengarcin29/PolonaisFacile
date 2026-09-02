@@ -19,7 +19,7 @@ type DialogueMode = 'loading' | 'error' | 'read' | 'quiz' | 'completed';
 // ── Composant principal ──────────────────────────────────────
 export default function DialogueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { awardXP } = useGamification();
+  const { awardXP, recordDailyActivity } = useGamification();
 
   const [dialogue, setDialogue] = useState<Dialogue | null>(null);
   const [mode, setMode] = useState<DialogueMode>('loading');
@@ -32,6 +32,7 @@ export default function DialogueScreen() {
   const [quizScore, setQuizScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [startTime] = useState(Date.now());
 
   const scrollRef = useRef<ScrollView>(null);
 
@@ -116,7 +117,10 @@ export default function DialogueScreen() {
     setTimeout(() => {
       if (quizIndex + 1 >= quizQuestions.length) {
         setMode('completed');
-        awardXP(dialogue.xpReward + quizScore * 10);
+        const finalXP = dialogue.xpReward + quizScore * 10;
+        awardXP(finalXP, '🤝 Dialogue maîtrisé !');
+        const timeSpent = Math.round((Date.now() - startTime) / 1000);
+        recordDailyActivity(Math.round(timeSpent / 60));
       } else {
         setQuizIndex(prev => prev + 1);
         setSelectedAnswer(null);

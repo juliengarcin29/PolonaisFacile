@@ -5,6 +5,7 @@
 
 import { BORDER_RADIUS, COLORS, GAMIFICATION, SPACING } from '@/constants';
 import { useUserStore } from '@/store/userStore';
+import { useGamification } from '@/hooks/useGamification';
 import { getLessonById } from '@/content/lessons';
 import type { Exercise, ExerciseAnswer, Lesson } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -29,7 +30,8 @@ type LessonPhase = 'loading' | 'error' | 'exercise' | 'feedback_correct' | 'feed
 export default function LessonScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { addXP, user } = useUserStore();
+  const { user } = useUserStore();
+  const { completeLesson } = useGamification();
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,6 +41,7 @@ export default function LessonScreen() {
   const [xpEarned, setXpEarned] = useState(0);
   const [answers, setAnswers] = useState<ExerciseAnswer[]>([]);
   const [lives, setLives] = useState(user?.hearts ?? 5);
+  const [startTime] = useState(Date.now());
   const [matchSelected, setMatchSelected] = useState<{ left?: string; right?: string }>({});
   const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
   const [wordOrderAnswer, setWordOrderAnswer] = useState<string[]>([]);
@@ -131,8 +134,9 @@ export default function LessonScreen() {
     setMatchSelected({});
 
     if (currentIndex + 1 >= exercises.length) {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      completeLesson(id, score, exercises.length, timeSpent);
       setPhase('completed');
-      addXP(xpEarned);
     } else {
       setCurrentIndex(prev => prev + 1);
       setPhase('exercise');

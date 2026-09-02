@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Speech from 'expo-speech';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
 import { useFlashcards } from '@/hooks/useFlashcards';
@@ -81,6 +82,11 @@ export default function FlashcardScreen() {
   const handleStart = () => {
     startSession();
     setPhase('card');
+  };
+
+  const playAudio = (text: string) => {
+    Speech.stop();
+    Speech.speak(text, { language: 'pl-PL', rate: 0.85 });
   };
 
   // Interpolations flip
@@ -171,27 +177,61 @@ export default function FlashcardScreen() {
         </View>
       </View>
 
-      {/* Card */}
-      <Animated.View style={[s.cardWrap, { transform: [{ translateX: slideAnim }], opacity: opacityAnim }]}>
-        <Animated.View style={[s.card, s.cardFront, { transform: [{ rotateY: frontRotate }], opacity: frontOpacity }]}>
-          <Text style={s.cardHint}>🇵🇱 Polonais</Text>
-          <Text style={s.cardWord}>{current.front}</Text>
-          <Text style={s.cardPhonetic}>{current.phonetic}</Text>
-          <View style={s.cardDivider} />
-          <Text style={s.cardExample}>{current.examplePl}</Text>
-          <TouchableOpacity style={s.tapHint} onPress={handleFlip}>
-            <Text style={s.tapHintText}>Appuyez pour révéler →</Text>
-          </TouchableOpacity>
-        </Animated.View>
+      {/* Card Container */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={handleFlip}
+        style={s.cardTouchable}
+      >
+        <Animated.View style={[s.cardWrap, { transform: [{ translateX: slideAnim }], opacity: opacityAnim }]}>
+          {/* Face avant (polonais) */}
+          <Animated.View style={[s.card, s.cardFront, { transform: [{ rotateY: frontRotate }], opacity: frontOpacity }]}>
+            <Text style={s.cardHint}>🇵🇱 Polonais • {current.tags[0]}</Text>
+            <View style={s.wordRow}>
+              <Text style={s.cardWord}>{current.front}</Text>
+              <TouchableOpacity
+                onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
+                style={s.audioBtnSmall}
+              >
+                <Text style={{ fontSize: 24 }}>🔊</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={s.cardPhonetic}>{current.phonetic}</Text>
+            <View style={s.cardDivider} />
+            <Text style={s.tapHintText}>Appuyez pour retourner →</Text>
+          </Animated.View>
 
-        <Animated.View style={[s.card, s.cardBack, { transform: [{ rotateY: backRotate }], opacity: backOpacity }]}>
-          <Text style={s.cardHint}>🇫🇷 Français</Text>
-          <Text style={s.cardWordBack}>{current.back}</Text>
-          <View style={s.cardDivider} />
-          <Text style={s.cardWordSmall}>{current.front}</Text>
-          <Text style={s.cardExample}>{current.exampleFr}</Text>
+          {/* Face arrière (français + détails) */}
+          <Animated.View style={[s.card, s.cardBack, { transform: [{ rotateY: backRotate }], opacity: backOpacity }]}>
+            <Text style={s.cardHint}>🇫🇷 Français</Text>
+            <Text style={s.cardWordBack}>{current.back}</Text>
+            <View style={s.cardDivider} />
+
+            <View style={s.backDetails}>
+              <View style={s.wordRowSmall}>
+                <Text style={s.cardWordSmall}>{current.front}</Text>
+                <TouchableOpacity
+                  onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
+                >
+                  <Text style={{ fontSize: 18 }}>🔊</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={s.exampleBox}>
+                <View style={s.wordRowSmall}>
+                  <Text style={s.cardExamplePl}>{current.examplePl}</Text>
+                  <TouchableOpacity
+                    onPress={(e) => { e.stopPropagation(); playAudio(current.examplePl); }}
+                  >
+                    <Text style={{ fontSize: 18 }}>🔊</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={s.cardExampleFr}>{current.exampleFr}</Text>
+              </View>
+            </View>
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
+      </TouchableOpacity>
 
       {/* Footer Area */}
       <View style={{ paddingBottom: insets.bottom + 16 }}>
@@ -263,19 +303,28 @@ const s = StyleSheet.create({
   masteryBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: BORDER_RADIUS.full, alignSelf: 'flex-start' },
   masteryText: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary },
 
+  cardTouchable: { flex: 1 },
   cardWrap: { flex: 1, marginHorizontal: SPACING.lg, marginBottom: SPACING.md },
   card: { position: 'absolute', inset: 0, backgroundColor: COLORS.white, borderRadius: 24, padding: SPACING.xl, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 16, elevation: 6, backfaceVisibility: 'hidden', gap: SPACING.sm },
   cardFront: { borderTopWidth: 4, borderTopColor: COLORS.primary },
   cardBack: { borderTopWidth: 4, borderTopColor: COLORS.success },
-  cardHint: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600', letterSpacing: 0.5 },
+
+  cardHint: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600', letterSpacing: 0.5, marginBottom: 8 },
+  wordRow: { flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'center' },
+  wordRowSmall: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' },
   cardWord: { fontSize: 36, fontWeight: '900', color: COLORS.primary, textAlign: 'center' },
   cardWordBack: { fontSize: 32, fontWeight: '900', color: COLORS.success, textAlign: 'center' },
-  cardWordSmall: { fontSize: 18, color: COLORS.textMuted, fontWeight: '600' },
-  cardPhonetic: { fontSize: 16, color: COLORS.textMuted, fontStyle: 'italic' },
-  cardDivider: { width: '40%', height: 1, backgroundColor: COLORS.surfaceAlt, marginVertical: 4 },
-  cardExample: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', fontStyle: 'italic', lineHeight: 20 },
-  tapHint: { marginTop: SPACING.md, backgroundColor: COLORS.primary + '15', paddingHorizontal: 16, paddingVertical: 8, borderRadius: BORDER_RADIUS.full },
-  tapHintText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  cardPhonetic: { fontSize: 18, color: COLORS.textMuted, fontStyle: 'italic' },
+  cardDivider: { width: '40%', height: 1, backgroundColor: COLORS.surfaceAlt, marginVertical: 12 },
+
+  backDetails: { width: '100%', gap: 16, alignItems: 'center' },
+  cardWordSmall: { fontSize: 20, color: COLORS.textPrimary, fontWeight: '700' },
+  exampleBox: { backgroundColor: COLORS.surfaceAlt, padding: 12, borderRadius: 16, width: '100%', gap: 4 },
+  cardExamplePl: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '600', textAlign: 'center' },
+  cardExampleFr: { fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic', textAlign: 'center' },
+
+  tapHintText: { fontSize: 13, color: COLORS.primary, fontWeight: '700', marginTop: 12 },
+  audioBtnSmall: { padding: 4 },
 
   flipBtn: { marginHorizontal: SPACING.lg, marginBottom: SPACING.lg, backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   flipBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '800' },

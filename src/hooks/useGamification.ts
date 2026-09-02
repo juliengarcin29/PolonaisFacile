@@ -235,6 +235,38 @@ export function useGamification() {
     return { xpEarned: totalXP, isPerfect };
   }, [user]);
 
+  // ── Terminer un quiz ─────────────────────────────────────
+  const completeQuiz = useCallback(async (
+    quizId: string,
+    score: number,
+    total: number,
+    timeSpentSeconds: number,
+  ) => {
+    if (!user) return;
+
+    const percentage = Math.round((score / total) * 100);
+    const passed = percentage >= 70; // score de passage par défaut
+    const xpReward = Math.round((score / total) * 100); // XP proportionnels au score
+
+    if (passed) {
+      const updatedProgress = {
+        ...user.progress,
+        completedQuizzes: [...new Set([...user.progress.completedQuizzes, quizId])],
+        totalTimeSpent: user.progress.totalTimeSpent + timeSpentSeconds,
+      };
+      updateUser({ progress: updatedProgress });
+    }
+
+    await awardXP(xpReward, passed ? '🎯 Quiz réussi !' : '🎯 Quiz terminé');
+    await recordDailyActivity(Math.round(timeSpentSeconds / 60));
+
+    if (percentage === 100) {
+      await checkAchievements({ quizScore: 100 });
+    }
+
+    return { xpEarned: xpReward, passed };
+  }, [user]);
+
   // ── Vérifier et débloquer les badges ────────────────────
   const checkAchievements = useCallback(async (params: {
     streak?: number;
@@ -307,6 +339,7 @@ export function useGamification() {
     recordDailyActivity,
     awardXP,
     completeLesson,
+    completeQuiz,
     checkAchievements,
     getDailyProgress,
     awardExerciseXP,

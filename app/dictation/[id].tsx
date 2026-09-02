@@ -1,14 +1,14 @@
 // ============================================================
 // app/dictation/[id].tsx
-// Écran de dictée — écouter et ordonner les mots
+// Écran de dictée — écouter et écrire le texte
 // Fonctionnalité Premium
 // ============================================================
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView,
-  Animated, ActivityIndicator,
+  Animated, ActivityIndicator, TextInput,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,15 +16,11 @@ import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDictationById, DictationExercise, DictationSentence } from '@/content/dictations/dictations';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
-import { shuffleArray } from '@/utils';
 
 type DictationPhase = 'loading' | 'error' | 'intro' | 'listening' | 'writing' | 'feedback' | 'completed';
 
-// Distracteurs génériques si on n'en a pas de spécifiques
-const GENERIC_DISTRACTORS = ['jestem', 'bardzo', 'tutaj', 'teraz', 'dobrze', 'może'];
-
 // ── Vérification de la réponse ────────────────────────────────
-function verifyAnswer(userWords: string[], correctAnswer: string): {
+function verifyAnswer(userInput: string, correctAnswer: string): {
   isCorrect: boolean;
   score: number;
 } {
@@ -33,11 +29,8 @@ function verifyAnswer(userWords: string[], correctAnswer: string): {
       .replace(/[.,!?;:]/g, '')
       .trim();
 
-  const userText = normalize(userWords.join(' '));
-  const correctText = normalize(correctAnswer);
-
-  const isCorrect = userText === correctText;
-  const score = isCorrect ? 100 : 0; // Dans ce mode, c'est binaire ou presque
+  const isCorrect = normalize(userInput) === normalize(correctAnswer);
+  const score = isCorrect ? 100 : 0;
 
   return { isCorrect, score };
 }
@@ -45,16 +38,13 @@ function verifyAnswer(userWords: string[], correctAnswer: string): {
 export default function DictationScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { awardXP } = useGamification();
+  const { awardXP, recordDailyActivity } = useGamification();
 
   const [dictation, setDictation] = useState<DictationExercise | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<DictationPhase>('loading');
 
-  // États pour le word-scramble
-  const [selectedWords, setSelectedWords] = useState<string[]>([]);
-  const [wordPool, setWordPool] = useState<string[]>([]);
-
+  const [userAnswer, setUserAnswer] = useState('');
   const [playCount, setPlayCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [results, setResults] = useState<Array<{
@@ -64,9 +54,11 @@ export default function DictationScreen() {
     isCorrect: boolean;
   }>>([]);
   const [totalXP, setTotalXP] = useState(0);
+  const [startTime] = useState(Date.now());
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const successAnim = useRef(new Animated.Value(0)).current;
+  const inputRef = useRef<TextInput>(null);
 
   // Charger la dictée
   useEffect(() => {
@@ -83,27 +75,6 @@ export default function DictationScreen() {
 
   const current = dictation?.sentences[currentIndex];
   const maxPlays = 3;
-
-  // Initialiser le pool de mots pour la phrase actuelle
-  useEffect(() => {
-    if (current && (phase === 'listening' || phase === 'writing')) {
-      const cleanSentence = current.text.replace(/[.,!?;:]/g, '');
-      const words = cleanSentence.split(/\s+/).filter(w => w.length > 0);
-
-      if (words.length === 0) {
-        setWordPool([]);
-        setSelectedWords([]);
-        return;
-      }
-
-      // Ajouter 2-3 distracteurs
-      const distractorsCount = Math.floor(Math.random() * 2) + 2; // 2 ou 3
-      const distractors = shuffleArray(GENERIC_DISTRACTORS).slice(0, distractorsCount);
-
-      setWordPool(shuffleArray([...words, ...distractors]));
-      setSelectedWords([]);
-    }
-  }, [currentIndex, phase, current]);
 
   const playSentence = useCallback(async (speed = 1.0) => {
     if (!current || isPlaying || playCount >= maxPlays) return;
@@ -131,27 +102,11 @@ export default function DictationScreen() {
     ]).start();
   };
 
-  const addWord = (word: string, poolIndex: number) => {
-    if (phase !== 'writing') return;
-    setSelectedWords([...selectedWords, word]);
-    const newPool = [...wordPool];
-    newPool.splice(poolIndex, 1);
-    setWordPool(newPool);
-  };
-
-  const removeWord = (word: string, selectedIndex: number) => {
-    if (phase !== 'writing') return;
-    const newSelected = [...selectedWords];
-    newSelected.splice(selectedIndex, 1);
-    setSelectedWords(newSelected);
-    setWordPool([...wordPool, word]);
-  };
-
   const handleSubmit = () => {
-    if (selectedWords.length === 0 || !current) return;
+    if (!userAnswer.trim() || !current) return;
 
-    const { isCorrect, score } = verifyAnswer(selectedWords, current.text);
-    const result = { sentence: current, userAnswer: selectedWords.join(' '), score, isCorrect };
+    const { isCorrect, score } = verifyAnswer(userAnswer, current.text);
+    const result = { sentence: current, userAnswer: userAnswer.trim(), score, isCorrect };
     setResults(prev => [...prev, result]);
 
     const xpEarned = isCorrect ? 30 : 5;
@@ -168,9 +123,13 @@ export default function DictationScreen() {
   const handleNext = () => {
     successAnim.setValue(0);
     setPlayCount(0);
+    setUserAnswer('');
 
     if (currentIndex + 1 >= (dictation?.sentences.length ?? 0)) {
-      awardXP(totalXP + (dictation?.xpReward ?? 0));
+      const finalXP = totalXP + (dictation?.xpReward ?? 0);
+      awardXP(finalXP, '🎤 Dictée terminée !');
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      recordDailyActivity(Math.round(timeSpent / 60));
       setPhase('completed');
     } else {
       setCurrentIndex(prev => prev + 1);
@@ -238,80 +197,84 @@ export default function DictationScreen() {
         <Text style={s.progressTxt}>{currentIndex + 1}/{dictation.sentences.length}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={s.exerciseWrap} showsVerticalScrollIndicator={false}>
-        <Text style={s.phaseLabel}>
-          {phase === 'listening' ? '🔊 Écoutez la phrase' :
-           phase === 'writing' ? '🧩 Ordonnez les mots' :
-           phase === 'feedback' ? (feedbackResult?.isCorrect ? '✅ Correct !' : '❌ Pas tout à fait...') : ''}
-        </Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={s.exerciseWrap}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={s.phaseLabel}>
+            {phase === 'listening' ? '🔊 Écoutez la phrase' :
+             phase === 'writing' ? '✍️ Écrivez ce que vous entendez' :
+             phase === 'feedback' ? (feedbackResult?.isCorrect ? '✅ Correct !' : '❌ Pas tout à fait...') : ''}
+          </Text>
 
-        {/* Boutons d'écoute */}
-        <View style={s.playButtons}>
-          <TouchableOpacity
-            style={[s.playBtn, (isPlaying || playCount >= maxPlays) && s.playBtnDisabled]}
-            onPress={() => playSentence(1.0)}
-            disabled={isPlaying || playCount >= maxPlays || phase === 'feedback'}
-          >
-            {isPlaying ? <ActivityIndicator color={COLORS.white} /> : <Text style={s.playBtnTxt}>🔊 Écouter ({playCount}/{maxPlays})</Text>}
-          </TouchableOpacity>
-        </View>
-
-        {/* Zone de mots sélectionnés (Word Scramble Area) */}
-        <Animated.View style={[s.selectedArea, { transform: [{ translateX: shakeAnim }] }]}>
-          {selectedWords.length === 0 ? (
-            <Text style={s.placeholderTxt}>Appuyez sur les mots ci-dessous...</Text>
-          ) : (
-            <View style={s.chipContainer}>
-              {selectedWords.map((word, i) => (
-                <TouchableOpacity key={`${word}-${i}`} style={s.wordChipSelected} onPress={() => removeWord(word, i)} disabled={phase === 'feedback'}>
-                  <Text style={s.wordTextSelected}>{word}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </Animated.View>
-
-        {/* Pool de mots (Word Pool Area) */}
-        {phase === 'writing' && (
-          <View style={s.poolArea}>
-            <View style={s.chipContainer}>
-              {wordPool.map((word, i) => (
-                <TouchableOpacity key={`${word}-${i}`} style={s.wordChip} onPress={() => addWord(word, i)}>
-                  <Text style={s.wordText}>{word}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {/* Boutons d'écoute */}
+          <View style={s.playButtons}>
+            <TouchableOpacity
+              style={[s.playBtn, (isPlaying || playCount >= maxPlays) && s.playBtnDisabled]}
+              onPress={() => playSentence(1.0)}
+              disabled={isPlaying || playCount >= maxPlays || phase === 'feedback'}
+            >
+              {isPlaying ? <ActivityIndicator color={COLORS.white} /> : <Text style={s.playBtnTxt}>🔊 Écouter ({playCount}/{maxPlays})</Text>}
+            </TouchableOpacity>
           </View>
-        )}
 
-        {/* Feedback détaillé */}
-        {phase === 'feedback' && feedbackResult && (
-          <Animated.View style={[s.feedbackBox, feedbackResult.isCorrect ? s.feedbackCorrect : s.feedbackWrong, { transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }]}>
-            <Text style={s.feedbackLabel}>Phrase correcte :</Text>
-            <Text style={s.feedbackText}>{feedbackResult.sentence.text}</Text>
-            <Text style={s.feedbackTranslation}>{feedbackResult.sentence.translation}</Text>
-          </Animated.View>
-        )}
-      </ScrollView>
+          {/* Saisie de texte */}
+          {(phase === 'writing' || phase === 'feedback') && (
+            <Animated.View style={[s.inputContainer, { transform: [{ translateX: shakeAnim }] }]}>
+              <TextInput
+                ref={inputRef}
+                style={[
+                  s.textInput,
+                  phase === 'feedback' && feedbackResult?.isCorrect && s.textInputCorrect,
+                  phase === 'feedback' && !feedbackResult?.isCorrect && s.textInputWrong,
+                ]}
+                value={userAnswer}
+                onChangeText={setUserAnswer}
+                placeholder="Écrivez ce que vous entendez..."
+                placeholderTextColor="#999"
+                multiline
+                autoCorrect={false}
+                autoCapitalize="sentences"
+                editable={phase === 'writing'}
+                textAlignVertical="top"
+              />
+            </Animated.View>
+          )}
 
-      {/* Footer fixe avec Safe Area */}
-      <View style={[s.footer, { paddingBottom: insets.bottom + 16 }]}>
-        {phase === 'writing' && (
-          <TouchableOpacity
-            style={[s.submitBtn, selectedWords.length === 0 && s.submitBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={selectedWords.length === 0}
-          >
-            <Text style={s.submitBtnTxt}>Vérifier →</Text>
-          </TouchableOpacity>
-        )}
+          {/* Feedback détaillé */}
+          {phase === 'feedback' && feedbackResult && (
+            <Animated.View style={[s.feedbackBox, feedbackResult.isCorrect ? s.feedbackCorrect : s.feedbackWrong, { transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }]}>
+              <Text style={s.feedbackLabel}>Phrase correcte :</Text>
+              <Text style={s.feedbackText}>{feedbackResult.sentence.text}</Text>
+              <Text style={s.feedbackTranslation}>{feedbackResult.sentence.translation}</Text>
+            </Animated.View>
+          )}
+        </ScrollView>
 
-        {phase === 'feedback' && (
-          <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
-            <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Terminer' : 'Suivant →'}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+        {/* Footer fixe avec Safe Area */}
+        <View style={[s.footer, { paddingBottom: insets.bottom + 16 }]}>
+          {phase === 'writing' && (
+            <TouchableOpacity
+              style={[s.submitBtn, userAnswer.trim().length === 0 && s.submitBtnDisabled]}
+              onPress={handleSubmit}
+              disabled={userAnswer.trim().length === 0}
+            >
+              <Text style={s.submitBtnTxt}>Vérifier →</Text>
+            </TouchableOpacity>
+          )}
+
+          {phase === 'feedback' && (
+            <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
+              <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Terminer' : 'Suivant →'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -338,37 +301,21 @@ const s = StyleSheet.create({
   playBtnDisabled: { opacity: 0.5 },
   playBtnTxt: { color: COLORS.white, fontSize: 15, fontWeight: '800' },
 
-  selectedArea: {
-    minHeight: 120, backgroundColor: COLORS.white, borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.md, borderWidth: 2, borderColor: COLORS.surfaceAlt, borderStyle: 'dashed',
-    justifyContent: 'center',
+  inputContainer: {
+    marginTop: 20,
   },
-  placeholderTxt: { color: COLORS.textMuted, textAlign: 'center', fontSize: 14, fontStyle: 'italic' },
-
-  poolArea: {
-    marginTop: SPACING.lg,
-    padding: SPACING.md,
-    backgroundColor: 'transparent',
-  },
-  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
-
-  wordChip: {
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
+  textInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
     borderColor: '#E0E0E0',
-  },
-  wordText: { fontSize: 16, fontWeight: '600', color: COLORS.textPrimary },
-
-  wordChipSelected: {
-    backgroundColor: COLORS.primary,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    fontSize: 18,
+    padding: 16,
+    minHeight: 100,
+    color: '#333333',
   },
-  wordTextSelected: { fontSize: 15, fontWeight: '700', color: COLORS.white },
+  textInputCorrect: { borderColor: COLORS.success, backgroundColor: COLORS.successLight },
+  textInputWrong: { borderColor: COLORS.error, backgroundColor: COLORS.errorLight },
 
   feedbackBox: { borderRadius: BORDER_RADIUS.xl, padding: SPACING.lg, gap: 6, borderWidth: 1 },
   feedbackCorrect: { backgroundColor: COLORS.successLight, borderColor: COLORS.success + '40' },

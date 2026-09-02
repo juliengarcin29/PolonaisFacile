@@ -3,17 +3,18 @@
 // Profil complet — auth, sync, paramètres, notifications
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ScrollView, View, Text, TouchableOpacity, StyleSheet,
   Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useAuth } from '@/hooks/useAuth';
 import { useSync } from '@/hooks/useSync';
+import { useProgress } from '@/hooks/useProgress';
 import { useGamification, ALL_ACHIEVEMENTS } from '@/hooks/useGamification';
 import {
   loadSettings, saveSettings, scheduleDailyReminder,
@@ -27,10 +28,21 @@ export default function ProfileScreen() {
   const { logout, isAnonymous } = useAuth();
   const { syncStatus, lastSyncAt, forceSync } = useSync();
   const { allAchievements } = useGamification();
+  const {
+    streakDays, totalXp, completedLessonsCount, masteredWordsCount,
+    refreshDailyStats
+  } = useProgress();
 
   const [notifDaily, setNotifDaily] = useState(true);
   const [notifStreak, setNotifStreak] = useState(true);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Rafraîchir les stats quand l'écran gagne le focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshDailyStats();
+    }, [refreshDailyStats])
+  );
 
   // Charger les préférences de notifications
   useEffect(() => {
@@ -83,10 +95,10 @@ export default function ProfileScreen() {
   const lockedAchievements = allAchievements.filter(a => !unlockedIds.includes(a.id)).slice(0, 4);
 
   const STATS = [
-    { label: 'Série actuelle', value: user?.streak ?? 0, emoji: '🔥' },
-    { label: 'XP total', value: user?.xp ?? 0, emoji: '⭐' },
-    { label: 'Leçons', value: user?.progress.totalLessonsCompleted ?? 0, emoji: '📚' },
-    { label: 'Mots appris', value: user?.progress.masteredFlashcards.length ?? 0, emoji: '🧠' },
+    { label: 'Série actuelle', value: streakDays, emoji: '🔥' },
+    { label: 'XP total', value: totalXp, emoji: '⭐' },
+    { label: 'Leçons', value: completedLessonsCount, emoji: '📚' },
+    { label: 'Mots appris', value: masteredWordsCount, emoji: '🧠' },
   ];
 
   const syncLabel = {

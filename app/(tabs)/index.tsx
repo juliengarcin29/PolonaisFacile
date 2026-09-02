@@ -9,10 +9,11 @@ import {
   StyleSheet, RefreshControl, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useGamification } from '@/hooks/useGamification';
+import { useProgress } from '@/hooks/useProgress';
 import { useSync } from '@/hooks/useSync';
 import { ALL_LOCAL_LESSONS } from '@/content/lessons';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
@@ -36,27 +37,45 @@ function getTodayWord() {
   return WORDS_OF_DAY[dayOfYear % WORDS_OF_DAY.length];
 }
 
+// Noms des modules pour l'affichage dynamique
+const MODULE_NAMES: Record<string, string> = {
+  module_1: 'Alphabet & Prononciation',
+  module_2: 'Salutations essentielles',
+  module_3: 'Chiffres et nombres',
+  module_4: 'La famille',
+  module_5: 'Nourriture & Boissons',
+  module_6: 'Ville & Transport',
+  module_7: 'Temps & Dates',
+};
+
 export default function HomeScreen() {
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
-  const { checkAndUpdateStreak, getDailyProgress } = useGamification();
+  const { checkAndUpdateStreak } = useGamification();
+  const {
+    streakDays, totalXp, dailyMinutes, targetMinutes, dailyPercentage,
+    refreshDailyStats
+  } = useProgress();
   const { triggerSync } = useSync();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [dailyProgress, setDailyProgress] = useState({ done: 0, goal: 10, percentage: 0 });
   const wordOfDay = useMemo(() => getTodayWord(), []);
 
-  // Charger la progression au montage
+  // Rafraîchir les stats quand l'écran gagne le focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshDailyStats();
+    }, [refreshDailyStats])
+  );
+
+  // Vérifier le streak au montage
   useEffect(() => {
     checkAndUpdateStreak();
-    getDailyProgress().then(setDailyProgress);
   }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await triggerSync();
-    const p = await getDailyProgress();
-    setDailyProgress(p);
     setRefreshing(false);
   }, []);
 
@@ -73,10 +92,10 @@ export default function HomeScreen() {
         <Text style={s.greeting}>Dzień dobry! 👋</Text>
         <View style={s.headerBadges}>
           <View style={s.badge}>
-            <Text style={s.badgeTxt}>🔥 {user?.streak ?? 0}</Text>
+            <Text style={s.badgeTxt}>🔥 {streakDays}</Text>
           </View>
           <View style={[s.badge, { backgroundColor: '#FEF3C7' }]}>
-            <Text style={[s.badgeTxt, { color: '#D97706' }]}>⭐ {formatNumber(user?.xp ?? 0)}</Text>
+            <Text style={[s.badgeTxt, { color: '#D97706' }]}>⭐ {formatNumber(totalXp)}</Text>
           </View>
         </View>
       </View>
@@ -91,9 +110,9 @@ export default function HomeScreen() {
         {/* ── DAILY GOAL INDICATOR (Compact) ── */}
         <View style={s.dailyGoalMini}>
           <View style={s.goalTrack}>
-            <View style={[s.goalFill, { width: `${Math.min(dailyProgress.percentage, 100)}%` }]} />
+            <View style={[s.goalFill, { width: `${Math.min(dailyPercentage, 100)}%` }]} />
           </View>
-          <Text style={s.goalTxt}>Objectif : {dailyProgress.done}/{dailyProgress.goal} min</Text>
+          <Text style={s.goalTxt}>Objectif : {dailyMinutes}/{targetMinutes} min</Text>
         </View>
 
         {/* ── MAIN CALL-TO-ACTION CARD (Hero) ── */}
@@ -106,7 +125,9 @@ export default function HomeScreen() {
             <View style={s.heroInfo}>
               <Text style={s.heroLabel}>CONTINUER L'APPRENTISSAGE</Text>
               <Text style={s.heroTitle}>{nextLesson.title}</Text>
-              <Text style={s.heroSub}>Module {nextLesson.moduleId.split('_')[1]}</Text>
+              <Text style={s.heroSub}>
+                Module {nextLesson.moduleId.split('_')[1]} • {MODULE_NAMES[nextLesson.moduleId] || 'Cours'}
+              </Text>
             </View>
             <View style={s.heroIconBox}>
               <Text style={s.heroIcon}>📚</Text>
