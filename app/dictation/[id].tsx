@@ -44,7 +44,7 @@ export default function DictationScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<DictationPhase>('loading');
 
-  const [userAnswer, setUserAnswer] = useState('');
+  const [userInput, setUserInput] = useState('');
   const [playCount, setPlayCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [results, setResults] = useState<Array<{
@@ -58,7 +58,6 @@ export default function DictationScreen() {
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const successAnim = useRef(new Animated.Value(0)).current;
-  const inputRef = useRef<TextInput>(null);
 
   // Charger la dictée
   useEffect(() => {
@@ -72,6 +71,11 @@ export default function DictationScreen() {
       }
     }
   }, [id]);
+
+  // Reset input when moving to a new exercise
+  useEffect(() => {
+    setUserInput('');
+  }, [currentIndex]);
 
   const current = dictation?.sentences[currentIndex];
   const maxPlays = 3;
@@ -87,7 +91,7 @@ export default function DictationScreen() {
       rate: speed,
       onDone: () => {
         setIsPlaying(false);
-        if (phase === 'listening') setPhase('writing');
+        if (phase === 'listening' || phase === 'intro') setPhase('writing');
       },
       onError: () => setIsPlaying(false),
     });
@@ -103,10 +107,10 @@ export default function DictationScreen() {
   };
 
   const handleSubmit = () => {
-    if (!userAnswer.trim() || !current) return;
+    if (!userInput.trim() || !current) return;
 
-    const { isCorrect, score } = verifyAnswer(userAnswer, current.text);
-    const result = { sentence: current, userAnswer: userAnswer.trim(), score, isCorrect };
+    const { isCorrect, score } = verifyAnswer(userInput, current.text);
+    const result = { sentence: current, userAnswer: userInput.trim(), score, isCorrect };
     setResults(prev => [...prev, result]);
 
     const xpEarned = isCorrect ? 30 : 5;
@@ -123,7 +127,6 @@ export default function DictationScreen() {
   const handleNext = () => {
     successAnim.setValue(0);
     setPlayCount(0);
-    setUserAnswer('');
 
     if (currentIndex + 1 >= (dictation?.sentences.length ?? 0)) {
       const finalXP = totalXP + (dictation?.xpReward ?? 0);
@@ -207,7 +210,7 @@ export default function DictationScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.phaseLabel}>
-            {phase === 'listening' ? '🔊 Écoutez la phrase' :
+            {phase === 'listening' || phase === 'intro' ? '🔊 Écoutez la phrase' :
              phase === 'writing' ? '✍️ Écrivez ce que vous entendez' :
              phase === 'feedback' ? (feedbackResult?.isCorrect ? '✅ Correct !' : '❌ Pas tout à fait...') : ''}
           </Text>
@@ -225,23 +228,21 @@ export default function DictationScreen() {
 
           {/* Saisie de texte */}
           {(phase === 'writing' || phase === 'feedback') && (
-            <Animated.View style={[s.inputContainer, { transform: [{ translateX: shakeAnim }] }]}>
+            <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
               <TextInput
-                ref={inputRef}
                 style={[
                   s.textInput,
                   phase === 'feedback' && feedbackResult?.isCorrect && s.textInputCorrect,
                   phase === 'feedback' && !feedbackResult?.isCorrect && s.textInputWrong,
                 ]}
-                value={userAnswer}
-                onChangeText={setUserAnswer}
+                value={userInput}
+                onChangeText={setUserInput}
                 placeholder="Écrivez ce que vous entendez..."
-                placeholderTextColor="#999"
-                multiline
-                autoCorrect={false}
+                placeholderTextColor={COLORS.textMuted}
+                multiline={true}
                 autoCapitalize="sentences"
+                autoCorrect={false}
                 editable={phase === 'writing'}
-                textAlignVertical="top"
               />
             </Animated.View>
           )}
@@ -260,9 +261,9 @@ export default function DictationScreen() {
         <View style={[s.footer, { paddingBottom: insets.bottom + 16 }]}>
           {phase === 'writing' && (
             <TouchableOpacity
-              style={[s.submitBtn, userAnswer.trim().length === 0 && s.submitBtnDisabled]}
+              style={[s.submitBtn, userInput.trim().length === 0 && s.submitBtnDisabled]}
               onPress={handleSubmit}
-              disabled={userAnswer.trim().length === 0}
+              disabled={userInput.trim().length === 0}
             >
               <Text style={s.submitBtnTxt}>Vérifier →</Text>
             </TouchableOpacity>
@@ -301,18 +302,16 @@ const s = StyleSheet.create({
   playBtnDisabled: { opacity: 0.5 },
   playBtnTxt: { color: COLORS.white, fontSize: 15, fontWeight: '800' },
 
-  inputContainer: {
-    marginTop: 20,
-  },
   textInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
-    fontSize: 18,
-    padding: 16,
     minHeight: 100,
-    color: '#333333',
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    textAlignVertical: 'top',
   },
   textInputCorrect: { borderColor: COLORS.success, backgroundColor: COLORS.successLight },
   textInputWrong: { borderColor: COLORS.error, backgroundColor: COLORS.errorLight },
