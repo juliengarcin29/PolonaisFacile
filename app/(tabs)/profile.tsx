@@ -255,7 +255,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* Version */}
-        <Text style={s.version}>Polonais Facile v1.0.0</Text>
+        <Text style={s.version}>Polish with Kasia v1.0.0</Text>
 
         <View style={{ height: SPACING.xxl }} />
       </ScrollView>

@@ -217,7 +217,7 @@ function StepDemo() {
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>🇵🇱</Text>
-      <Text style={styles.title}>Polonais Facile</Text>
+      <Text style={styles.title}>Polish with Kasia</Text>
       <Text style={styles.subtitle}>La méthode la plus efficace pour les francophones</Text>
       <View style={styles.featureList}>
         {features.map((f) => (

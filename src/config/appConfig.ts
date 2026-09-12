@@ -142,16 +142,16 @@ export const NOTIFICATION_CONFIG = {
 export const URLS = {
   PRIVACY_POLICY: 'https://votresite.com/privacy',
   TERMS_OF_SERVICE: 'https://votresite.com/terms',
-  SUPPORT_EMAIL: 'support@polonaisfacile.app',
-  WEBSITE: 'https://polonaisfacile.app',
-  PLAY_STORE: 'https://play.google.com/store/apps/details?id=com.votreapp.polonaisfacile',
-  APP_STORE: 'https://apps.apple.com/app/polonais-facile/id000000000',
+  SUPPORT_EMAIL: 'contact@polonais-facile.fr',
+  WEBSITE: 'https://polonais-facile.fr',
+  PLAY_STORE: 'https://play.google.com/store/apps/details?id=com.polishwithkasia.app',
+  APP_STORE: 'https://apps.apple.com/app/polish-with-kasia/id000000000',
 };
 
 // ── Méta-informations ─────────────────────────────────────────
 export const APP_META = {
-  NAME: 'Polonais Facile',
-  BUNDLE_ID: 'com.votreapp.polonaisfacile',
+  NAME: 'Polish with Kasia',
+  BUNDLE_ID: 'com.polishwithkasia.app',
   VERSION: Constants.expoConfig?.version ?? '1.0.0',
   BUILD_NUMBER: Constants.expoConfig?.ios?.buildNumber ?? '1',
   ENV,
