@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
@@ -53,8 +53,10 @@ export default function MatchingExercise({
 
   // Note: Dans le code original, rights est trié aléatoirement à chaque rendu.
   // Nous gardons ce comportement pour l'instant pour garantir une identité parfaite.
-  const lefts = pairs.map(p => p.left);
-  const rights = pairs.map(p => p.right).sort(() => Math.random() - 0.5);
+  const lefts = useMemo(() => pairs.map(p => p.left), [exercise.id]);
+  const rights = useMemo(() => {
+    return pairs.map(p => p.right).sort(() => Math.random() - 0.5);
+  }, [exercise.id]);
 
   return (
     <View style={mat.container}>
