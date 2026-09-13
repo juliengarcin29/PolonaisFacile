@@ -7,6 +7,7 @@ import { BORDER_RADIUS, COLORS, GAMIFICATION, SPACING } from '@/constants';
 import { useUserStore } from '@/store/userStore';
 import { useGamification } from '@/hooks/useGamification';
 import { getLessonById } from '@/content/lessons';
+import MultipleChoiceExercise from '@/components/exercises/MultipleChoiceExercise';
 import type { Exercise, ExerciseAnswer, Lesson } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -289,73 +290,6 @@ export default function LessonScreen() {
     </View>
   );
 }
-
-// ── COMPOSANT : QCM ──────────────────────────────────────────
-function MultipleChoiceExercise({
-  exercise, selectedAnswer, phase, onAnswer,
-}: {
-  exercise: Exercise;
-  selectedAnswer: string;
-  phase: LessonPhase;
-  onAnswer: (answer: string) => void;
-}) {
-  const options = exercise.options ?? [];
-
-  return (
-    <View style={mc.container}>
-      {options.map((option, index) => {
-        const isSelected = selectedAnswer === option;
-        const isCorrect = option === exercise.correctAnswer;
-        const showResult = phase !== 'exercise';
-
-        let bgColor = COLORS.white;
-        let borderColor = COLORS.surfaceAlt;
-        let textColor = COLORS.textPrimary;
-
-        if (showResult && isCorrect) {
-          bgColor = COLORS.successLight;
-          borderColor = COLORS.success;
-          textColor = COLORS.success;
-        } else if (showResult && isSelected && !isCorrect) {
-          bgColor = COLORS.errorLight;
-          borderColor = COLORS.error;
-          textColor = COLORS.error;
-        } else if (isSelected) {
-          borderColor = COLORS.primary;
-        }
-
-        return (
-          <TouchableOpacity
-            key={`${option}_${index}`}
-            style={[mc.option, { backgroundColor: bgColor, borderColor }]}
-            onPress={() => phase === 'exercise' && onAnswer(option)}
-            disabled={phase !== 'exercise'}
-          >
-            <Text style={[mc.optionText, { color: textColor }]}>{option}</Text>
-            {showResult && isCorrect && <Text style={mc.tick}>✓</Text>}
-            {showResult && isSelected && !isCorrect && <Text style={mc.cross}>✗</Text>}
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
-const mc = StyleSheet.create({
-  container: { gap: 12, marginTop: SPACING.lg },
-  option: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: SPACING.md, borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2, borderColor: '#E5E7EB',
-    ...Platform.select({
-      web: { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.04)' },
-      default: { shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-    }),
-  },
-  optionText: { fontSize: 16, fontWeight: '600', flex: 1 },
-  tick: { fontSize: 18, color: COLORS.success },
-  cross: { fontSize: 18, color: COLORS.error },
-});
 
 // ── COMPOSANT : ASSOCIATION ──────────────────────────────────
 function MatchingExercise({

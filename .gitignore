@@ -42,3 +42,6 @@ example
 # generated native folders
 /ios
 /android
+
+# caché le fichier de clé de l'application
+*serviceAccountKey*.json
