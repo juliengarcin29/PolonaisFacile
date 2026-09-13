@@ -154,7 +154,7 @@ const m = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
     borderWidth: 1.5, borderColor: 'transparent',
   },
-  lessonRowCompleted: { borderColor: COLORS.success + '30', backgroundColor: COLORS.successLight + '20' },
+  lessonRowCompleted: { borderColor: COLORS.success },
   lessonRowNext: { borderColor: COLORS.primary, shadowColor: COLORS.primary, shadowOpacity: 0.15 },
   lessonRowLocked: { opacity: 0.65 },
   lessonNum: {
