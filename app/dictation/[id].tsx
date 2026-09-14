@@ -4,17 +4,18 @@
 // Fonctionnalité Premium
 // ============================================================
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView,
-  Animated, ActivityIndicator, TextInput,
+  Animated, ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDictationById, DictationExercise, DictationSentence } from '@/content/dictations/dictations';
+import WordOrderExercise from '@/components/exercises/WordOrderExercise';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 
 type DictationPhase = 'loading' | 'error' | 'intro' | 'listening' | 'writing' | 'feedback' | 'completed';
@@ -44,7 +45,9 @@ export default function DictationScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<DictationPhase>('loading');
 
-  const [userInput, setUserInput] = useState('');
+  const [wordOrderAnswer, setWordOrderAnswer] = useState<string[]>([]);
+  const [availableWords, setAvailableWords] = useState<string[]>([]);
+
   const [playCount, setPlayCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [results, setResults] = useState<Array<{
@@ -74,10 +77,47 @@ export default function DictationScreen() {
 
   // Reset input when moving to a new exercise
   useEffect(() => {
-    setUserInput('');
+    setWordOrderAnswer([]);
   }, [currentIndex]);
 
   const current = dictation?.sentences[currentIndex];
+
+  // ── Mots et Intrus ───────────────────────────────────────
+  // Liste globale de mots polonais plausibles extraits du Module 1
+  const GLOBAL_PO_WORDS = [
+    'Dzień', 'dobry', 'Cześć', 'Tak', 'Nie', 'Proszę', 'Dziękuję', 'Przepraszam',
+    'Jestem', 'nazywam', 'się', 'Jak', 'masz', 'na', 'imię', 'Bardzo', 'mi', 'miło',
+    'Co', 'słychać', 'Dobrze', 'źle', 'nauczyciel', 'uczeń', 'kobieta', 'mężczyzna'
+  ];
+
+  const { wordsData, requiredCount } = useMemo(() => {
+    if (!current) return { wordsData: [], requiredCount: 0 };
+
+    // 1. Nettoyer et découper la phrase correcte
+    const realWords = current.text.replace(/[.,!?;:]/g, "").split(" ").filter(w => w.length > 0);
+
+    // 2. Choisir 3 intrus dans la banque globale qui ne sont pas dans la phrase
+    const intruders = GLOBAL_PO_WORDS
+      .filter(w => !realWords.some(rw => rw.toLowerCase() === w.toLowerCase()))
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    // 3. Mélanger le tout
+    const allWords = [...realWords, ...intruders].sort(() => Math.random() - 0.5);
+
+    return {
+      wordsData: allWords,
+      requiredCount: realWords.length
+    };
+  }, [current?.text]);
+
+  useEffect(() => {
+    if (phase === 'listening' || phase === 'intro' || phase === 'writing') {
+      setAvailableWords(wordsData);
+      setWordOrderAnswer([]);
+    }
+  }, [wordsData]);
+
   const maxPlays = 3;
 
   const playSentence = useCallback(async (speed = 1.0) => {
@@ -106,11 +146,15 @@ export default function DictationScreen() {
     ]).start();
   };
 
-  const handleSubmit = () => {
-    if (!userInput.trim() || !current) return;
+  const handleSubmit = (answer?: string) => {
+    if (!current) return;
 
-    const { isCorrect, score } = verifyAnswer(userInput, current.text);
-    const result = { sentence: current, userAnswer: userInput.trim(), score, isCorrect };
+    // Si answer est fourni (par WordOrderExercise), on l'utilise, sinon on prend le state
+    const finalAnswer = answer || wordOrderAnswer.join(' ');
+    if (!finalAnswer.trim()) return;
+
+    const { isCorrect, score } = verifyAnswer(finalAnswer, current.text);
+    const result = { sentence: current, userAnswer: finalAnswer.trim(), score, isCorrect };
     setResults(prev => [...prev, result]);
 
     const xpEarned = isCorrect ? 30 : 5;
@@ -226,23 +270,25 @@ export default function DictationScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Saisie de texte */}
+          {/* Saisie par remise en ordre (Remplace le TextInput) */}
           {(phase === 'writing' || phase === 'feedback') && (
             <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
-              <TextInput
-                style={[
-                  s.textInput,
-                  phase === 'feedback' && feedbackResult?.isCorrect && s.textInputCorrect,
-                  phase === 'feedback' && !feedbackResult?.isCorrect && s.textInputWrong,
-                ]}
-                value={userInput}
-                onChangeText={setUserInput}
-                placeholder="Écrivez ce que vous entendez..."
-                placeholderTextColor={COLORS.textMuted}
-                multiline={true}
-                autoCapitalize="sentences"
-                autoCorrect={false}
-                editable={phase === 'writing'}
+              <WordOrderExercise
+                exercise={{
+                   id: current?.text || '',
+                   type: 'word_order',
+                   question: '',
+                   correctAnswer: current?.text.replace(/[.,!?;:]/g, "") || '',
+                   words: wordsData,
+                   xpReward: 30
+                } as any}
+                wordOrderAnswer={wordOrderAnswer}
+                setWordOrderAnswer={setWordOrderAnswer}
+                availableWords={availableWords}
+                setAvailableWords={setAvailableWords}
+                onSubmit={handleSubmit}
+                phase={phase === 'feedback' ? 'feedback_correct' : 'exercise'}
+                requiredCount={requiredCount}
               />
             </Animated.View>
           )}
@@ -256,18 +302,8 @@ export default function DictationScreen() {
             </Animated.View>
           )}
 
-          {/* Boutons d'action déplacés ici (sous l'input) */}
+          {/* Boutons d'action — Le bouton de validation est maintenant géré par WordOrderExercise */}
           <View style={s.actionArea}>
-            {phase === 'writing' && (
-              <TouchableOpacity
-                style={[s.submitBtn, userInput.trim().length === 0 && s.submitBtnDisabled]}
-                onPress={handleSubmit}
-                disabled={userInput.trim().length === 0}
-              >
-                <Text style={s.submitBtnTxt}>Vérifier →</Text>
-              </TouchableOpacity>
-            )}
-
             {phase === 'feedback' && (
               <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
                 <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Terminer' : 'Suivant →'}</Text>

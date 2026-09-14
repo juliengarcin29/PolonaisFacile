@@ -14,6 +14,7 @@ interface WordOrderExerciseProps {
   setAvailableWords: (v: string[]) => void;
   onSubmit: (answer: string) => void;
   phase: LessonPhase;
+  requiredCount?: number; // Nouveau : nombre de mots requis pour valider (optionnel)
 }
 
 export default function WordOrderExercise({
@@ -24,6 +25,7 @@ export default function WordOrderExercise({
   setAvailableWords,
   onSubmit,
   phase,
+  requiredCount,
 }: WordOrderExerciseProps) {
   const addWord = (word: string, index: number) => {
     if (phase !== 'exercise') return;
@@ -41,6 +43,9 @@ export default function WordOrderExercise({
   const handleSubmit = () => {
     onSubmit(wordOrderAnswer.join(' '));
   };
+
+  // Par défaut, on attend tous les mots de l'exercice si requiredCount n'est pas fourni
+  const targetCount = requiredCount ?? (exercise.words?.length ?? 0);
 
   return (
     <View style={wo.container}>
@@ -69,7 +74,7 @@ export default function WordOrderExercise({
       </View>
 
       {/* Bouton valider */}
-      {wordOrderAnswer.length === (exercise.words?.length ?? 0) && phase === 'exercise' && (
+      {wordOrderAnswer.length === targetCount && phase === 'exercise' && (
         <TouchableOpacity style={wo.submitBtn} onPress={handleSubmit}>
           <Text style={wo.submitBtnText}>Vérifier →</Text>
         </TouchableOpacity>
