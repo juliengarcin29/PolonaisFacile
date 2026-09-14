@@ -2,7 +2,8 @@
 // app/(tabs)/review.tsx — Onglet Réviser (SRS)
 // ============================================================
 import { useCallback, useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
@@ -36,6 +37,24 @@ export default function ReviewScreen() {
     .slice(0, 5)
     .map(r => FLASHCARDS.find(f => f.id === r.flashcardId))
     .filter(Boolean);
+
+  const handleResetReviews = async () => {
+    Alert.alert(
+      "🔧 Debug",
+      "Réinitialiser l'historique des flashcards ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Réinitialiser",
+          style: "destructive",
+          onPress: async () => {
+            await AsyncStorage.removeItem('flashcard_reviews');
+            router.replace('/(tabs)/review');
+          }
+        }
+      ]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -99,6 +118,16 @@ export default function ReviewScreen() {
             ))}
           </>
         )}
+
+        {__DEV__ && (
+          <TouchableOpacity
+            onPress={handleResetReviews}
+            style={s.debugBtn}
+          >
+            <Text style={s.debugBtnText}>🔧 Reset reviews (dev only)</Text>
+          </TouchableOpacity>
+        )}
+
         <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
@@ -151,5 +180,19 @@ const s = StyleSheet.create({
   flashStatus: {
     width: 32, height: 32, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
+  },
+  debugBtn: {
+    margin: SPACING.lg,
+    padding: SPACING.md,
+    backgroundColor: COLORS.surfaceAlt,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  debugBtnText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
   },
 });

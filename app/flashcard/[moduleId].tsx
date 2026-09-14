@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Animated, Dimensions, ActivityIndicator,
+  Animated, Dimensions, ActivityIndicator, Pressable,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -178,40 +178,36 @@ export default function FlashcardScreen() {
       </View>
 
       {/* Card Container */}
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={handleFlip}
-        style={s.cardTouchable}
-      >
+      <View style={s.cardTouchable}>
         <Animated.View style={[s.cardWrap, { transform: [{ translateX: slideAnim }], opacity: opacityAnim }]}>
           {/* Face avant (polonais) */}
           <Animated.View style={[s.card, s.cardFront, { transform: [{ rotateY: frontRotate }], opacity: frontOpacity }]}>
-            <Text style={s.cardHint}>🇵🇱 Polonais • {current.tags[0]}</Text>
+            <Pressable style={StyleSheet.absoluteFill} onPress={handleFlip} />
+            <Text style={s.cardHint} pointerEvents="none">🇵🇱 Polonais • {current.tags[0]}</Text>
             <View style={s.wordRow}>
-              <Text style={s.cardWord}>{current.front}</Text>
-              <TouchableOpacity
-                onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
-                style={s.audioBtnSmall}
-              >
+              <Text style={s.cardWord} pointerEvents="none">{current.front}</Text>
+              {/* Le bouton audio a été déplacé dans un calque stable pour corriger le bug Android de rotation 3D */}
+              <View style={[s.audioBtnSmall, { opacity: 0 }]} pointerEvents="none">
                 <Text style={{ fontSize: 24 }}>🔊</Text>
-              </TouchableOpacity>
+              </View>
             </View>
-            <Text style={s.cardPhonetic}>{current.phonetic}</Text>
-            <View style={s.cardDivider} />
-            <Text style={s.tapHintText}>Appuyez pour retourner →</Text>
+            <Text style={s.cardPhonetic} pointerEvents="none">{current.phonetic}</Text>
+            <View style={s.cardDivider} pointerEvents="none" />
+            <Text style={s.tapHintText} pointerEvents="none">Appuyez pour retourner →</Text>
           </Animated.View>
 
           {/* Face arrière (français + détails) */}
           <Animated.View style={[s.card, s.cardBack, { transform: [{ rotateY: backRotate }], opacity: backOpacity }]}>
-            <Text style={s.cardHint}>🇫🇷 Français</Text>
-            <Text style={s.cardWordBack}>{current.back}</Text>
-            <View style={s.cardDivider} />
+            <Pressable style={StyleSheet.absoluteFill} onPress={handleFlip} />
+            <Text style={s.cardHint} pointerEvents="none">🇫🇷 Français</Text>
+            <Text style={s.cardWordBack} pointerEvents="none">{current.back}</Text>
+            <View style={s.cardDivider} pointerEvents="none" />
 
             <View style={s.backDetails}>
               <View style={s.wordRowSmall}>
-                <Text style={s.cardWordSmall}>{current.front}</Text>
+                <Text style={s.cardWordSmall} pointerEvents="none">{current.front}</Text>
                 <TouchableOpacity
-                  onPress={(e) => { e.stopPropagation(); playAudio(current.front); }}
+                  onPress={() => playAudio(current.front)}
                 >
                   <Text style={{ fontSize: 18 }}>🔊</Text>
                 </TouchableOpacity>
@@ -219,19 +215,37 @@ export default function FlashcardScreen() {
 
               <View style={s.exampleBox}>
                 <View style={s.wordRowSmall}>
-                  <Text style={s.cardExamplePl}>{current.examplePl}</Text>
+                  <Text style={s.cardExamplePl} pointerEvents="none">{current.examplePl}</Text>
                   <TouchableOpacity
-                    onPress={(e) => { e.stopPropagation(); playAudio(current.examplePl); }}
+                    onPress={() => playAudio(current.examplePl)}
                   >
                     <Text style={{ fontSize: 18 }}>🔊</Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={s.cardExampleFr}>{current.exampleFr}</Text>
+                <Text style={s.cardExampleFr} pointerEvents="none">{current.exampleFr}</Text>
               </View>
             </View>
           </Animated.View>
+
+          {/* Calque AUDIO stable (Hors zone de rotation) */}
+          {!isFlipped && (
+            <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]} pointerEvents="box-none">
+              <View style={[s.card, { backgroundColor: 'transparent', shadowOpacity: 0, elevation: 0, borderTopWidth: 0 }]} pointerEvents="box-none">
+                <View style={[s.wordRow, { marginTop: -45 }]} pointerEvents="box-none">
+                   {/* On simule la position du texte pour aligner le bouton à sa droite */}
+                   <Text style={[s.cardWord, { opacity: 0 }]} pointerEvents="none">{current.front}</Text>
+                   <TouchableOpacity
+                    onPress={() => playAudio(current.front)}
+                    style={s.audioBtnSmall}
+                  >
+                    <Text style={{ fontSize: 24 }}>🔊</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </Animated.View>
-      </TouchableOpacity>
+      </View>
 
       {/* Footer Area */}
       <View style={{ paddingBottom: insets.bottom + 16 }}>
@@ -324,7 +338,11 @@ const s = StyleSheet.create({
   cardExampleFr: { fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic', textAlign: 'center' },
 
   tapHintText: { fontSize: 13, color: COLORS.primary, fontWeight: '700', marginTop: 12 },
-  audioBtnSmall: { padding: 4 },
+  audioBtnSmall: {
+    padding: 10,
+    zIndex: 10,
+    elevation: 10,
+  },
 
   flipBtn: { marginHorizontal: SPACING.lg, marginBottom: SPACING.lg, backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full, paddingVertical: 16, alignItems: 'center' },
   flipBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
