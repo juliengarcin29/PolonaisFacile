@@ -11,24 +11,26 @@ import { useFlashcards } from '@/hooks/useFlashcards';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
 
 export default function ReviewScreen() {
-  const { getSessionStats, isLoading, reviews } = useFlashcards(FLASHCARDS);
+  const { getSessionStats, isLoading, reviews, refreshReviews } = useFlashcards(FLASHCARDS);
   const [stats, setStats] = useState({ dueCount: 0, newCount: 0, reviewCount: 0 });
 
   // Rafraîchir les stats quand l'onglet gagne le focus
   useFocusEffect(
     useCallback(() => {
-      const s = getSessionStats();
-      setStats({
-        dueCount: s.dueCount,
-        newCount: s.newCount,
-        reviewCount: s.reviewCount
+      refreshReviews().then(() => {
+        const s = getSessionStats();
+        setStats({
+          dueCount: s.dueCount,
+          newCount: s.newCount,
+          reviewCount: s.reviewCount
+        });
       });
-    }, [getSessionStats, reviews])
+    }, [getSessionStats, refreshReviews])
   );
 
-  // Calculer les compteurs demandés
-  const masteredCount = Object.values(reviews).filter(r => r.repetitions >= 5).length;
-  const inProgressCount = Object.values(reviews).filter(r => r.repetitions > 0 && r.repetitions < 5).length;
+  // Calculer les compteurs demandés (Harmonisé : repetitions >= 2 pour Appris)
+  const masteredCount = Object.values(reviews).filter(r => r.repetitions >= 2).length;
+  const inProgressCount = Object.values(reviews).filter(r => r.repetitions > 0 && r.repetitions < 2).length;
   const toReviewCount = stats.dueCount;
 
   // Flashcards récentes (5 dernières révisées)

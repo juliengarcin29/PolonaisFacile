@@ -34,12 +34,15 @@ export function useFlashcards(cards: Flashcard[]) {
   const [xpEarned, setXpEarned] = useState(0);
 
   // ── Charger les révisions sauvegardées ───────────────────
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then(data => {
-      if (data) setReviews(JSON.parse(data));
-      setIsLoading(false);
-    });
+  const refreshReviews = useCallback(async () => {
+    const data = await AsyncStorage.getItem(STORAGE_KEY);
+    if (data) setReviews(JSON.parse(data));
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    refreshReviews();
+  }, [refreshReviews]);
 
   // ── Calculer les stats de session ────────────────────────
   const getSessionStats = useCallback((): FlashcardSession => {
@@ -106,8 +109,8 @@ export function useFlashcards(cards: Flashcard[]) {
     setXpEarned(prev => prev + xp);
     setSessionDone(prev => [...prev, card.id]);
 
-    // Mettre à jour les mots maîtrisés
-    if (rating === 5 && newReview.repetitions >= 3) {
+    // Mettre à jour les mots maîtrisés (Seuil : note >= 4 et 2 répétitions réussies)
+    if (rating >= 4 && newReview.repetitions >= 2) {
       const mastered = user?.progress.masteredFlashcards ?? [];
       if (!mastered.includes(card.id)) {
         updateUser({
@@ -134,7 +137,7 @@ export function useFlashcards(cards: Flashcard[]) {
   const getCardMastery = useCallback((cardId: string): 'new' | 'learning' | 'mastered' => {
     const review = reviews[cardId];
     if (!review) return 'new';
-    if (review.repetitions >= 5) return 'mastered';
+    if (review.repetitions >= 2) return 'mastered';
     return 'learning';
   }, [reviews]);
 
@@ -160,6 +163,7 @@ export function useFlashcards(cards: Flashcard[]) {
     flip,
     rateCard,
     getCardMastery,
+    refreshReviews,
     totalCards: cards.length,
     masteredCount: user?.progress.masteredFlashcards.length ?? 0,
   };
