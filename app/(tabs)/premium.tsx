@@ -1,7 +1,8 @@
 // ============================================================
 // app/(tabs)/premium.tsx — Onglet Premium
 // ============================================================
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 
 const FEATURES = [
@@ -14,7 +15,7 @@ const FEATURES = [
 
 export default function PremiumScreen() {
   return (
-    <SafeAreaView style={p.safe}>
+    <SafeAreaView style={p.safe} edges={['top', 'bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={p.hero}>
           <Text style={p.heroEmoji}>⭐</Text>

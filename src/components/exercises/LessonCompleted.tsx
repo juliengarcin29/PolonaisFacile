@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { COLORS, BORDER_RADIUS, SPACING, GAMIFICATION } from '@/constants';
 
@@ -15,7 +16,7 @@ export default function LessonCompleted({ score, total, xpEarned, lessonId }: Le
   const isPerfect = score === total;
 
   return (
-    <SafeAreaView style={res.safe}>
+    <SafeAreaView style={res.safe} edges={['top', 'bottom']}>
       <View style={res.container}>
         <Text style={res.emoji}>{isPerfect ? '🏆' : percentage >= 70 ? '⭐' : '💪'}</Text>
         <Text style={res.title}>

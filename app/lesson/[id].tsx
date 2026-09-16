@@ -256,6 +256,7 @@ export default function LessonScreen() {
           <Animated.View
             style={[
               styles.feedbackBar,
+              { paddingBottom: Math.max(SPACING.xl, insets.bottom + SPACING.md) },
               phase === 'feedback_correct' ? styles.feedbackCorrect : styles.feedbackWrong,
               { transform: [{ scale: feedbackAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] },
             ]}
