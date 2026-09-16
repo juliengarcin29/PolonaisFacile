@@ -21,6 +21,7 @@ import {
   cancelNotification,
 } from '@/services/notifications';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
+import { MONETIZATION_ENABLED } from '@/config/appConfig';
 
 export default function ProfileScreen() {
   const { user } = useUserStore();
@@ -124,7 +125,7 @@ export default function ProfileScreen() {
           <Text style={s.level}>Niveau {user?.level ?? 1} · {user?.xp ?? 0} XP</Text>
 
           {/* Badge premium ou anonyme */}
-          {isPremium ? (
+          {MONETIZATION_ENABLED && isPremium ? (
             <View style={s.premiumBadge}>
               <Text style={s.premiumBadgeTxt}>⭐ Accès Illimité</Text>
             </View>
@@ -135,7 +136,7 @@ export default function ProfileScreen() {
             >
               <Text style={s.loginBtnTxt}>🔒 Créer un compte pour sauvegarder</Text>
             </TouchableOpacity>
-          ) : (
+          ) : !MONETIZATION_ENABLED ? null : (
             <View style={s.emailBadge}>
               <Text style={s.emailBadgeTxt}>✅ Compte connecté</Text>
             </View>
@@ -229,12 +230,12 @@ export default function ProfileScreen() {
         <Text style={s.sectionTitle}>⚙️ Paramètres</Text>
         <View style={s.menuCard}>
           {[
-            { emoji: '⭐', label: 'Passer à Premium', action: () => router.push('/(tabs)/premium') },
+            MONETIZATION_ENABLED ? { emoji: '⭐', label: 'Passer à Premium', action: () => router.push('/(tabs)/premium') } : null,
             { emoji: '🌍', label: 'Langue de l\'interface', action: () => {} },
             { emoji: '❓', label: 'Aide & FAQ', action: () => {} },
             { emoji: '⭐', label: 'Noter l\'application', action: () => {} },
             { emoji: '📤', label: 'Partager avec un ami', action: () => {} },
-          ].map((item, i, arr) => (
+          ].filter(Boolean).map((item: any, i, arr) => (
             <TouchableOpacity
               key={item.label}
               style={[s.menuRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}

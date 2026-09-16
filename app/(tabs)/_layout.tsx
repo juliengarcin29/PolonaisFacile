@@ -7,6 +7,7 @@ import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants';
+import { MONETIZATION_ENABLED } from '@/config/appConfig';
 
 function TabIcon({ emoji, focused, size }: { emoji: string; focused: boolean; size: number }) {
   return (
@@ -76,7 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="premium"
         options={{
-          href: null,
+          href: MONETIZATION_ENABLED ? undefined : null,
           tabBarLabel: 'Premium',
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="⭐" focused={focused} size={24} />

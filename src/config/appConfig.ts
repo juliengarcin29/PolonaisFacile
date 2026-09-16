@@ -14,6 +14,9 @@ export const IS_DEV = ENV === 'development';
 export const IS_PREVIEW = ENV === 'preview';
 export const IS_PROD = ENV === 'production';
 
+// ── Globale ──────────────────────────────────────────────────
+export const MONETIZATION_ENABLED = false; // Désactiver pour la phase de test initiale
+
 // ── Configuration Firebase ────────────────────────────────────
 export const FIREBASE_CONFIG = {
   apiKey: Constants.expoConfig?.extra?.FIREBASE_API_KEY ?? 'VOTRE_API_KEY',
@@ -57,8 +60,8 @@ export const FEATURES = {
   STATS_ADVANCED: true,
   WEEKLY_REVIEW: true,
   PUSH_NOTIFICATIONS: true,
-  REWARDED_ADS: true,
-  INTERSTITIAL_ADS: true,
+  REWARDED_ADS: MONETIZATION_ENABLED && true,
+  INTERSTITIAL_ADS: MONETIZATION_ENABLED && true,
 
   // Fonctionnalités en développement
   LEADERBOARD: false,

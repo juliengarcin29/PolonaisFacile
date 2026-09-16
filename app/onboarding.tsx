@@ -3,13 +3,14 @@
 // Onboarding 5 étapes — sans compte obligatoire
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, ScrollView, Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
+import { MONETIZATION_ENABLED } from '@/config/appConfig';
 import { COLORS, SPACING, BORDER_RADIUS, ONBOARDING_GOALS, DAILY_GOALS, LEVELS_LABELS } from '@/constants';
 
 const { width } = Dimensions.get('window');
@@ -22,6 +23,7 @@ type OnboardingData = {
 
 export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
+  const [isFinishing, setIsFinishing] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     goal: '',
     level: '',
@@ -29,13 +31,13 @@ export default function OnboardingScreen() {
   });
   const { setOnboarded, updateUser } = useUserStore();
 
-  const totalSteps = 5;
+  const totalSteps = MONETIZATION_ENABLED ? 5 : 4;
 
   const handleNext = () => {
     if (step < totalSteps - 1) {
       setStep(step + 1);
     } else {
-      handleFinish();
+      setIsFinishing(true);
     }
   };
 
@@ -77,6 +79,13 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
+  // Sécuriser la redirection de fin pour éviter le crash de mise à jour d'état pendant le rendu
+  useEffect(() => {
+    if (isFinishing) {
+      handleFinish();
+    }
+  }, [isFinishing]);
+
   const canContinue = () => {
     if (step === 0) return data.goal !== '';
     if (step === 1) return data.level !== '';
@@ -103,7 +112,7 @@ export default function OnboardingScreen() {
         {step === 1 && <StepLevel data={data} setData={setData} />}
         {step === 2 && <StepTime data={data} setData={setData} />}
         {step === 3 && <StepDemo />}
-        {step === 4 && <StepPremium />}
+        {MONETIZATION_ENABLED && step === 4 && <StepPremium />}
       </ScrollView>
 
       {/* Bouton continuer */}
@@ -118,8 +127,8 @@ export default function OnboardingScreen() {
           </Text>
         </TouchableOpacity>
 
-        {step === 4 && (
-          <TouchableOpacity onPress={handleFinish} style={styles.skipBtn}>
+        {step === (MONETIZATION_ENABLED ? 4 : 3) && (
+          <TouchableOpacity onPress={() => setIsFinishing(true)} style={styles.skipBtn}>
             <Text style={styles.skipText}>Non merci, continuer gratuitement</Text>
           </TouchableOpacity>
         )}

@@ -6,6 +6,7 @@
 import { auth } from '@/services/firebase/config';
 import { userService } from '@/services/firebase/userService';
 import { useUserStore } from '@/store/userStore';
+import { MONETIZATION_ENABLED } from '@/config/appConfig';
 import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
@@ -45,6 +46,7 @@ export interface PackageInfo {
 
 // ── Initialisation RevenueCat ─────────────────────────────────
 export async function initRevenueCat(userId?: string): Promise<void> {
+  if (!MONETIZATION_ENABLED) return; // Court-circuit si monétisation désactivée
   try {
     if (__DEV__) {
       Purchases.setLogLevel(LOG_LEVEL.DEBUG);

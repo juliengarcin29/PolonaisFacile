@@ -6,6 +6,7 @@
 import { useUserStore } from '@/store/userStore';
 import { CONTENT_LIMITS } from '@/constants';
 import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { MONETIZATION_ENABLED } from '@/config/appConfig';
 import { router } from 'expo-router';
 import { useCallback } from 'react';
 
@@ -15,8 +16,8 @@ export function usePremiumGate() {
   const { user } = useUserStore();
 
   // Le statut Premium est effectif si l'utilisateur est abonné
-  // OU si la phase "Tout Gratuit" est activée.
-  const isPremium = (user?.premium ?? false) || FEATURE_FLAGS.FREE_ALL_LESSONS;
+  // OU si la phase "Tout Gratuit" est activée (via MONETIZATION_ENABLED = false).
+  const isPremium = !MONETIZATION_ENABLED || (user?.premium ?? false) || FEATURE_FLAGS.FREE_ALL_LESSONS;
 
   // ── Vérifier et rediriger vers le paywall si besoin ──────
   const requirePremium = useCallback((
