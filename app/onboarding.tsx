@@ -6,8 +6,9 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, ScrollView, Dimensions,
+  ScrollView, Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
@@ -93,7 +94,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Barre de progression */}
       <View style={styles.progressBar}>
         {Array.from({ length: totalSteps }).map((_, i) => (
