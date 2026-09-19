@@ -23,6 +23,7 @@ interface UserStore {
   updateStreak: () => void;
   loseHeart: () => void;
   refillHearts: () => void;
+  setLanguage: (lang: 'fr' | 'en') => void;
   setOnboarded: (value: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   setHasHydrated: (value: boolean) => void; // Ajouté
@@ -182,6 +183,11 @@ export const useUserStore = create<UserStore>()(
             },
           };
         }),
+
+      setLanguage: (lang) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, language: lang as any, updatedAt: new Date() } : null,
+        })),
 
       setOnboarded: (value) => {
         set({ isOnboarded: value });

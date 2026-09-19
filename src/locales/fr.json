@@ -1,0 +1,84 @@
+{
+  "onboarding": {
+    "language": {
+      "title": "Choisissez votre langue",
+      "subtitle": "Pour adapter l'interface de l'application",
+      "fr": "Français",
+      "en": "English"
+    },
+    "goal": {
+      "title": "Pourquoi apprenez-vous\nle polonais ?",
+      "subtitle": "Nous personnaliserons votre parcours",
+      "travel": "Voyager en Pologne",
+      "family": "Parler avec ma famille",
+      "culture": "Découvrir la culture",
+      "work": "Raisons professionnelles",
+      "study": "Études",
+      "fun": "Par plaisir"
+    },
+    "level": {
+      "title": "Quel est votre niveau\nen polonais ?",
+      "absolute_beginner": "Grand débutant",
+      "absolute_beginner_desc": "Je ne connais aucun mot polonais",
+      "beginner": "Débutant",
+      "beginner_desc": "Je connais quelques mots",
+      "intermediate": "Intermédiaire",
+      "intermediate_desc": "Je me débrouille un peu"
+    },
+    "time": {
+      "title": "Combien de temps par jour ?",
+      "subtitle": "La régularité compte plus que la durée",
+      "minutes": "{{count}} min",
+      "casual": "Décontracté",
+      "regular": "Régulier",
+      "serious": "Sérieux",
+      "intensive": "Intensif"
+    },
+    "demo": {
+      "title": "Polish with Kasia",
+      "subtitle": "La méthode la plus efficace pour les francophones",
+      "feature1_title": "Apprenez en jouant",
+      "feature1_desc": "Quiz, flashcards, défis quotidiens",
+      "feature2_title": "Prononciation native",
+      "feature2_desc": "Audio par des locuteurs natifs",
+      "feature3_title": "Streak quotidien",
+      "feature3_desc": "Restez motivé chaque jour",
+      "feature4_title": "Répétition intelligente",
+      "feature4_desc": "L'algorithme retient ce que vous oubliez"
+    },
+    "premium": {
+      "title": "Essayez Premium\n7 jours gratuits",
+      "subtitle": "Puis 29,99 €/an — annulable à tout moment",
+      "feature1": "✅ Accès illimité à tout le contenu",
+      "feature2": "✅ Mode hors ligne complet",
+      "feature3": "✅ Zéro publicité",
+      "feature4": "✅ Dictées et dialogues",
+      "feature5": "✅ Statistiques avancées",
+      "feature6": "✅ Conversation avec l'IA",
+      "note": "Aucune facturation pendant 7 jours.\nAnnulez avant la fin de l'essai."
+    },
+    "buttons": {
+      "continue": "Continuer →",
+      "finish": "Commencer gratuitement →",
+      "skip": "Non merci, continuer gratuitement"
+    }
+  },
+  "notifications": {
+    "daily_reminder": {
+      "title": "🇵🇱 Votre leçon vous attend !",
+      "body": "Quelques minutes de polonais pour garder votre série."
+    },
+    "streak_alert": {
+      "title": "🔥 Série de {{count}} jours en danger !",
+      "body": "Faites une leçon rapide pour ne pas perdre votre série."
+    },
+    "reactivation": {
+      "title": "👋 Ça fait un moment...",
+      "body": "Le polonais vous attend ! Une leçon de 5 minutes suffit."
+    },
+    "achievement": {
+      "title": "Nouveau badge débloqué !",
+      "body": "Félicitations pour votre progression !"
+    }
+  }
+}

@@ -138,23 +138,23 @@ export const ADMOB = {
 } as const;
 
 export const ONBOARDING_GOALS = [
-  { id: 'travel',      label: 'Voyager en Pologne',    emoji: '✈️' },
-  { id: 'family',      label: 'Parler avec ma famille', emoji: '👨‍👩‍👧' },
-  { id: 'culture',     label: 'Découvrir la culture',  emoji: '🎭' },
-  { id: 'work',        label: 'Raisons professionnelles', emoji: '💼' },
-  { id: 'study',       label: 'Études',                emoji: '📚' },
-  { id: 'fun',         label: 'Par plaisir',           emoji: '😊' },
+  { id: 'travel',      labelKey: 'onboarding.goal.travel',    emoji: '✈️' },
+  { id: 'family',      labelKey: 'onboarding.goal.family',    emoji: '👨‍👩‍👧' },
+  { id: 'culture',     labelKey: 'onboarding.goal.culture',   emoji: '🎭' },
+  { id: 'work',        labelKey: 'onboarding.goal.work',      emoji: '💼' },
+  { id: 'study',       labelKey: 'onboarding.goal.study',     emoji: '📚' },
+  { id: 'fun',         labelKey: 'onboarding.goal.fun',       emoji: '😊' },
 ] as const;
 
 export const DAILY_GOALS = [
-  { minutes: 5,  label: 'Décontracté',  emoji: '🌿', xpBonus: 0 },
-  { minutes: 10, label: 'Régulier',     emoji: '⭐', xpBonus: 10 },
-  { minutes: 15, label: 'Sérieux',      emoji: '🔥', xpBonus: 20 },
-  { minutes: 20, label: 'Intensif',     emoji: '💪', xpBonus: 30 },
+  { minutes: 5,  labelKey: 'onboarding.time.casual',  emoji: '🌿', xpBonus: 0 },
+  { minutes: 10, labelKey: 'onboarding.time.regular',     emoji: '⭐', xpBonus: 10 },
+  { minutes: 15, labelKey: 'onboarding.time.serious',      emoji: '🔥', xpBonus: 20 },
+  { minutes: 20, labelKey: 'onboarding.time.intensive',     emoji: '💪', xpBonus: 30 },
 ] as const;
 
 export const LEVELS_LABELS = [
-  { id: 'absolute_beginner', label: 'Grand débutant', description: 'Je ne connais aucun mot polonais' },
-  { id: 'beginner',          label: 'Débutant',       description: 'Je connais quelques mots' },
-  { id: 'intermediate',      label: 'Intermédiaire',  description: 'Je me débrouille un peu' },
+  { id: 'absolute_beginner', labelKey: 'onboarding.level.absolute_beginner', descriptionKey: 'onboarding.level.absolute_beginner_desc' },
+  { id: 'beginner',          labelKey: 'onboarding.level.beginner',       descriptionKey: 'onboarding.level.beginner_desc' },
+  { id: 'intermediate',      labelKey: 'onboarding.level.intermediate',  descriptionKey: 'onboarding.level.intermediate_desc' },
 ] as const;

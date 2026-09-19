@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/config/i18n';
 
 const STORAGE_KEY = 'notification_settings';
 
@@ -107,8 +108,8 @@ export async function scheduleDailyReminder(time: string = '09:00'): Promise<voi
     await Notifications.scheduleNotificationAsync({
       identifier: 'daily_reminder',
       content: {
-        title: '🇵🇱 Votre leçon vous attend !',
-        body: 'Quelques minutes de polonais pour garder votre série.',
+        title: i18n.t('notifications.daily_reminder.title'),
+        body: i18n.t('notifications.daily_reminder.body'),
         data: { type: 'daily_reminder' },
         sound: true,
       },
@@ -131,8 +132,8 @@ export async function scheduleStreakAlert(streakCount: number): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: 'streak_alert',
       content: {
-        title: `🔥 Série de ${streakCount} jours en danger !`,
-        body: 'Faites une leçon rapide pour ne pas perdre votre série.',
+        title: i18n.t('notifications.streak_alert.title', { count: streakCount }),
+        body: i18n.t('notifications.streak_alert.body'),
         data: { type: 'streak_alert', streak: streakCount },
         sound: true,
       },
@@ -155,8 +156,8 @@ export async function scheduleReactivation(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: 'reactivation',
       content: {
-        title: '👋 Ça fait un moment...',
-        body: 'Le polonais vous attend ! Une leçon de 5 minutes suffit.',
+        title: i18n.t('notifications.reactivation.title'),
+        body: i18n.t('notifications.reactivation.body'),
         data: { type: 'reactivation' },
       },
       trigger: {
@@ -178,8 +179,8 @@ export async function sendAchievementNotification(
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `🏆 ${title}`,
-        body,
+        title: title || i18n.t('notifications.achievement.title'),
+        body: body || i18n.t('notifications.achievement.body'),
         data: { type: 'achievement' },
         sound: true,
       },

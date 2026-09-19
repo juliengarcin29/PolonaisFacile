@@ -1,0 +1,84 @@
+{
+  "onboarding": {
+    "language": {
+      "title": "Choose your language",
+      "subtitle": "To adapt the application interface",
+      "fr": "Français",
+      "en": "English"
+    },
+    "goal": {
+      "title": "Why are you learning\nPolish?",
+      "subtitle": "We will personalize your path",
+      "travel": "Travel to Poland",
+      "family": "Talk with my family",
+      "culture": "Discover the culture",
+      "work": "Professional reasons",
+      "study": "Studies",
+      "fun": "For fun"
+    },
+    "level": {
+      "title": "What is your level\nin Polish?",
+      "absolute_beginner": "Absolute beginner",
+      "absolute_beginner_desc": "I don't know any Polish words",
+      "beginner": "Beginner",
+      "beginner_desc": "I know a few words",
+      "intermediate": "Intermediate",
+      "intermediate_desc": "I manage a bit"
+    },
+    "time": {
+      "title": "How much time per day?",
+      "subtitle": "Consistency matters more than duration",
+      "minutes": "{{count}} min",
+      "casual": "Casual",
+      "regular": "Regular",
+      "serious": "Serious",
+      "intensive": "Intensive"
+    },
+    "demo": {
+      "title": "Polish with Kasia",
+      "subtitle": "The most effective method for learners",
+      "feature1_title": "Learn while playing",
+      "feature1_desc": "Quizzes, flashcards, daily challenges",
+      "feature2_title": "Native pronunciation",
+      "feature2_desc": "Audio by native speakers",
+      "feature3_title": "Daily streak",
+      "feature3_desc": "Stay motivated every day",
+      "feature4_title": "Smart repetition",
+      "feature4_desc": "The algorithm remembers what you forget"
+    },
+    "premium": {
+      "title": "Try Premium\n7 days free",
+      "subtitle": "Then €29.99/year — cancel at any time",
+      "feature1": "✅ Unlimited access to all content",
+      "feature2": "✅ Full offline mode",
+      "feature3": "✅ Zero ads",
+      "feature4": "✅ Dictations and dialogues",
+      "feature5": "✅ Advanced statistics",
+      "feature6": "✅ AI Conversation",
+      "note": "No billing for 7 days.\nCancel before the end of the trial."
+    },
+    "buttons": {
+      "continue": "Continue →",
+      "finish": "Start for free →",
+      "skip": "No thanks, continue for free"
+    }
+  },
+  "notifications": {
+    "daily_reminder": {
+      "title": "🇵🇱 Your lesson is waiting!",
+      "body": "A few minutes of Polish to keep your streak."
+    },
+    "streak_alert": {
+      "title": "🔥 {{count}} day streak in danger!",
+      "body": "Do a quick lesson to keep your streak."
+    },
+    "reactivation": {
+      "title": "👋 It's been a while...",
+      "body": "Polish is waiting for you! A 5-minute lesson is enough."
+    },
+    "achievement": {
+      "title": "New badge unlocked!",
+      "body": "Congratulations on your progress!"
+    }
+  }
+}

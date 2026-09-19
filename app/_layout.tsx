@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { syncService } from '@/services/firebase/syncService';
 import { setupNotifications } from '@/services/notifications';
 import { useUserStore } from '@/store/userStore';
+import '@/config/i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

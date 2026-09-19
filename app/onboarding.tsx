@@ -1,6 +1,6 @@
 // ============================================================
 // app/onboarding.tsx
-// Onboarding 5 étapes — sans compte obligatoire
+// Onboarding multilingue — sans compte obligatoire
 // ============================================================
 
 import { useState, useEffect } from 'react';
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
 import { setupNotifications } from '@/services/notifications';
@@ -24,6 +25,7 @@ type OnboardingData = {
 };
 
 export default function OnboardingScreen() {
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
   const [data, setData] = useState<OnboardingData>({
@@ -31,9 +33,9 @@ export default function OnboardingScreen() {
     level: '',
     dailyMinutes: 10,
   });
-  const { setOnboarded, updateUser } = useUserStore();
+  const { setOnboarded, setLanguage } = useUserStore();
 
-  const totalSteps = MONETIZATION_ENABLED ? 5 : 4;
+  const totalSteps = MONETIZATION_ENABLED ? 6 : 5;
 
   const handleNext = () => {
     if (step < totalSteps - 1) {
@@ -44,7 +46,6 @@ export default function OnboardingScreen() {
   };
 
   const handleFinish = async () => {
-    // Créer un utilisateur anonyme local pour démarrer
     const newUser = {
       id: `anon_${Date.now()}`,
       email: null,
@@ -59,7 +60,7 @@ export default function OnboardingScreen() {
       maxHearts: 5,
       premium: false,
       premiumExpiresAt: null,
-      language: 'fr' as const,
+      language: i18n.language as any,
       targetLanguage: 'pl' as const,
       dailyGoal: data.dailyMinutes,
       achievements: [],
@@ -79,7 +80,6 @@ export default function OnboardingScreen() {
     useUserStore.setState({ user: newUser });
     await setOnboarded(true);
 
-    // Activer les notifications à la fin de l'onboarding
     try {
       await setupNotifications(0, '09:00');
     } catch (e) {
@@ -89,16 +89,22 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
-  // Sécuriser la redirection de fin pour éviter le crash de mise à jour d'état pendant le rendu
   useEffect(() => {
     if (isFinishing) {
       handleFinish();
     }
   }, [isFinishing]);
 
+  const changeLanguage = (lang: 'fr' | 'en') => {
+    i18n.changeLanguage(lang);
+    setLanguage(lang);
+    handleNext();
+  };
+
   const canContinue = () => {
-    if (step === 0) return data.goal !== '';
-    if (step === 1) return data.level !== '';
+    if (step === 0) return false; // Choix de langue force le clic sur bouton
+    if (step === 1) return data.goal !== '';
+    if (step === 2) return data.level !== '';
     return true;
   };
 
@@ -118,28 +124,31 @@ export default function OnboardingScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {step === 0 && <StepGoal data={data} setData={setData} />}
-        {step === 1 && <StepLevel data={data} setData={setData} />}
-        {step === 2 && <StepTime data={data} setData={setData} />}
-        {step === 3 && <StepDemo />}
-        {MONETIZATION_ENABLED && step === 4 && <StepPremium />}
+        {step === 0 && <StepLanguage onSelect={changeLanguage} />}
+        {step === 1 && <StepGoal data={data} setData={setData} />}
+        {step === 2 && <StepLevel data={data} setData={setData} />}
+        {step === 3 && <StepTime data={data} setData={setData} />}
+        {step === 4 && <StepDemo />}
+        {MONETIZATION_ENABLED && step === 5 && <StepPremium />}
       </ScrollView>
 
-      {/* Bouton continuer */}
+      {/* Footer area */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.btn, !canContinue() && styles.btnDisabled]}
-          onPress={handleNext}
-          disabled={!canContinue()}
-        >
-          <Text style={styles.btnText}>
-            {step === totalSteps - 1 ? 'Commencer gratuitement →' : 'Continuer →'}
-          </Text>
-        </TouchableOpacity>
+        {step > 0 && (
+          <TouchableOpacity
+            style={[styles.btn, !canContinue() && styles.btnDisabled]}
+            onPress={handleNext}
+            disabled={!canContinue()}
+          >
+            <Text style={styles.btnText}>
+              {step === totalSteps - 1 ? t('onboarding.buttons.finish') : t('onboarding.buttons.continue')}
+            </Text>
+          </TouchableOpacity>
+        )}
 
-        {step === (MONETIZATION_ENABLED ? 4 : 3) && (
+        {step === (MONETIZATION_ENABLED ? 5 : 4) && (
           <TouchableOpacity onPress={() => setIsFinishing(true)} style={styles.skipBtn}>
-            <Text style={styles.skipText}>Non merci, continuer gratuitement</Text>
+            <Text style={styles.skipText}>{t('onboarding.buttons.skip')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -147,13 +156,36 @@ export default function OnboardingScreen() {
   );
 }
 
+// ── ÉTAPE 0 : Langue ─────────────────────────────────────────
+function StepLanguage({ onSelect }: { onSelect: (lang: 'fr' | 'en') => void }) {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.step}>
+      <Text style={styles.emoji}>🌍</Text>
+      <Text style={styles.title}>{t('onboarding.language.title')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.language.subtitle')}</Text>
+      <View style={styles.grid}>
+        <TouchableOpacity style={styles.optionCard} onPress={() => onSelect('fr')}>
+          <Text style={styles.optionEmoji}>🇫🇷</Text>
+          <Text style={styles.optionLabel}>{t('onboarding.language.fr')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.optionCard} onPress={() => onSelect('en')}>
+          <Text style={styles.optionEmoji}>🇬🇧</Text>
+          <Text style={styles.optionLabel}>{t('onboarding.language.en')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 // ── ÉTAPE 1 : Objectif ───────────────────────────────────────
 function StepGoal({ data, setData }: { data: OnboardingData; setData: (d: OnboardingData) => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>🎯</Text>
-      <Text style={styles.title}>Pourquoi apprenez-vous{'\n'}le polonais ?</Text>
-      <Text style={styles.subtitle}>Nous personnaliserons votre parcours</Text>
+      <Text style={styles.title}>{t('onboarding.goal.title')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.goal.subtitle')}</Text>
       <View style={styles.grid}>
         {ONBOARDING_GOALS.map((goal) => (
           <TouchableOpacity
@@ -163,7 +195,7 @@ function StepGoal({ data, setData }: { data: OnboardingData; setData: (d: Onboar
           >
             <Text style={styles.optionEmoji}>{goal.emoji}</Text>
             <Text style={[styles.optionLabel, data.goal === goal.id && styles.optionLabelSelected]}>
-              {goal.label}
+              {t(goal.labelKey as any)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -174,10 +206,11 @@ function StepGoal({ data, setData }: { data: OnboardingData; setData: (d: Onboar
 
 // ── ÉTAPE 2 : Niveau ─────────────────────────────────────────
 function StepLevel({ data, setData }: { data: OnboardingData; setData: (d: OnboardingData) => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>📊</Text>
-      <Text style={styles.title}>Quel est votre niveau{'\n'}en polonais ?</Text>
+      <Text style={styles.title}>{t('onboarding.level.title')}</Text>
       <View style={styles.levelList}>
         {LEVELS_LABELS.map((lvl) => (
           <TouchableOpacity
@@ -187,9 +220,9 @@ function StepLevel({ data, setData }: { data: OnboardingData; setData: (d: Onboa
           >
             <View style={styles.levelCardInner}>
               <Text style={[styles.levelName, data.level === lvl.id && styles.levelNameSelected]}>
-                {lvl.label}
+                {t(lvl.labelKey as any)}
               </Text>
-              <Text style={styles.levelDesc}>{lvl.description}</Text>
+              <Text style={styles.levelDesc}>{t(lvl.descriptionKey as any)}</Text>
             </View>
             <View style={[styles.radio, data.level === lvl.id && styles.radioSelected]} />
           </TouchableOpacity>
@@ -201,11 +234,12 @@ function StepLevel({ data, setData }: { data: OnboardingData; setData: (d: Onboa
 
 // ── ÉTAPE 3 : Objectif quotidien ─────────────────────────────
 function StepTime({ data, setData }: { data: OnboardingData; setData: (d: OnboardingData) => void }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>⏱️</Text>
-      <Text style={styles.title}>Combien de temps par jour ?</Text>
-      <Text style={styles.subtitle}>La régularité compte plus que la durée</Text>
+      <Text style={styles.title}>{t('onboarding.time.title')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.time.subtitle')}</Text>
       <View style={styles.timeGrid}>
         {DAILY_GOALS.map((goal) => (
           <TouchableOpacity
@@ -215,9 +249,9 @@ function StepTime({ data, setData }: { data: OnboardingData; setData: (d: Onboar
           >
             <Text style={styles.timeEmoji}>{goal.emoji}</Text>
             <Text style={[styles.timeMin, data.dailyMinutes === goal.minutes && styles.timeMinSelected]}>
-              {goal.minutes} min
+              {t('onboarding.time.minutes', { count: goal.minutes })}
             </Text>
-            <Text style={styles.timeLabel}>{goal.label}</Text>
+            <Text style={styles.timeLabel}>{t(goal.labelKey as any)}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -227,17 +261,18 @@ function StepTime({ data, setData }: { data: OnboardingData; setData: (d: Onboar
 
 // ── ÉTAPE 4 : Démo de valeur ──────────────────────────────────
 function StepDemo() {
+  const { t } = useTranslation();
   const features = [
-    { emoji: '🎮', title: 'Apprenez en jouant', desc: 'Quiz, flashcards, défis quotidiens' },
-    { emoji: '🔊', title: 'Prononciation native', desc: 'Audio par des locuteurs natifs' },
-    { emoji: '🔥', title: 'Streak quotidien', desc: 'Restez motivé chaque jour' },
-    { emoji: '🧠', title: 'Répétition intelligente', desc: 'L\'algorithme retient ce que vous oubliez' },
+    { emoji: '🎮', title: t('onboarding.demo.feature1_title'), desc: t('onboarding.demo.feature1_desc') },
+    { emoji: '🔊', title: t('onboarding.demo.feature2_title'), desc: t('onboarding.demo.feature2_desc') },
+    { emoji: '🔥', title: t('onboarding.demo.feature3_title'), desc: t('onboarding.demo.feature3_desc') },
+    { emoji: '🧠', title: t('onboarding.demo.feature4_title'), desc: t('onboarding.demo.feature4_desc') },
   ];
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>🇵🇱</Text>
-      <Text style={styles.title}>Polish with Kasia</Text>
-      <Text style={styles.subtitle}>La méthode la plus efficace pour les francophones</Text>
+      <Text style={styles.title}>{t('onboarding.demo.title')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.demo.subtitle')}</Text>
       <View style={styles.featureList}>
         {features.map((f) => (
           <View key={f.title} style={styles.featureRow}>
@@ -255,26 +290,25 @@ function StepDemo() {
 
 // ── ÉTAPE 5 : Offre Premium ───────────────────────────────────
 function StepPremium() {
+  const { t } = useTranslation();
   return (
     <View style={styles.step}>
       <Text style={styles.emoji}>⭐</Text>
-      <Text style={styles.title}>Essayez Premium{'\n'}7 jours gratuits</Text>
-      <Text style={styles.subtitle}>Puis 29,99 €/an — annulable à tout moment</Text>
+      <Text style={styles.title}>{t('onboarding.premium.title')}</Text>
+      <Text style={styles.subtitle}>{t('onboarding.premium.subtitle')}</Text>
       <View style={styles.premiumCard}>
         {[
-          '✅ Accès illimité à tout le contenu',
-          '✅ Mode hors ligne complet',
-          '✅ Zéro publicité',
-          '✅ Dictées et dialogues',
-          '✅ Statistiques avancées',
-          '✅ Conversation avec l\'IA',
+          t('onboarding.premium.feature1'),
+          t('onboarding.premium.feature2'),
+          t('onboarding.premium.feature3'),
+          t('onboarding.premium.feature4'),
+          t('onboarding.premium.feature5'),
+          t('onboarding.premium.feature6'),
         ].map((item) => (
           <Text key={item} style={styles.premiumItem}>{item}</Text>
         ))}
       </View>
-      <Text style={styles.premiumNote}>
-        Aucune facturation pendant 7 jours.{'\n'}Annulez avant la fin de l'essai.
-      </Text>
+      <Text style={styles.premiumNote}>{t('onboarding.premium.note')}</Text>
     </View>
   );
 }
