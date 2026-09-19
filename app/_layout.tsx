@@ -51,12 +51,10 @@ export default function RootLayout() {
     prepare();
   }, []);
 
-  // Configurer les notifications quand l'utilisateur est chargé
+  // Configurer les notifications : déplacé dans l'onboarding pour une meilleure UX
   useEffect(() => {
-    if (user) {
-      setupNotifications(user.streak, '09:00').catch(() => {});
-    }
-  }, [user?.streak]);
+    // Supprimé d'ici
+  }, []);
 
   if (!appReady) return null;
 

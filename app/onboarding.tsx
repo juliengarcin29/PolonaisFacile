@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
+import { setupNotifications } from '@/services/notifications';
 import { COLORS, SPACING, BORDER_RADIUS, ONBOARDING_GOALS, DAILY_GOALS, LEVELS_LABELS } from '@/constants';
 
 const { width } = Dimensions.get('window');
@@ -77,6 +78,14 @@ export default function OnboardingScreen() {
     };
     useUserStore.setState({ user: newUser });
     await setOnboarded(true);
+
+    // Activer les notifications à la fin de l'onboarding
+    try {
+      await setupNotifications(0, '09:00');
+    } catch (e) {
+      console.warn('Erreur setup notifications:', e);
+    }
+
     router.replace('/(tabs)');
   };
 

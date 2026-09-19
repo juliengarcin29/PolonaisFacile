@@ -45,10 +45,14 @@ export async function requestPermissions(): Promise<boolean> {
     return false;
   }
 
+  console.log('[Notifications] Vérification des permissions...');
   const { status: existing } = await Notifications.getPermissionsAsync();
+  console.log('[Notifications] Permission actuelle:', existing);
   if (existing === 'granted') return true;
 
+  console.log('[Notifications] Demande de nouvelle permission...');
   const { status } = await Notifications.requestPermissionsAsync();
+  console.log('[Notifications] Résultat de la demande:', status);
   return status === 'granted';
 }
 
@@ -59,7 +63,7 @@ export async function getPushToken(): Promise<string | null> {
 
   try {
     const { data: token } = await Notifications.getExpoPushTokenAsync({
-      projectId: 'VOTRE_EXPO_PROJECT_ID', // À remplacer avec votre ID Expo
+      projectId: 'd3ea15f2-e0c2-4970-84ee-0d59791a3a71',
     });
     return token;
   } catch (e) {
@@ -90,20 +94,30 @@ export async function scheduleDailyReminder(time: string = '09:00'): Promise<voi
 
   const [hour, minute] = time.split(':').map(Number);
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: 'daily_reminder',
-    content: {
-      title: '🇵🇱 Votre leçon vous attend !',
-      body: 'Quelques minutes de polonais pour garder votre série.',
-      data: { type: 'daily_reminder' },
-      sound: true,
-    },
-    trigger: {
-      hour,
-      minute,
-      repeats: true,
-    } as Notifications.CalendarTriggerInput,
-  });
+  const trigger = {
+    type: 'daily',
+    hour,
+    minute,
+  };
+
+  console.log('[Notifications] Planification du rappel quotidien...');
+  console.log('[Notifications] Trigger utilisé:', JSON.stringify(trigger));
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'daily_reminder',
+      content: {
+        title: '🇵🇱 Votre leçon vous attend !',
+        body: 'Quelques minutes de polonais pour garder votre série.',
+        data: { type: 'daily_reminder' },
+        sound: true,
+      },
+      trigger: trigger as any,
+    });
+    console.log('[Notifications] Rappel planifié avec succès !');
+  } catch (e) {
+    console.error('[Notifications] Erreur lors de la planification:', e);
+  }
 }
 
 // ── Alerte de streak en danger ────────────────────────────────
@@ -113,38 +127,47 @@ export async function scheduleStreakAlert(streakCount: number): Promise<void> {
   if (streakCount === 0) return;
 
   // Alerte à 20h si pas d'activité ce jour
-  await Notifications.scheduleNotificationAsync({
-    identifier: 'streak_alert',
-    content: {
-      title: `🔥 Série de ${streakCount} jours en danger !`,
-      body: 'Faites une leçon rapide pour ne pas perdre votre série.',
-      data: { type: 'streak_alert', streak: streakCount },
-      sound: true,
-    },
-    trigger: {
-      hour: 20,
-      minute: 0,
-      repeats: false,
-    } as Notifications.CalendarTriggerInput,
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'streak_alert',
+      content: {
+        title: `🔥 Série de ${streakCount} jours en danger !`,
+        body: 'Faites une leçon rapide pour ne pas perdre votre série.',
+        data: { type: 'streak_alert', streak: streakCount },
+        sound: true,
+      },
+      trigger: {
+        type: 'daily',
+        hour: 20,
+        minute: 0,
+      } as any,
+    });
+  } catch (e) {
+    console.error('[Notifications] Erreur planification alerte streak:', e);
+  }
 }
 
 // ── Notification de réactivation (J+3 sans activité) ─────────
 export async function scheduleReactivation(): Promise<void> {
   await cancelNotification('reactivation');
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: 'reactivation',
-    content: {
-      title: '👋 Ça fait un moment...',
-      body: 'Le polonais vous attend ! Une leçon de 5 minutes suffit.',
-      data: { type: 'reactivation' },
-    },
-    trigger: {
-      seconds: 3 * 24 * 60 * 60, // 3 jours
-      repeats: false,
-    } as Notifications.TimeIntervalTriggerInput,
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'reactivation',
+      content: {
+        title: '👋 Ça fait un moment...',
+        body: 'Le polonais vous attend ! Une leçon de 5 minutes suffit.',
+        data: { type: 'reactivation' },
+      },
+      trigger: {
+        type: 'timeInterval',
+        seconds: 3 * 24 * 60 * 60, // 3 jours
+        repeats: false,
+      } as any,
+    });
+  } catch (e) {
+    console.error('[Notifications] Erreur planification réactivation:', e);
+  }
 }
 
 // ── Notification de succès / badge ───────────────────────────
@@ -152,15 +175,19 @@ export async function sendAchievementNotification(
   title: string,
   body: string,
 ): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: `🏆 ${title}`,
-      body,
-      data: { type: 'achievement' },
-      sound: true,
-    },
-    trigger: null, // immédiat
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `🏆 ${title}`,
+        body,
+        data: { type: 'achievement' },
+        sound: true,
+      },
+      trigger: null,
+    });
+  } catch (e) {
+    console.error('[Notifications] Erreur notification immédiate:', e);
+  }
 }
 
 // ── Annuler une notification planifiée ───────────────────────
@@ -183,10 +210,12 @@ export async function setupNotifications(
 
   const settings = await loadSettings();
 
+  // On planifie toujours le rappel quotidien si activé, même sans streak
   if (settings.dailyReminder) {
     await scheduleDailyReminder(reminderTime);
   }
 
+  // Alerte de streak uniquement si l'utilisateur a commencé une série
   if (settings.streakAlert && streakCount > 0) {
     await scheduleStreakAlert(streakCount);
   }
