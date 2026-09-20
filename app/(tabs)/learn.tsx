@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { getLessonsByModule, ALL_LOCAL_LESSONS } from '@/content/lessons';
@@ -48,6 +49,7 @@ const DICTEES = [
 ];
 
 export default function LearnScreen() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<LearnTab>('modules');
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
@@ -82,16 +84,16 @@ export default function LearnScreen() {
   }, []);
 
   const TABS: Array<{ id: LearnTab; label: string; emoji: string }> = [
-    { id: 'modules', label: 'Leçons', emoji: '📚' },
-    { id: 'dialogues', label: 'Dialogues', emoji: '💬' },
-    { id: 'dictees', label: 'Dictées', emoji: '🎤' },
+    { id: 'modules', label: t('learn.tabs.lessons'), emoji: '📚' },
+    { id: 'dialogues', label: t('learn.tabs.dialogues'), emoji: '💬' },
+    { id: 'dictees', label: t('learn.tabs.dictations'), emoji: '🎤' },
   ];
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       {/* Header */}
       <View style={s.header}>
-        <Text style={s.headerTitle}>Apprendre</Text>
+        <Text style={s.headerTitle}>{t('learn.title')}</Text>
         <TouchableOpacity
           style={s.statsBtn}
           onPress={() => router.push('/stats')}
@@ -123,13 +125,13 @@ export default function LearnScreen() {
             {/* Progression globale */}
             <View style={s.progressCard}>
               <View style={s.progressRow}>
-                <Text style={s.progressLabel}>Progression globale</Text>
+                <Text style={s.progressLabel}>{t('learn.global_progress')}</Text>
                 <Text style={s.progressPct}>{globalProgress}%</Text>
               </View>
               <View style={s.progressTrack}>
                 <View style={[s.progressFill, { width: `${globalProgress}%` }]} />
               </View>
-              <Text style={s.progressSub}>{totalCompleted} / {totalLessons} leçons terminées</Text>
+              <Text style={s.progressSub}>{t('learn.lessons_completed', { completed: totalCompleted, total: totalLessons })}</Text>
             </View>
 
             {modules.map((mod, index) => {
@@ -155,9 +157,9 @@ export default function LearnScreen() {
                   </View>
 
                   <View style={s.moduleBody}>
-                    <Text style={s.moduleName}>{mod.title}</Text>
+                    <Text style={s.moduleName}>{t(`modules.${mod.id}` as any)}</Text>
                     <View style={s.moduleMetaRow}>
-                      <Text style={s.moduleMeta}>{mod.lessonCount} leçons • {mod.difficulty}</Text>
+                      <Text style={s.moduleMeta}>{mod.lessonCount} {t('learn.meta.lessons')} • {mod.difficulty}</Text>
                     </View>
 
                     {/* Barre de progression du module */}
@@ -199,8 +201,8 @@ export default function LearnScreen() {
                   <Text style={s.contentEmoji}>{dlg.emoji}</Text>
                 </View>
                 <View style={s.contentCardBody}>
-                  <Text style={s.contentTitle}>{dlg.title}</Text>
-                  <Text style={s.contentMetaTxt}>{dlg.difficulty} • {dlg.duration}</Text>
+                  <Text style={s.contentTitle}>{t(`dialogues.${dlg.id}` as any)}</Text>
+                  <Text style={s.contentMetaTxt}>{dlg.difficulty} • {t('learn.meta.duration', { count: parseInt(dlg.duration) })}</Text>
                 </View>
                 {!dlg.free && !isPremium ? <Text style={s.lockIcon}>🔒</Text> : <Text style={s.arrowIcon}>›</Text>}
               </TouchableOpacity>
@@ -227,8 +229,8 @@ export default function LearnScreen() {
                   <Text style={s.contentEmoji}>{dict.emoji}</Text>
                 </View>
                 <View style={s.contentCardBody}>
-                  <Text style={s.contentTitle}>{dict.title}</Text>
-                  <Text style={s.contentMetaTxt}>{dict.difficulty} • {dict.sentences} phrases</Text>
+                  <Text style={s.contentTitle}>{t(`dictations.${dict.id}` as any)}</Text>
+                  <Text style={s.contentMetaTxt}>{dict.difficulty} • {dict.sentences} {t('learn.meta.sentences')}</Text>
                 </View>
                 {!dict.free && !isPremium ? <Text style={s.lockIcon}>🔒</Text> : <Text style={s.arrowIcon}>›</Text>}
               </TouchableOpacity>

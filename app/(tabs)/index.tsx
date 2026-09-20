@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useGamification } from '@/hooks/useGamification';
@@ -37,18 +38,8 @@ function getTodayWord() {
   return WORDS_OF_DAY[dayOfYear % WORDS_OF_DAY.length];
 }
 
-// Noms des modules pour l'affichage dynamique
-const MODULE_NAMES: Record<string, string> = {
-  module_1: 'Alphabet & Prononciation',
-  module_2: 'Salutations essentielles',
-  module_3: 'Chiffres et nombres',
-  module_4: 'La famille',
-  module_5: 'Nourriture & Boissons',
-  module_6: 'Ville & Transport',
-  module_7: 'Temps & Dates',
-};
-
 export default function HomeScreen() {
+  const { t, i18n } = useTranslation();
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
   const { checkAndUpdateStreak } = useGamification();
@@ -112,7 +103,7 @@ export default function HomeScreen() {
           <View style={s.goalTrack}>
             <View style={[s.goalFill, { width: `${Math.min(dailyPercentage, 100)}%` }]} />
           </View>
-          <Text style={s.goalTxt}>Objectif : {dailyMinutes}/{targetMinutes} min</Text>
+          <Text style={s.goalTxt}>{t('home.daily_goal', { done: dailyMinutes, goal: targetMinutes })}</Text>
         </View>
 
         {/* ── MAIN CALL-TO-ACTION CARD (Hero) ── */}
@@ -123,10 +114,10 @@ export default function HomeScreen() {
         >
           <View style={s.heroTop}>
             <View style={s.heroInfo}>
-              <Text style={s.heroLabel}>CONTINUER L'APPRENTISSAGE</Text>
+              <Text style={s.heroLabel}>{t('home.continue_learning_label')}</Text>
               <Text style={s.heroTitle}>{nextLesson.title}</Text>
               <Text style={s.heroSub}>
-                Module {nextLesson.moduleId.split('_')[1]} • {MODULE_NAMES[nextLesson.moduleId] || 'Cours'}
+                Module {nextLesson.moduleId.split('_')[1]} • {t(`modules.${nextLesson.moduleId}` as any)}
               </Text>
             </View>
             <View style={s.heroIconBox}>
@@ -135,7 +126,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={s.heroBtn}>
-            <Text style={s.heroBtnTxt}>Continuer le cours →</Text>
+            <Text style={s.heroBtnTxt}>{t('home.continue_learning_btn')}</Text>
           </View>
         </TouchableOpacity>
 
@@ -146,7 +137,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/review')}
           >
             <Text style={s.actionEmoji}>🔄</Text>
-            <Text style={s.actionLabel}>Révision rapide</Text>
+            <Text style={s.actionLabel}>{t('home.quick_review')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -154,18 +145,18 @@ export default function HomeScreen() {
             onPress={() => router.push('/quiz/quiz_salutations_01')}
           >
             <Text style={s.actionEmoji}>🎯</Text>
-            <Text style={s.actionLabel}>Quiz du jour</Text>
+            <Text style={s.actionLabel}>{t('home.daily_quiz')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* ── MOT DU JOUR (Bottom) ── */}
         <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>📖 Mot du jour</Text>
+          <Text style={s.sectionTitle}>📖 {t('home.word_of_day')}</Text>
         </View>
         <View style={s.wordCard}>
           <View style={s.wordMain}>
             <Text style={s.wordPl}>{wordOfDay.pl}</Text>
-            <Text style={s.wordFr}>{wordOfDay.fr}</Text>
+            <Text style={s.wordFr}>{i18n.language === 'fr' ? wordOfDay.fr : 'Translation pending'}</Text>
           </View>
           <Text style={s.wordPhonetic}>{wordOfDay.phonetic}</Text>
         </View>

@@ -6,6 +6,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '@/constants';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
 
@@ -19,6 +20,7 @@ function TabIcon({ emoji, focused, size }: { emoji: string; focused: boolean; si
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -49,7 +51,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarLabel: 'Accueil',
+          tabBarLabel: t('tabs.home'),
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="🏠" focused={focused} size={24} />
           ),
@@ -58,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="learn"
         options={{
-          tabBarLabel: 'Apprendre',
+          tabBarLabel: t('tabs.learn'),
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="📚" focused={focused} size={24} />
           ),
@@ -67,7 +69,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="review"
         options={{
-          tabBarLabel: 'Réviser',
+          tabBarLabel: t('tabs.review'),
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="🔄" focused={focused} size={24} />
           ),
@@ -78,7 +80,7 @@ export default function TabsLayout() {
         name="premium"
         options={{
           href: MONETIZATION_ENABLED ? undefined : null,
-          tabBarLabel: 'Premium',
+          tabBarLabel: t('tabs.premium'),
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="⭐" focused={focused} size={24} />
           ),
@@ -87,7 +89,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ focused }) => (
             <TabIcon emoji="👤" focused={focused} size={24} />
           ),

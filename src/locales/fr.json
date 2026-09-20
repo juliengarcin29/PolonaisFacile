@@ -63,6 +63,56 @@
       "skip": "Non merci, continuer gratuitement"
     }
   },
+  "tabs": {
+    "home": "Accueil",
+    "learn": "Apprendre",
+    "review": "Réviser",
+    "premium": "Premium",
+    "profile": "Profil"
+  },
+  "home": {
+    "daily_goal": "Objectif : {{done}}/{{goal}} min",
+    "continue_learning_label": "CONTINUER L'APPRENTISSAGE",
+    "continue_learning_btn": "Continuer le cours →",
+    "quick_review": "Révision rapide",
+    "daily_quiz": "Quiz du jour",
+    "word_of_day": "Mot du jour"
+  },
+  "learn": {
+    "title": "Apprendre",
+    "tabs": {
+      "lessons": "Leçons",
+      "dialogues": "Dialogues",
+      "dictations": "Dictées"
+    },
+    "global_progress": "Progression globale",
+    "lessons_completed": "{{completed}} / {{total}} leçons terminées",
+    "meta": {
+      "lessons": "leçons",
+      "sentences": "phrases",
+      "duration": "{{count}} min"
+    }
+  },
+  "modules": {
+    "module_1": "Alphabet & Prononciation",
+    "module_2": "Salutations essentielles",
+    "module_3": "Chiffres et nombres",
+    "module_4": "La famille",
+    "module_5": "Nourriture & Boissons",
+    "module_6": "Ville & Transport",
+    "module_7": "Temps & Dates"
+  },
+  "dialogues": {
+    "dialogue_01": "Première rencontre",
+    "dialogue_02": "Au restaurant",
+    "dialogue_03": "Dans le bus",
+    "dialogue_04": "À l'hôtel"
+  },
+  "dictations": {
+    "dictation_01": "Salutations du quotidien",
+    "dictation_02": "Au café polonais",
+    "dictation_03": "Se présenter"
+  },
   "notifications": {
     "daily_reminder": {
       "title": "🇵🇱 Votre leçon vous attend !",

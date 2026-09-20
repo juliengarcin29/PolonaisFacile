@@ -63,6 +63,56 @@
       "skip": "No thanks, continue for free"
     }
   },
+  "tabs": {
+    "home": "Home",
+    "learn": "Learn",
+    "review": "Review",
+    "premium": "Premium",
+    "profile": "Profile"
+  },
+  "home": {
+    "daily_goal": "Goal: {{done}}/{{goal}} min",
+    "continue_learning_label": "CONTINUE LEARNING",
+    "continue_learning_btn": "Continue course →",
+    "quick_review": "Quick review",
+    "daily_quiz": "Daily quiz",
+    "word_of_day": "Word of the day"
+  },
+  "learn": {
+    "title": "Learn",
+    "tabs": {
+      "lessons": "Lessons",
+      "dialogues": "Dialogues",
+      "dictations": "Dictations"
+    },
+    "global_progress": "Global progress",
+    "lessons_completed": "{{completed}} / {{total}} lessons completed",
+    "meta": {
+      "lessons": "lessons",
+      "sentences": "sentences",
+      "duration": "{{count}} min"
+    }
+  },
+  "modules": {
+    "module_1": "Alphabet & Pronunciation",
+    "module_2": "Essential Greetings",
+    "module_3": "Numbers",
+    "module_4": "Family",
+    "module_5": "Food & Drinks",
+    "module_6": "City & Transport",
+    "module_7": "Time & Dates"
+  },
+  "dialogues": {
+    "dialogue_01": "First meeting",
+    "dialogue_02": "At the restaurant",
+    "dialogue_03": "On the bus",
+    "dialogue_04": "At the hotel"
+  },
+  "dictations": {
+    "dictation_01": "Daily greetings",
+    "dictation_02": "At the Polish café",
+    "dictation_03": "Introduce yourself"
+  },
   "notifications": {
     "daily_reminder": {
       "title": "🇵🇱 Your lesson is waiting!",
