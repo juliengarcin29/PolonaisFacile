@@ -6,11 +6,13 @@ import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { useFlashcards } from '@/hooks/useFlashcards';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
 
 export default function ReviewScreen() {
+  const { t } = useTranslation();
   const { getSessionStats, isLoading, reviews, refreshReviews } = useFlashcards(FLASHCARDS);
   const [stats, setStats] = useState({ dueCount: 0, newCount: 0, reviewCount: 0 });
 
@@ -43,11 +45,11 @@ export default function ReviewScreen() {
   const handleResetReviews = async () => {
     Alert.alert(
       "🔧 Debug",
-      "Réinitialiser l'historique des flashcards ?",
+      t('review.debug_alert'),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t('review.cancel'), style: "cancel" },
         {
-          text: "Réinitialiser",
+          text: t('review.reset'),
           style: "destructive",
           onPress: async () => {
             await AsyncStorage.removeItem('flashcard_reviews');
@@ -70,30 +72,30 @@ export default function ReviewScreen() {
     <SafeAreaView style={s.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={s.header}>
-          <Text style={s.title}>Réviser</Text>
-          <Text style={s.subtitle}>Répétition espacée intelligente (SM-2)</Text>
+          <Text style={s.title}>{t('review.title')}</Text>
+          <Text style={s.subtitle}>{t('review.subtitle')}</Text>
         </View>
 
         <View style={s.dueCard}>
           <Text style={s.dueEmoji}>🧠</Text>
           <Text style={s.dueCount}>{toReviewCount}</Text>
-          <Text style={s.dueLabel}>cartes à réviser aujourd'hui</Text>
+          <Text style={s.dueLabel}>{t('review.due_count', { count: toReviewCount })}</Text>
           <TouchableOpacity
             style={[s.startBtn, toReviewCount === 0 && s.startBtnDisabled]}
             onPress={() => toReviewCount > 0 && router.push('/flashcard/all')}
             disabled={toReviewCount === 0}
           >
             <Text style={s.startBtnText}>
-              {toReviewCount > 0 ? 'Commencer la révision →' : 'Tout est à jour !'}
+              {toReviewCount > 0 ? t('review.start_btn') : t('review.all_up_to_date')}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={s.statsRow}>
           {[
-            { label: 'Apprises', value: masteredCount, emoji: '✅', color: COLORS.success },
-            { label: 'En cours', value: inProgressCount, emoji: '🔄', color: COLORS.warning },
-            { label: 'À revoir', value: toReviewCount, emoji: '⚠️', color: COLORS.error },
+            { label: t('review.stats.mastered'), value: masteredCount, emoji: '✅', color: COLORS.success },
+            { label: t('review.stats.learning'), value: inProgressCount, emoji: '🔄', color: COLORS.warning },
+            { label: t('review.stats.due'), value: toReviewCount, emoji: '⚠️', color: COLORS.error },
           ].map((stat) => (
             <View key={stat.label} style={[s.statBox, { borderTopColor: stat.color }]}>
               <Text style={s.statEmoji}>{stat.emoji}</Text>
@@ -105,7 +107,7 @@ export default function ReviewScreen() {
 
         {recentCards.length > 0 && (
           <>
-            <Text style={s.sectionTitle}>📋 Flashcards récentes</Text>
+            <Text style={s.sectionTitle}>{t('review.recent')}</Text>
             {recentCards.map((card: any) => (
               <View key={card.id} style={s.flashRow}>
                 <View style={s.flashLeft}>
@@ -126,7 +128,7 @@ export default function ReviewScreen() {
             onPress={handleResetReviews}
             style={s.debugBtn}
           >
-            <Text style={s.debugBtnText}>🔧 Reset reviews (dev only)</Text>
+            <Text style={s.debugBtnText}>{t('review.debug_reset')}</Text>
           </TouchableOpacity>
         )}
 

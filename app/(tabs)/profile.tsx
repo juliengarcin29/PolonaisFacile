@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,7 @@ import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
   const { logout, isAnonymous } = useAuth();
@@ -72,14 +74,14 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Se déconnecter',
+      t('profile.logout.alert_title'),
       isAnonymous
-        ? '⚠️ Votre progression sera perdue si vous n\'avez pas créé de compte. Continuer ?'
-        : 'Voulez-vous vous déconnecter ?',
+        ? t('profile.logout.alert_msg_anon')
+        : t('profile.logout.alert_msg'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('profile.logout.cancel'), style: 'cancel' },
         {
-          text: 'Se déconnecter',
+          text: isAnonymous ? t('profile.logout.btn_anon') : t('profile.logout.btn'),
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -96,18 +98,18 @@ export default function ProfileScreen() {
   const lockedAchievements = allAchievements.filter(a => !unlockedIds.includes(a.id)).slice(0, 4);
 
   const STATS = [
-    { label: 'Série actuelle', value: streakDays, emoji: '🔥' },
-    { label: 'XP total', value: totalXp, emoji: '⭐' },
-    { label: 'Leçons', value: completedLessonsCount, emoji: '📚' },
-    { label: 'Mots appris', value: masteredWordsCount, emoji: '🧠' },
+    { label: t('profile.stats.streak'), value: streakDays, emoji: '🔥' },
+    { label: t('profile.stats.xp'), value: totalXp, emoji: '⭐' },
+    { label: t('profile.stats.lessons'), value: completedLessonsCount, emoji: '📚' },
+    { label: t('profile.stats.words'), value: masteredWordsCount, emoji: '🧠' },
   ];
 
   const syncLabel = {
-    idle: '⚪ Non synchronisé',
-    syncing: '🔄 Synchronisation...',
-    synced: `✅ Sync ${lastSyncAt ? new Date(lastSyncAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}`,
-    error: '❌ Erreur de sync',
-    offline: '📵 Hors ligne',
+    idle: t('profile.sync.idle'),
+    syncing: t('profile.sync.syncing'),
+    synced: t('profile.sync.synced', { time: lastSyncAt ? new Date(lastSyncAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '' }),
+    error: t('profile.sync.error'),
+    offline: t('profile.sync.offline'),
   }[syncStatus];
 
   return (
@@ -122,23 +124,23 @@ export default function ProfileScreen() {
             </Text>
           </View>
           <Text style={s.name}>{user?.displayName ?? 'Apprenant'}</Text>
-          <Text style={s.level}>Niveau {user?.level ?? 1} · {user?.xp ?? 0} XP</Text>
+          <Text style={s.level}>{t('profile.level', { count: user?.level ?? 1 })} · {user?.xp ?? 0} XP</Text>
 
           {/* Badge premium ou anonyme */}
           {MONETIZATION_ENABLED && isPremium ? (
             <View style={s.premiumBadge}>
-              <Text style={s.premiumBadgeTxt}>⭐ Accès Illimité</Text>
+              <Text style={s.premiumBadgeTxt}>{t('profile.unlimited_access')}</Text>
             </View>
           ) : isAnonymous ? (
             <TouchableOpacity
               style={s.loginBtn}
               onPress={() => router.push('/auth/login')}
             >
-              <Text style={s.loginBtnTxt}>🔒 Créer un compte pour sauvegarder</Text>
+              <Text style={s.loginBtnTxt}>{t('profile.create_account')}</Text>
             </TouchableOpacity>
           ) : !MONETIZATION_ENABLED ? null : (
             <View style={s.emailBadge}>
-              <Text style={s.emailBadgeTxt}>✅ Compte connecté</Text>
+              <Text style={s.emailBadgeTxt}>{t('profile.account_connected')}</Text>
             </View>
           )}
         </View>
@@ -157,18 +159,18 @@ export default function ProfileScreen() {
         {/* ── Badges débloqués ── */}
         {unlockedAchievements.length > 0 && (
           <>
-            <Text style={s.sectionTitle}>🏆 Mes badges</Text>
+            <Text style={s.sectionTitle}>{t('profile.sections.badges')}</Text>
             <View style={s.badgesWrap}>
               {unlockedAchievements.map((a) => (
                 <View key={a.id} style={[s.badge, s.badgeUnlocked]}>
                   <Text style={s.badgeEmoji}>{a.icon}</Text>
-                  <Text style={s.badgeTitle}>{a.title}</Text>
+                  <Text style={s.badgeTitle}>{t(a.title as any)}</Text>
                 </View>
               ))}
               {lockedAchievements.map((a) => (
                 <View key={a.id} style={[s.badge, s.badgeLocked]}>
                   <Text style={[s.badgeEmoji, { opacity: 0.25 }]}>{a.icon}</Text>
-                  <Text style={[s.badgeTitle, { opacity: 0.35 }]}>{a.title}</Text>
+                  <Text style={[s.badgeTitle, { opacity: 0.35 }]}>{t(a.title as any)}</Text>
                 </View>
               ))}
             </View>
@@ -176,12 +178,12 @@ export default function ProfileScreen() {
         )}
 
         {/* ── Notifications ── */}
-        <Text style={s.sectionTitle}>🔔 Notifications</Text>
+        <Text style={s.sectionTitle}>{t('profile.sections.notifications')}</Text>
         <View style={s.settingsCard}>
           <View style={s.settingRow}>
             <View style={s.settingLeft}>
-              <Text style={s.settingLabel}>Rappel quotidien</Text>
-              <Text style={s.settingDesc}>Chaque jour à 9h00</Text>
+              <Text style={s.settingLabel}>{t('profile.notif.daily')}</Text>
+              <Text style={s.settingDesc}>{t('profile.notif.daily_desc')}</Text>
             </View>
             <Switch
               value={notifDaily}
@@ -193,8 +195,8 @@ export default function ProfileScreen() {
 
           <View style={[s.settingRow, { borderBottomWidth: 0 }]}>
             <View style={s.settingLeft}>
-              <Text style={s.settingLabel}>Alerte série</Text>
-              <Text style={s.settingDesc}>Si pas d'activité à 20h</Text>
+              <Text style={s.settingLabel}>{t('profile.notif.streak')}</Text>
+              <Text style={s.settingDesc}>{t('profile.notif.streak_desc')}</Text>
             </View>
             <Switch
               value={notifStreak}
@@ -206,11 +208,11 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Synchronisation ── */}
-        <Text style={s.sectionTitle}>☁️ Synchronisation</Text>
+        <Text style={s.sectionTitle}>{t('profile.sections.sync')}</Text>
         <View style={s.settingsCard}>
           <View style={s.settingRow}>
             <View style={s.settingLeft}>
-              <Text style={s.settingLabel}>Statut</Text>
+              <Text style={s.settingLabel}>{t('profile.sync.status')}</Text>
               <Text style={s.settingDesc}>{syncLabel}</Text>
             </View>
             <TouchableOpacity
@@ -220,21 +222,21 @@ export default function ProfileScreen() {
             >
               {syncStatus === 'syncing'
                 ? <ActivityIndicator size="small" color={COLORS.primary} />
-                : <Text style={s.syncBtnTxt}>Sync</Text>
+                : <Text style={s.syncBtnTxt}>{t('profile.sync.btn')}</Text>
               }
             </TouchableOpacity>
           </View>
         </View>
 
         {/* ── Menu ── */}
-        <Text style={s.sectionTitle}>⚙️ Paramètres</Text>
+        <Text style={s.sectionTitle}>{t('profile.sections.settings')}</Text>
         <View style={s.menuCard}>
           {[
-            MONETIZATION_ENABLED ? { emoji: '⭐', label: 'Passer à Premium', action: () => router.push('/(tabs)/premium') } : null,
-            { emoji: '🌍', label: 'Langue de l\'interface', action: () => {} },
-            { emoji: '❓', label: 'Aide & FAQ', action: () => {} },
-            { emoji: '⭐', label: 'Noter l\'application', action: () => {} },
-            { emoji: '📤', label: 'Partager avec un ami', action: () => {} },
+            MONETIZATION_ENABLED ? { emoji: '⭐', label: t('profile.menu.premium'), action: () => router.push('/(tabs)/premium') } : null,
+            { emoji: '🌍', label: t('profile.menu.language'), action: () => {} },
+            { emoji: '❓', label: t('profile.menu.help'), action: () => {} },
+            { emoji: '⭐', label: t('profile.menu.rate'), action: () => {} },
+            { emoji: '📤', label: t('profile.menu.share'), action: () => {} },
           ].filter(Boolean).map((item: any, i, arr) => (
             <TouchableOpacity
               key={item.label}
@@ -251,7 +253,7 @@ export default function ProfileScreen() {
         {/* ── Déconnexion ── */}
         <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
           <Text style={s.logoutTxt}>
-            {isAnonymous ? '🚪 Effacer les données' : '🚪 Se déconnecter'}
+            {isAnonymous ? t('profile.logout.btn_anon') : t('profile.logout.btn')}
           </Text>
         </TouchableOpacity>
 

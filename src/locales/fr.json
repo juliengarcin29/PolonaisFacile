@@ -130,5 +130,84 @@
       "title": "Nouveau badge débloqué !",
       "body": "Félicitations pour votre progression !"
     }
+  },
+  "review": {
+    "title": "Réviser",
+    "subtitle": "Répétition espacée intelligente (SM-2)",
+    "due_count": "{{count}} cartes à réviser aujourd'hui",
+    "start_btn": "Commencer la révision →",
+    "all_up_to_date": "Tout est à jour !",
+    "stats": {
+      "mastered": "Apprises",
+      "learning": "En cours",
+      "due": "À revoir"
+    },
+    "recent": "📋 Flashcards récentes",
+    "debug_reset": "🔧 Reset reviews (dev only)",
+    "debug_alert": "Réinitialiser l'historique des flashcards ?",
+    "cancel": "Annuler",
+    "reset": "Réinitialiser"
+  },
+  "profile": {
+    "level": "Niveau {{count}}",
+    "unlimited_access": "⭐ Accès Illimité",
+    "create_account": "🔒 Créer un compte pour sauvegarder",
+    "account_connected": "✅ Compte connecté",
+    "stats": {
+      "streak": "Série actuelle",
+      "xp": "XP total",
+      "lessons": "Leçons",
+      "words": "Mots appris"
+    },
+    "sections": {
+      "badges": "🏆 Mes badges",
+      "notifications": "🔔 Notifications",
+      "sync": "☁️ Synchronisation",
+      "settings": "⚙️ Paramètres"
+    },
+    "notif": {
+      "daily": "Rappel quotidien",
+      "daily_desc": "Chaque jour à 9h00",
+      "streak": "Alerte série",
+      "streak_desc": "Si pas d'activité à 20h"
+    },
+    "sync": {
+      "status": "Statut",
+      "idle": "⚪ Non synchronisé",
+      "syncing": "🔄 Synchronisation...",
+      "synced": "✅ Sync {{time}}",
+      "error": "❌ Erreur de sync",
+      "offline": "📵 Hors ligne",
+      "btn": "Sync"
+    },
+    "menu": {
+      "premium": "Passer à Premium",
+      "language": "Langue de l'interface",
+      "help": "Aide & FAQ",
+      "rate": "Noter l'application",
+      "share": "Partager avec un ami"
+    },
+    "logout": {
+      "btn_anon": "🚪 Effacer les données",
+      "btn": "🚪 Se déconnecter",
+      "alert_title": "Se déconnecter",
+      "alert_msg_anon": "⚠️ Votre progression sera perdue si vous n'avez pas créé de compte. Continuer ?",
+      "alert_msg": "Voulez-vous vous déconnecter ?",
+      "cancel": "Annuler"
+    }
+  },
+  "achievements": {
+    "first_lesson": { "title": "Premier pas", "desc": "Terminez votre première leçon" },
+    "streak_3": { "title": "3 jours de suite", "desc": "Maintenez une série de 3 jours" },
+    "streak_7": { "title": "Une semaine !", "desc": "Maintenez une série de 7 jours" },
+    "streak_30": { "title": "Un mois !", "desc": "Maintenez une série de 30 jours" },
+    "xp_100": { "title": "Démarrage", "desc": "Gagnez 100 XP" },
+    "xp_500": { "title": "Assidu", "desc": "Gagnez 500 XP" },
+    "xp_1000": { "title": "Expert", "desc": "Gagnez 1 000 XP" },
+    "xp_5000": { "title": "Maître", "desc": "Gagnez 5 000 XP" },
+    "lessons_5": { "title": "Studieux", "desc": "Terminez 5 leçons" },
+    "lessons_25": { "title": "Dévoué", "desc": "Terminez 25 leçons" },
+    "flashcards_50": { "title": "Vocabulaire", "desc": "Maîtrisez 50 flashcards" },
+    "quiz_perfect": { "title": "Parfait !", "desc": "Obtenez 100% à un quiz" }
   }
 }

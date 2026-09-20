@@ -130,5 +130,84 @@
       "title": "New badge unlocked!",
       "body": "Congratulations on your progress!"
     }
+  },
+  "review": {
+    "title": "Review",
+    "subtitle": "Smart Spaced Repetition (SM-2)",
+    "due_count": "{{count}} cards to review today",
+    "start_btn": "Start review →",
+    "all_up_to_date": "All up to date!",
+    "stats": {
+      "mastered": "Mastered",
+      "learning": "Learning",
+      "due": "Due"
+    },
+    "recent": "📋 Recent Flashcards",
+    "debug_reset": "🔧 Reset reviews (dev only)",
+    "debug_alert": "Reset flashcard history?",
+    "cancel": "Cancel",
+    "reset": "Reset"
+  },
+  "profile": {
+    "level": "Level {{count}}",
+    "unlimited_access": "⭐ Unlimited Access",
+    "create_account": "🔒 Create account to save",
+    "account_connected": "✅ Account connected",
+    "stats": {
+      "streak": "Current streak",
+      "xp": "Total XP",
+      "lessons": "Lessons",
+      "words": "Words learned"
+    },
+    "sections": {
+      "badges": "🏆 My badges",
+      "notifications": "🔔 Notifications",
+      "sync": "☁️ Synchronization",
+      "settings": "⚙️ Settings"
+    },
+    "notif": {
+      "daily": "Daily reminder",
+      "daily_desc": "Every day at 9:00 AM",
+      "streak": "Streak alert",
+      "streak_desc": "If no activity at 8:00 PM"
+    },
+    "sync": {
+      "status": "Status",
+      "idle": "⚪ Not synced",
+      "syncing": "🔄 Syncing...",
+      "synced": "✅ Synced {{time}}",
+      "error": "❌ Sync error",
+      "offline": "📵 Offline",
+      "btn": "Sync"
+    },
+    "menu": {
+      "premium": "Upgrade to Premium",
+      "language": "Interface Language",
+      "help": "Help & FAQ",
+      "rate": "Rate the app",
+      "share": "Share with a friend"
+    },
+    "logout": {
+      "btn_anon": "🚪 Clear data",
+      "btn": "🚪 Log out",
+      "alert_title": "Log out",
+      "alert_msg_anon": "⚠️ Your progress will be lost if you haven't created an account. Continue?",
+      "alert_msg": "Do you want to log out?",
+      "cancel": "Cancel"
+    }
+  },
+  "achievements": {
+    "first_lesson": { "title": "First step", "desc": "Finish your first lesson" },
+    "streak_3": { "title": "3 day streak", "desc": "Maintain a 3 day streak" },
+    "streak_7": { "title": "A week!", "desc": "Maintain a 7 day streak" },
+    "streak_30": { "title": "A month!", "desc": "Maintain a 30 day streak" },
+    "xp_100": { "title": "Starting out", "desc": "Earn 100 XP" },
+    "xp_500": { "title": "Assiduous", "desc": "Earn 500 XP" },
+    "xp_1000": { "title": "Expert", "desc": "Earn 1,000 XP" },
+    "xp_5000": { "title": "Master", "desc": "Earn 5,000 XP" },
+    "lessons_5": { "title": "Studious", "desc": "Finish 5 lessons" },
+    "lessons_25": { "title": "Dedicated", "desc": "Finish 25 lessons" },
+    "flashcards_50": { "title": "Vocabulary", "desc": "Master 50 flashcards" },
+    "quiz_perfect": { "title": "Perfect!", "desc": "Get 100% on a quiz" }
   }
 }
