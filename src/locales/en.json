@@ -193,6 +193,40 @@
     "stat_xp": "XP earned",
     "btn_home": "Back to home →"
   },
+  "flashcards": {
+    "intro": {
+      "title": "Flashcards Review",
+      "all_cards": "All your cards",
+      "theme_label": "Theme: {{theme}}",
+      "total_label": "Total cards",
+      "start_btn": "Start review →"
+    },
+    "badge": {
+      "mastered": "✅ Mastered",
+      "learning": "🔄 Learning",
+      "new": "🆕 New"
+    },
+    "card": {
+      "pl_hint": "🇵🇱 Polish • {{tag}}",
+      "fr_hint": "🇫🇷 French",
+      "tap_hint": "Tap to flip →",
+      "flip_btn": "🔄 Flip card"
+    },
+    "rating": {
+      "question": "Did you know this word?",
+      "no": "No",
+      "no_sub": "Soon",
+      "mid": "Medium",
+      "mid_sub": "In a few days",
+      "yes": "Yes!",
+      "yes_sub": "Long time"
+    },
+    "completed": {
+      "title": "Session completed!",
+      "summary": "You reviewed {{count}} cards.",
+      "btn_home": "Back to home"
+    }
+  },
   "notifications": {
     "daily_reminder": {
       "title": "🇵🇱 Your lesson is waiting!",

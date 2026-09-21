@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import * as Speech from 'expo-speech';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { FLASHCARDS } from '@/content/flashcards/flashcards';
@@ -20,6 +21,7 @@ const { width } = Dimensions.get('window');
 type FlashcardPhase = 'intro' | 'card' | 'completed';
 
 export default function FlashcardScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { moduleId } = useLocalSearchParams<{ moduleId: string }>();
 
@@ -116,18 +118,18 @@ export default function FlashcardScreen() {
         </View>
         <View style={[s.introWrap, { paddingBottom: insets.bottom + 20 }]}>
           <Text style={s.introEmoji}>🧠</Text>
-          <Text style={s.introTitle}>Révision Flashcards</Text>
+          <Text style={s.introTitle}>{t('flashcards.intro.title')}</Text>
           <Text style={s.introDesc}>
-            {moduleId === 'all' ? 'Toutes vos cartes' : `Thème : ${initialCards[0]?.tags[0] || 'Général'}`}
+            {moduleId === 'all' ? t('flashcards.intro.all_cards') : t('flashcards.intro.theme_label', { theme: initialCards[0]?.tags[0] || 'Général' })}
           </Text>
           <View style={s.introStats}>
             <View style={s.introStat}>
               <Text style={s.introStatVal}>{initialCards.length}</Text>
-              <Text style={s.introStatLabel}>Cartes totales</Text>
+              <Text style={s.introStatLabel}>{t('flashcards.intro.total_label')}</Text>
             </View>
           </View>
           <TouchableOpacity style={s.startBtn} onPress={handleStart}>
-            <Text style={s.startBtnTxt}>Commencer la révision →</Text>
+            <Text style={s.startBtnTxt}>{t('flashcards.intro.start_btn')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -140,10 +142,10 @@ export default function FlashcardScreen() {
       <View style={s.safe}>
         <View style={[s.completedWrap, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>
           <Text style={s.completedEmoji}>🎉</Text>
-          <Text style={s.completedTitle}>Session terminée !</Text>
-          <Text style={s.completedSub}>Vous avez révisé {sessionCards.length} cartes.</Text>
+          <Text style={s.completedTitle}>{t('flashcards.completed.title')}</Text>
+          <Text style={s.completedSub}>{t('flashcards.completed.summary', { count: sessionCards.length })}</Text>
           <TouchableOpacity style={s.homeBtn} onPress={() => router.replace('/(tabs)')}>
-            <Text style={s.homeBtnTxt}>Retour à l'accueil</Text>
+            <Text style={s.homeBtnTxt}>{t('flashcards.completed.btn_home')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -172,7 +174,7 @@ export default function FlashcardScreen() {
       <View style={s.masteryRow}>
         <View style={[s.masteryBadge, { backgroundColor: mastery === 'mastered' ? COLORS.successLight : mastery === 'learning' ? COLORS.warningLight : COLORS.surfaceAlt }]}>
           <Text style={s.masteryText}>
-            {mastery === 'mastered' ? '✅ Maîtrisé' : mastery === 'learning' ? '🔄 En cours' : '🆕 Nouveau'}
+            {mastery === 'mastered' ? t('flashcards.badge.mastered') : mastery === 'learning' ? t('flashcards.badge.learning') : t('flashcards.badge.new')}
           </Text>
         </View>
       </View>
@@ -183,7 +185,7 @@ export default function FlashcardScreen() {
           {/* Face avant (polonais) */}
           <Animated.View style={[s.card, s.cardFront, { transform: [{ rotateY: frontRotate }], opacity: frontOpacity }]}>
             <Pressable style={StyleSheet.absoluteFill} onPress={handleFlip} />
-            <Text style={s.cardHint} pointerEvents="none">🇵🇱 Polonais • {current.tags[0]}</Text>
+            <Text style={s.cardHint} pointerEvents="none">{t('flashcards.card.pl_hint', { tag: current.tags[0] })}</Text>
             <View style={s.wordRow}>
               <Text style={s.cardWord} pointerEvents="none">{current.front}</Text>
               {/* Le bouton audio a été déplacé dans un calque stable pour corriger le bug Android de rotation 3D */}
@@ -193,13 +195,13 @@ export default function FlashcardScreen() {
             </View>
             <Text style={s.cardPhonetic} pointerEvents="none">{current.phonetic}</Text>
             <View style={s.cardDivider} pointerEvents="none" />
-            <Text style={s.tapHintText} pointerEvents="none">Appuyez pour retourner →</Text>
+            <Text style={s.tapHintText} pointerEvents="none">{t('flashcards.card.tap_hint')}</Text>
           </Animated.View>
 
           {/* Face arrière (français + détails) */}
           <Animated.View style={[s.card, s.cardBack, { transform: [{ rotateY: backRotate }], opacity: backOpacity }]}>
             <Pressable style={StyleSheet.absoluteFill} onPress={handleFlip} />
-            <Text style={s.cardHint} pointerEvents="none">🇫🇷 Français</Text>
+            <Text style={s.cardHint} pointerEvents="none">{t('flashcards.card.fr_hint')}</Text>
             <Text style={s.cardWordBack} pointerEvents="none">{current.back}</Text>
             <View style={s.cardDivider} pointerEvents="none" />
 
@@ -251,15 +253,15 @@ export default function FlashcardScreen() {
       <View style={{ paddingBottom: insets.bottom + 16 }}>
         {!showRating ? (
           <TouchableOpacity style={s.flipBtn} onPress={handleFlip}>
-            <Text style={s.flipBtnText}>🔄 Retourner la carte</Text>
+            <Text style={s.flipBtnText}>{t('flashcards.card.flip_btn')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={s.ratingWrap}>
-            <Text style={s.ratingLabel}>Connaissiez-vous ce mot ?</Text>
+            <Text style={s.ratingLabel}>{t('flashcards.rating.question')}</Text>
             <View style={s.ratingRow}>
-              <RatingBtn emoji="😔" label="Non" sub="Bientôt" color={COLORS.error} onPress={() => handleRate(0)} />
-              <RatingBtn emoji="🤔" label="Moyen" sub="Quelques jours" color={COLORS.warning} onPress={() => handleRate(3)} />
-              <RatingBtn emoji="😄" label="Oui !" sub="Longtemps" color={COLORS.success} onPress={() => handleRate(5)} />
+              <RatingBtn emoji="😔" label={t('flashcards.rating.no')} sub={t('flashcards.rating.no_sub')} color={COLORS.error} onPress={() => handleRate(0)} />
+              <RatingBtn emoji="🤔" label={t('flashcards.rating.mid')} sub={t('flashcards.rating.mid_sub')} color={COLORS.warning} onPress={() => handleRate(3)} />
+              <RatingBtn emoji="😄" label={t('flashcards.rating.yes')} sub={t('flashcards.rating.yes_sub')} color={COLORS.success} onPress={() => handleRate(5)} />
             </View>
           </View>
         )}

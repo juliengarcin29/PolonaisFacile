@@ -193,6 +193,40 @@
     "stat_xp": "XP gagnés",
     "btn_home": "Retour à l'accueil →"
   },
+  "flashcards": {
+    "intro": {
+      "title": "Révision Flashcards",
+      "all_cards": "Toutes vos cartes",
+      "theme_label": "Thème : {{theme}}",
+      "total_label": "Cartes totales",
+      "start_btn": "Commencer la révision →"
+    },
+    "badge": {
+      "mastered": "✅ Maîtrisé",
+      "learning": "🔄 En cours",
+      "new": "🆕 Nouveau"
+    },
+    "card": {
+      "pl_hint": "🇵🇱 Polonais • {{tag}}",
+      "fr_hint": "🇫🇷 Français",
+      "tap_hint": "Appuyez pour retourner →",
+      "flip_btn": "🔄 Retourner la carte"
+    },
+    "rating": {
+      "question": "Connaissiez-vous ce mot ?",
+      "no": "Non",
+      "no_sub": "Bientôt",
+      "mid": "Moyen",
+      "mid_sub": "Quelques jours",
+      "yes": "Oui !",
+      "yes_sub": "Longtemps"
+    },
+    "completed": {
+      "title": "Session terminée !",
+      "summary": "Vous avez révisé {{count}} cartes.",
+      "btn_home": "Retour à l'accueil"
+    }
+  },
   "notifications": {
     "daily_reminder": {
       "title": "🇵🇱 Votre leçon vous attend !",
