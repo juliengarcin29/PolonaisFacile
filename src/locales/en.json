@@ -152,10 +152,46 @@
     "dialogue_03": "On the bus",
     "dialogue_04": "At the hotel"
   },
+  "dialogue_screen": {
+    "loading": "Loading dialogue...",
+    "error_title": "Dialogue not found",
+    "error_desc": "Sorry, we couldn't load this dialogue.",
+    "error_btn": "Return to learning",
+    "header_sub": "{{count}} lines",
+    "reveal_start": "▶ Start dialogue",
+    "reveal_next": "▶ Next line",
+    "stop": "⏹ Stop",
+    "play_all": "🔊 Play all",
+    "start_quiz": "🎯 Test comprehension →",
+    "quiz_title": "Comprehension Quiz",
+    "quiz_back": "← Back",
+    "quiz_instruction": "What is the translation of this sentence?",
+    "completed_title": "Dialogue mastered!",
+    "stat_correct": "Correct answers",
+    "stat_xp": "XP earned",
+    "btn_home": "Back to home →",
+    "btn_retry": "🔄 Restart"
+  },
   "dictations": {
     "dictation_01": "Daily greetings",
     "dictation_02": "At the Polish café",
     "dictation_03": "Introduce yourself"
+  },
+  "dictation_screen": {
+    "loading": "Loading dictation...",
+    "error_title": "Dictation not found",
+    "error_btn": "Return to learning",
+    "phase_listening": "🔊 Listen to the sentence",
+    "phase_writing": "✍️ Write what you hear",
+    "feedback_correct": "✅ Correct!",
+    "feedback_wrong": "❌ Not quite...",
+    "btn_listen": "🔊 Listen ({{done}}/{{total}})",
+    "correct_label": "Correct sentence:",
+    "btn_next": "Next →",
+    "btn_finish": "🏁 Finish",
+    "completed_title": "Dictation completed!",
+    "stat_xp": "XP earned",
+    "btn_home": "Back to home →"
   },
   "notifications": {
     "daily_reminder": {

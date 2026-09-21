@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDialogueById, DialogueLine, Dialogue } from '@/content/dialogues/dialogues';
@@ -19,6 +20,7 @@ type DialogueMode = 'loading' | 'error' | 'read' | 'quiz' | 'completed';
 
 // ── Composant principal ──────────────────────────────────────
 export default function DialogueScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { awardXP, recordDailyActivity } = useGamification();
@@ -135,7 +137,7 @@ export default function DialogueScreen() {
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={s.loadingText}>Chargement du dialogue...</Text>
+          <Text style={s.loadingText}>{t('dialogue_screen.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -146,10 +148,10 @@ export default function DialogueScreen() {
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <Text style={s.errorEmoji}>🛰️</Text>
-          <Text style={s.errorTitle}>Dialogue introuvable</Text>
-          <Text style={s.errorDesc}>Désolé, nous n'avons pas pu charger ce dialogue.</Text>
+          <Text style={s.errorTitle}>{t('dialogue_screen.error_title')}</Text>
+          <Text style={s.errorDesc}>{t('dialogue_screen.error_desc')}</Text>
           <TouchableOpacity style={s.backBtnFull} onPress={() => router.back()}>
-            <Text style={s.backBtnText}>Retourner apprendre</Text>
+            <Text style={s.backBtnText}>{t('dialogue_screen.error_btn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -166,8 +168,8 @@ export default function DialogueScreen() {
             <Text style={s.backTxt}>✕</Text>
           </TouchableOpacity>
           <View style={s.headerCenter}>
-            <Text style={s.headerTitle}>{dialogue.emoji} {dialogue.title}</Text>
-            <Text style={s.headerSub}>{dialogue.difficulty} · {dialogue.lines.length} répliques</Text>
+            <Text style={s.headerTitle}>{dialogue.emoji} {t(`dialogues.${dialogue.id}` as any)}</Text>
+            <Text style={s.headerSub}>{dialogue.difficulty} · {t('dialogue_screen.header_sub', { count: dialogue.lines.length })}</Text>
           </View>
           <View style={s.headerActions}>
             <TouchableOpacity
@@ -227,8 +229,8 @@ export default function DialogueScreen() {
               >
                 <Text style={s.revealBtnTxt}>
                   {revealedLines === 0
-                    ? '▶ Commencer le dialogue'
-                    : '▶ Ligne suivante'}
+                    ? t('dialogue_screen.reveal_start')
+                    : t('dialogue_screen.reveal_next')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -238,14 +240,14 @@ export default function DialogueScreen() {
               <View style={s.completedActions}>
                 <TouchableOpacity style={s.playAllBtn} onPress={playAll}>
                   <Text style={s.playAllBtnTxt}>
-                    {isPlaying ? '⏹ Arrêter' : '🔊 Écouter tout'}
+                    {isPlaying ? t('dialogue_screen.stop') : t('dialogue_screen.play_all')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={s.quizBtn}
                   onPress={() => setMode('quiz')}
                 >
-                  <Text style={s.quizBtnTxt}>🎯 Tester sa compréhension →</Text>
+                  <Text style={s.quizBtnTxt}>{t('dialogue_screen.start_quiz')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -263,14 +265,14 @@ export default function DialogueScreen() {
       <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
         <View style={[s.header, { paddingTop: 8 }]}>
           <TouchableOpacity onPress={() => setMode('read')}>
-            <Text style={s.backTxt}>← Retour</Text>
+            <Text style={s.backTxt}>{t('dialogue_screen.quiz_back')}</Text>
           </TouchableOpacity>
-          <Text style={s.headerTitle}>Quiz de compréhension</Text>
+          <Text style={s.headerTitle}>{t('dialogue_screen.quiz_title')}</Text>
           <Text style={s.quizProgress}>{quizIndex + 1}/{quizQuestions.length}</Text>
         </View>
 
         <View style={s.quizContent}>
-          <Text style={s.quizInstruction}>Quelle est la traduction de cette phrase ?</Text>
+          <Text style={s.quizInstruction}>{t('dialogue_screen.quiz_instruction')}</Text>
 
           {/* Phrase polonaise */}
           <View style={s.quizLineBox}>
@@ -323,19 +325,19 @@ export default function DialogueScreen() {
         <Text style={s.completedEmoji}>
           {finalScore >= 75 ? '🏆' : finalScore >= 50 ? '⭐' : '💪'}
         </Text>
-        <Text style={s.completedTitle}>Dialogue maîtrisé !</Text>
+        <Text style={s.completedTitle}>{t('dialogue_screen.completed_title')}</Text>
         <View style={s.completedStats}>
           <View style={s.completedStat}>
             <Text style={[s.completedVal, { color: COLORS.success }]}>{quizScore}/{quizQuestions.length}</Text>
-            <Text style={s.completedLabel}>Bonnes réponses</Text>
+            <Text style={s.completedLabel}>{t('dialogue_screen.stat_correct')}</Text>
           </View>
           <View style={s.completedStat}>
             <Text style={[s.completedVal, { color: COLORS.xpGold }]}>+{dialogue.xpReward + quizScore * 10}</Text>
-            <Text style={s.completedLabel}>XP gagnés</Text>
+            <Text style={s.completedLabel}>{t('dialogue_screen.stat_xp')}</Text>
           </View>
         </View>
         <TouchableOpacity style={s.homeBtn} onPress={() => router.replace('/(tabs)')}>
-          <Text style={s.homeBtnTxt}>Retour à l'accueil →</Text>
+          <Text style={s.homeBtnTxt}>{t('dialogue_screen.btn_home')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.retryBtn} onPress={() => {
           setMode('read');
@@ -344,7 +346,7 @@ export default function DialogueScreen() {
           setQuizScore(0);
           setSelectedAnswer(null);
         }}>
-          <Text style={s.retryBtnTxt}>🔄 Recommencer</Text>
+          <Text style={s.retryBtnTxt}>{t('dialogue_screen.btn_retry')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

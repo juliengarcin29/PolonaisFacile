@@ -152,10 +152,46 @@
     "dialogue_03": "Dans le bus",
     "dialogue_04": "À l'hôtel"
   },
+  "dialogue_screen": {
+    "loading": "Chargement du dialogue...",
+    "error_title": "Dialogue introuvable",
+    "error_desc": "Désolé, nous n'avons pas pu charger ce dialogue.",
+    "error_btn": "Retourner apprendre",
+    "header_sub": "{{count}} répliques",
+    "reveal_start": "▶ Commencer le dialogue",
+    "reveal_next": "▶ Ligne suivante",
+    "stop": "⏹ Arrêter",
+    "play_all": "🔊 Écouter tout",
+    "start_quiz": "🎯 Tester sa compréhension →",
+    "quiz_title": "Quiz de compréhension",
+    "quiz_back": "← Retour",
+    "quiz_instruction": "Quelle est la traduction de cette phrase ?",
+    "completed_title": "Dialogue maîtrisé !",
+    "stat_correct": "Bonnes réponses",
+    "stat_xp": "XP gagnés",
+    "btn_home": "Retour à l'accueil →",
+    "btn_retry": "🔄 Recommencer"
+  },
   "dictations": {
     "dictation_01": "Salutations du quotidien",
     "dictation_02": "Au café polonais",
     "dictation_03": "Se présenter"
+  },
+  "dictation_screen": {
+    "loading": "Chargement de la dictée...",
+    "error_title": "Dictée introuvable",
+    "error_btn": "Retourner apprendre",
+    "phase_listening": "🔊 Écoutez la phrase",
+    "phase_writing": "✍️ Écrivez ce que vous entendez",
+    "feedback_correct": "✅ Correct !",
+    "feedback_wrong": "❌ Pas tout à fait...",
+    "btn_listen": "🔊 Écouter ({{done}}/{{total}})",
+    "correct_label": "Phrase correcte :",
+    "btn_next": "Suivant →",
+    "btn_finish": "🏁 Terminer",
+    "completed_title": "Dictée terminée !",
+    "stat_xp": "XP gagnés",
+    "btn_home": "Retour à l'accueil →"
   },
   "notifications": {
     "daily_reminder": {

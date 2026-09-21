@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDictationById, DictationExercise, DictationSentence } from '@/content/dictations/dictations';
@@ -37,6 +38,7 @@ function verifyAnswer(userInput: string, correctAnswer: string): {
 }
 
 export default function DictationScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { awardXP, recordDailyActivity } = useGamification();
@@ -189,6 +191,7 @@ export default function DictationScreen() {
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={s.loadingText}>{t('dictation_screen.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -199,9 +202,9 @@ export default function DictationScreen() {
       <SafeAreaView style={s.safe}>
         <View style={s.centered}>
           <Text style={s.errorEmoji}>🛰️</Text>
-          <Text style={s.errorTitle}>Dictée introuvable</Text>
+          <Text style={s.errorTitle}>{t('dictation_screen.error_title')}</Text>
           <TouchableOpacity style={s.backBtnFull} onPress={() => router.back()}>
-            <Text style={s.backBtnText}>Retourner apprendre</Text>
+            <Text style={s.backBtnText}>{t('dictation_screen.error_btn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -214,15 +217,15 @@ export default function DictationScreen() {
       <SafeAreaView style={s.safe}>
         <ScrollView contentContainerStyle={s.completedWrap}>
           <Text style={s.completedEmoji}>{avgScore >= 70 ? '🏆' : '💪'}</Text>
-          <Text style={s.completedTitle}>Dictée terminée !</Text>
+          <Text style={s.completedTitle}>{t('dictation_screen.completed_title')}</Text>
           <View style={s.completedStats}>
             <View style={s.completedStat}>
               <Text style={[s.completedStatVal, { color: COLORS.xpGold }]}>+{totalXP + dictation.xpReward}</Text>
-              <Text style={s.completedStatLabel}>XP gagnés</Text>
+              <Text style={s.completedStatLabel}>{t('dictation_screen.stat_xp')}</Text>
             </View>
           </View>
           <TouchableOpacity style={s.homeBtn} onPress={() => router.replace('/(tabs)')}>
-            <Text style={s.homeBtnTxt}>Retour à l'accueil →</Text>
+            <Text style={s.homeBtnTxt}>{t('dictation_screen.btn_home')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -254,9 +257,9 @@ export default function DictationScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text style={s.phaseLabel}>
-            {phase === 'listening' || phase === 'intro' ? '🔊 Écoutez la phrase' :
-             phase === 'writing' ? '✍️ Écrivez ce que vous entendez' :
-             phase === 'feedback' ? (feedbackResult?.isCorrect ? '✅ Correct !' : '❌ Pas tout à fait...') : ''}
+            {phase === 'listening' || phase === 'intro' ? t('dictation_screen.phase_listening') :
+             phase === 'writing' ? t('dictation_screen.phase_writing') :
+             phase === 'feedback' ? (feedbackResult?.isCorrect ? t('dictation_screen.feedback_correct') : t('dictation_screen.feedback_wrong')) : ''}
           </Text>
 
           {/* Boutons d'écoute */}
@@ -266,7 +269,7 @@ export default function DictationScreen() {
               onPress={() => playSentence(1.0)}
               disabled={isPlaying || playCount >= maxPlays || phase === 'feedback'}
             >
-              {isPlaying ? <ActivityIndicator color={COLORS.white} /> : <Text style={s.playBtnTxt}>🔊 Écouter ({playCount}/{maxPlays})</Text>}
+              {isPlaying ? <ActivityIndicator color={COLORS.white} /> : <Text style={s.playBtnTxt}>{t('dictation_screen.btn_listen', { done: playCount, total: maxPlays })}</Text>}
             </TouchableOpacity>
           </View>
 
@@ -296,7 +299,7 @@ export default function DictationScreen() {
           {/* Feedback détaillé */}
           {phase === 'feedback' && feedbackResult && (
             <Animated.View style={[s.feedbackBox, feedbackResult.isCorrect ? s.feedbackCorrect : s.feedbackWrong, { transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1] }) }] }]}>
-              <Text style={s.feedbackLabel}>Phrase correcte :</Text>
+              <Text style={s.feedbackLabel}>{t('dictation_screen.correct_label')}</Text>
               <Text style={s.feedbackText}>{feedbackResult.sentence.text}</Text>
               <Text style={s.feedbackTranslation}>{feedbackResult.sentence.translation}</Text>
             </Animated.View>
@@ -306,7 +309,7 @@ export default function DictationScreen() {
           <View style={s.actionArea}>
             {phase === 'feedback' && (
               <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
-                <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? '🏁 Terminer' : 'Suivant →'}</Text>
+                <Text style={s.nextBtnTxt}>{currentIndex + 1 >= dictation.sentences.length ? t('dictation_screen.btn_finish') : t('dictation_screen.btn_next')}</Text>
               </TouchableOpacity>
             )}
           </View>
