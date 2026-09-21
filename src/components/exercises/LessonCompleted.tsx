@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { COLORS, BORDER_RADIUS, SPACING, GAMIFICATION } from '@/constants';
 
@@ -12,6 +13,7 @@ interface LessonCompletedProps {
 }
 
 export default function LessonCompleted({ score, total, xpEarned, lessonId }: LessonCompletedProps) {
+  const { t } = useTranslation();
   const percentage = Math.round((score / total) * 100);
   const isPerfect = score === total;
 
@@ -20,35 +22,35 @@ export default function LessonCompleted({ score, total, xpEarned, lessonId }: Le
       <View style={res.container}>
         <Text style={res.emoji}>{isPerfect ? '🏆' : percentage >= 70 ? '⭐' : '💪'}</Text>
         <Text style={res.title}>
-          {isPerfect ? 'Parfait !' : percentage >= 70 ? 'Bien joué !' : 'Continue !'}
+          {isPerfect ? t('lesson.completed.perfect') : percentage >= 70 ? t('lesson.completed.great') : t('lesson.completed.good')}
         </Text>
 
         <View style={res.statsRow}>
           <View style={res.statBox}>
             <Text style={[res.statValue, { color: COLORS.success }]}>{score}/{total}</Text>
-            <Text style={res.statLabel}>Bonnes réponses</Text>
+            <Text style={res.statLabel}>{t('lesson.completed.stats.correct')}</Text>
           </View>
           <View style={res.statBox}>
             <Text style={[res.statValue, { color: COLORS.xpGold }]}>+{xpEarned}</Text>
-            <Text style={res.statLabel}>XP gagnés</Text>
+            <Text style={res.statLabel}>{t('lesson.completed.stats.xp')}</Text>
           </View>
           <View style={res.statBox}>
             <Text style={[res.statValue, { color: COLORS.primary }]}>{percentage}%</Text>
-            <Text style={res.statLabel}>Score</Text>
+            <Text style={res.statLabel}>{t('lesson.completed.stats.score')}</Text>
           </View>
         </View>
 
         {isPerfect && (
           <View style={res.bonusBox}>
-            <Text style={res.bonusText}>🎉 Bonus Parfait ! +{GAMIFICATION.XP_PER_PERFECT} XP supplémentaires</Text>
+            <Text style={res.bonusText}>{t('lesson.completed.bonus_perfect', { count: GAMIFICATION.XP_PER_PERFECT })}</Text>
           </View>
         )}
 
         <TouchableOpacity style={res.homeBtn} onPress={() => router.replace('/(tabs)')}>
-          <Text style={res.homeBtnText}>Retour à l'accueil →</Text>
+          <Text style={res.homeBtnText}>{t('lesson.completed.btn_home')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={res.replayBtn} onPress={() => router.replace(`/lesson/${lessonId}`)}>
-          <Text style={res.replayBtnText}>Rejouer la leçon</Text>
+          <Text style={res.replayBtnText}>{t('lesson.completed.btn_replay')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

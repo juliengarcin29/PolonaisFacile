@@ -78,6 +78,50 @@
     "daily_quiz": "Daily quiz",
     "word_of_day": "Word of the day"
   },
+  "lesson": {
+    "loading": "Loading lesson...",
+    "error_title": "Lesson not found",
+    "error_desc": "Sorry, we couldn't load the content of this lesson.",
+    "error_btn": "Return to modules",
+    "feedback": {
+      "correct": "Correct!",
+      "wrong": "Not quite...",
+      "correct_answer": "Correct answer:",
+      "btn_continue": "Continue →",
+      "btn_finish": "Finish lesson →"
+    },
+    "types": {
+      "multiple_choice": "📝 Multiple choice",
+      "translation_fr_pl": "🇫🇷→🇵🇱 Translation",
+      "translation_pl_fr": "🇵🇱→🇫🇷 Translation",
+      "fill_blank": "✏️ Fill in the blank",
+      "word_order": "🔀 Word order",
+      "matching": "🔗 Matching",
+      "listening": "🎧 Listening",
+      "dictation": "🎤 Dictation",
+      "pronunciation": "🔊 Pronunciation",
+      "drag_drop": "↕️ Drag and drop",
+      "generic": "📝 Exercise"
+    },
+    "completed": {
+      "perfect": "Perfect!",
+      "great": "Well done!",
+      "good": "Keep it up!",
+      "stats": {
+        "correct": "Correct answers",
+        "xp": "XP earned",
+        "score": "Score"
+      },
+      "bonus_perfect": "🎉 Perfect Bonus! +{{count}} extra XP",
+      "btn_home": "Back to home →",
+      "btn_replay": "Replay lesson"
+    },
+    "exercises": {
+      "matching_hint": "Match each word with its translation",
+      "word_order_placeholder": "Place words here",
+      "word_order_verify": "Verify →"
+    }
+  },
   "learn": {
     "title": "Learn",
     "tabs": {

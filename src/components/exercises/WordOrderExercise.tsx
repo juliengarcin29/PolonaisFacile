@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -27,6 +28,7 @@ export default function WordOrderExercise({
   phase,
   requiredCount,
 }: WordOrderExerciseProps) {
+  const { t } = useTranslation();
   const addWord = (word: string, index: number) => {
     if (phase !== 'exercise') return;
     setWordOrderAnswer([...wordOrderAnswer, word]);
@@ -52,7 +54,7 @@ export default function WordOrderExercise({
       {/* Zone de réponse */}
       <View style={wo.answerZone}>
         {wordOrderAnswer.length === 0 ? (
-          <Text style={wo.placeholder}>Placez les mots ici</Text>
+          <Text style={wo.placeholder}>{t('lesson.exercises.word_order_placeholder')}</Text>
         ) : (
           <View style={wo.wordRow}>
             {wordOrderAnswer.map((word, i) => (
@@ -76,7 +78,7 @@ export default function WordOrderExercise({
       {/* Bouton valider */}
       {wordOrderAnswer.length === targetCount && phase === 'exercise' && (
         <TouchableOpacity style={wo.submitBtn} onPress={handleSubmit}>
-          <Text style={wo.submitBtnText}>Vérifier →</Text>
+          <Text style={wo.submitBtnText}>{t('lesson.exercises.word_order_verify')}</Text>
         </TouchableOpacity>
       )}
     </View>

@@ -13,6 +13,7 @@ import WordOrderExercise from '@/components/exercises/WordOrderExercise';
 import LessonCompleted from '@/components/exercises/LessonCompleted';
 import type { Exercise, ExerciseAnswer, Lesson } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -32,6 +33,7 @@ const { width } = Dimensions.get('window');
 type LessonPhase = 'loading' | 'error' | 'exercise' | 'feedback_correct' | 'feedback_wrong' | 'completed';
 
 export default function LessonScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useUserStore();
@@ -152,7 +154,7 @@ export default function LessonScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Chargement de la leçon...</Text>
+          <Text style={styles.loadingText}>{t('lesson.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -163,10 +165,10 @@ export default function LessonScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.centered}>
           <Text style={styles.errorEmoji}>🛰️</Text>
-          <Text style={styles.errorTitle}>Leçon introuvable</Text>
-          <Text style={styles.errorDesc}>Désolé, nous n'avons pas pu charger le contenu de cette leçon.</Text>
+          <Text style={styles.errorTitle}>{t('lesson.error_title')}</Text>
+          <Text style={styles.errorDesc}>{t('lesson.error_desc')}</Text>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>Retourner aux modules</Text>
+            <Text style={styles.backBtnText}>{t('lesson.error_btn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -211,7 +213,7 @@ export default function LessonScreen() {
             <Text style={styles.counter}>{currentIndex + 1} / {exercises.length}</Text>
 
             {/* Type d'exercice */}
-            <Text style={styles.typeLabel}>{getTypeLabel(current.type)}</Text>
+            <Text style={styles.typeLabel}>{t(`lesson.types.${current.type}` as any)}</Text>
 
             {/* Question */}
             <Text style={styles.question}>{current.question}</Text>
@@ -265,11 +267,11 @@ export default function LessonScreen() {
               <Text style={styles.feedbackIcon}>{phase === 'feedback_correct' ? '✅' : '❌'}</Text>
               <View>
                 <Text style={styles.feedbackTitle}>
-                  {phase === 'feedback_correct' ? 'Correct !' : 'Pas tout à fait...'}
+                  {phase === 'feedback_correct' ? t('lesson.feedback.correct') : t('lesson.feedback.wrong')}
                 </Text>
                 {phase === 'feedback_wrong' && (
                   <Text style={styles.feedbackCorrectAnswer}>
-                    Bonne réponse : {current.correctAnswer}
+                    {t('lesson.feedback.correct_answer')} {current.correctAnswer}
                   </Text>
                 )}
               </View>
@@ -285,7 +287,7 @@ export default function LessonScreen() {
               onPress={nextExercise}
             >
               <Text style={styles.continueBtnText}>
-                {currentIndex + 1 >= exercises.length ? 'Terminer la leçon →' : 'Continuer →'}
+                {currentIndex + 1 >= exercises.length ? t('lesson.feedback.btn_finish') : t('lesson.feedback.btn_continue')}
               </Text>
             </TouchableOpacity>
           </Animated.View>

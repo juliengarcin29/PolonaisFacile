@@ -5,9 +5,10 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
+  View, Text, StyleSheet, TouchableOpacity,
   ScrollView, Animated, ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
@@ -18,6 +19,7 @@ type DialogueMode = 'loading' | 'error' | 'read' | 'quiz' | 'completed';
 
 // ── Composant principal ──────────────────────────────────────
 export default function DialogueScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { awardXP, recordDailyActivity } = useGamification();
 
@@ -157,9 +159,9 @@ export default function DialogueScreen() {
   // ── Mode lecture ─────────────────────────────────────────
   if (mode === 'read') {
     return (
-      <SafeAreaView style={s.safe}>
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
         {/* Header */}
-        <View style={s.header}>
+        <View style={[s.header, { paddingTop: 8 }]}>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={s.backTxt}>✕</Text>
           </TouchableOpacity>
@@ -258,8 +260,8 @@ export default function DialogueScreen() {
   if (mode === 'quiz') {
     const question = quizQuestions[quizIndex];
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.header}>
+      <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+        <View style={[s.header, { paddingTop: 8 }]}>
           <TouchableOpacity onPress={() => setMode('read')}>
             <Text style={s.backTxt}>← Retour</Text>
           </TouchableOpacity>
@@ -316,7 +318,7 @@ export default function DialogueScreen() {
   // ── Mode résultat ────────────────────────────────────────
   const finalScore = Math.round((quizScore / quizQuestions.length) * 100);
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
       <View style={s.completedScreen}>
         <Text style={s.completedEmoji}>
           {finalScore >= 75 ? '🏆' : finalScore >= 50 ? '⭐' : '💪'}

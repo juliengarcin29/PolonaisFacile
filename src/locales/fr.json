@@ -78,6 +78,50 @@
     "daily_quiz": "Quiz du jour",
     "word_of_day": "Mot du jour"
   },
+  "lesson": {
+    "loading": "Chargement de la leçon...",
+    "error_title": "Leçon introuvable",
+    "error_desc": "Désolé, nous n'avons pas pu charger le contenu de cette leçon.",
+    "error_btn": "Retourner aux modules",
+    "feedback": {
+      "correct": "Correct !",
+      "wrong": "Pas tout à fait...",
+      "correct_answer": "Bonne réponse :",
+      "btn_continue": "Continuer →",
+      "btn_finish": "Terminer la leçon →"
+    },
+    "types": {
+      "multiple_choice": "📝 Choix multiple",
+      "translation_fr_pl": "🇫🇷→🇵🇱 Traduction",
+      "translation_pl_fr": "🇵🇱→🇫🇷 Traduction",
+      "fill_blank": "✏️ Texte à trous",
+      "word_order": "🔀 Remise en ordre",
+      "matching": "🔗 Association",
+      "listening": "🎧 Écoute",
+      "dictation": "🎤 Dictée",
+      "pronunciation": "🔊 Prononciation",
+      "drag_drop": "↕️ Glisser-déposer",
+      "generic": "📝 Exercice"
+    },
+    "completed": {
+      "perfect": "Parfait !",
+      "great": "Bien joué !",
+      "good": "Continue !",
+      "stats": {
+        "correct": "Bonnes réponses",
+        "xp": "XP gagnés",
+        "score": "Score"
+      },
+      "bonus_perfect": "🎉 Bonus Parfait ! +{{count}} XP supplémentaires",
+      "btn_home": "Retour à l'accueil →",
+      "btn_replay": "Rejouer la leçon"
+    },
+    "exercises": {
+      "matching_hint": "Associez chaque mot à sa traduction",
+      "word_order_placeholder": "Placez les mots ici",
+      "word_order_verify": "Vérifier →"
+    }
+  },
   "learn": {
     "title": "Apprendre",
     "tabs": {

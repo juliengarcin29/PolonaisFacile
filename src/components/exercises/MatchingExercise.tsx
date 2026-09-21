@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -20,6 +21,7 @@ export default function MatchingExercise({
   setMatchedPairs,
   onComplete,
 }: MatchingExerciseProps) {
+  const { t } = useTranslation();
   const pairs = exercise.pairs ?? [];
 
   const handleLeft = (item: string) => {
@@ -94,7 +96,7 @@ export default function MatchingExercise({
           })}
         </View>
       </View>
-      <Text style={mat.hint}>Associez chaque mot à sa traduction</Text>
+      <Text style={mat.hint}>{t('lesson.exercises.matching_hint')}</Text>
     </View>
   );
 }
