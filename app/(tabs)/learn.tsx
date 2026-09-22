@@ -3,10 +3,10 @@
 // Onglet Apprendre — modules + contenu Premium enrichi
 // ============================================================
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ScrollView, View, Text, StyleSheet,
-  TouchableOpacity, ActivityIndicator,
+  TouchableOpacity, ActivityIndicator, Animated, Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -47,6 +47,43 @@ const DICTEES = [
   { id: 'dictation_02', emoji: '☕', title: 'Au café polonais', difficulty: 'A1', sentences: 4, free: true },
   { id: 'dictation_03', emoji: '👤', title: 'Se présenter', difficulty: 'A1', sentences: 4, free: false },
 ];
+
+// ── Component Barre de Progression Animée ─────────────────────
+function AnimatedProgressBar({
+  progress,
+  color,
+  style,
+}: {
+  progress: number;
+  color?: string;
+  style?: any;
+}) {
+  const animatedWidth = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedWidth, {
+      toValue: progress,
+      duration: 350,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  const width = animatedWidth.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        { width },
+        color ? { backgroundColor: color } : null,
+      ]}
+    />
+  );
+}
 
 export default function LearnScreen() {
   const { t } = useTranslation();
@@ -129,7 +166,7 @@ export default function LearnScreen() {
                 <Text style={s.progressPct}>{globalProgress}%</Text>
               </View>
               <View style={s.progressTrack}>
-                <View style={[s.progressFill, { width: `${globalProgress}%` }]} />
+                <AnimatedProgressBar progress={globalProgress} style={s.progressFill} />
               </View>
               <Text style={s.progressSub}>{t('learn.lessons_completed', { completed: totalCompleted, total: totalLessons })}</Text>
             </View>
@@ -164,10 +201,11 @@ export default function LearnScreen() {
 
                     {/* Barre de progression du module */}
                     <View style={s.moduleProgressTrack}>
-                      <View style={[s.moduleProgressFill, {
-                        width: `${mod.progress}%`,
-                        backgroundColor: mod.color
-                      }]} />
+                      <AnimatedProgressBar
+                        progress={mod.progress}
+                        color={mod.color}
+                        style={s.moduleProgressFill}
+                      />
                     </View>
                   </View>
 

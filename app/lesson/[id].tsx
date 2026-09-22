@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Easing,
   KeyboardAvoidingView, Platform,
   ScrollView,
   StyleSheet,
@@ -77,7 +78,8 @@ export default function LessonScreen() {
   useEffect(() => {
     Animated.timing(progressAnim, {
       toValue: progress,
-      duration: 300,
+      duration: 350,
+      easing: Easing.out(Easing.quad),
       useNativeDriver: false,
     }).start();
   }, [currentIndex, progress]);
