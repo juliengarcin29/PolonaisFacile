@@ -6,6 +6,9 @@ import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
+// Helper pour détecter les emojis Unicode
+const isEmoji = (text: string) => /\p{Extended_Pictographic}/u.test(text.trim());
+
 interface MatchingExerciseProps {
   exercise: Exercise;
   matchSelected: { left?: string; right?: string };
@@ -73,6 +76,8 @@ export default function MatchingExercise({
           {lefts.map((item, i) => {
             const matched = matchedPairs.includes(item);
             const selected = matchSelected.left === item;
+            const isItemEmoji = isEmoji(item);
+
             return (
               <ScaleButton
                 key={`left_${item}_${i}`}
@@ -80,7 +85,15 @@ export default function MatchingExercise({
                 onPress={() => handleLeft(item)}
                 disabled={matched}
               >
-                <Text style={[mat.chipText, matched && mat.chipTextMatched]}>{item}</Text>
+                <Text
+                  style={[
+                    mat.chipText,
+                    isItemEmoji && mat.chipTextEmoji,
+                    matched && mat.chipTextMatched,
+                  ]}
+                >
+                  {item}
+                </Text>
               </ScaleButton>
             );
           })}
@@ -89,6 +102,8 @@ export default function MatchingExercise({
           {rights.map((item, i) => {
             const matched = matchedPairs.includes(item);
             const selected = matchSelected.right === item;
+            const isItemEmoji = isEmoji(item);
+
             return (
               <ScaleButton
                 key={`right_${item}_${i}`}
@@ -96,7 +111,15 @@ export default function MatchingExercise({
                 onPress={() => handleRight(item)}
                 disabled={matched}
               >
-                <Text style={[mat.chipText, matched && mat.chipTextMatched]}>{item}</Text>
+                <Text
+                  style={[
+                    mat.chipText,
+                    isItemEmoji && mat.chipTextEmoji,
+                    matched && mat.chipTextMatched,
+                  ]}
+                >
+                  {item}
+                </Text>
               </ScaleButton>
             );
           })}
@@ -128,6 +151,7 @@ const mat = StyleSheet.create({
   chipSelected: { borderColor: COLORS.primary, backgroundColor: '#FFF0F3' },
   chipMatched: { borderColor: COLORS.success, backgroundColor: COLORS.successLight },
   chipText: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, textAlign: 'center' },
+  chipTextEmoji: { fontSize: 32, lineHeight: 38 },
   chipTextMatched: { color: COLORS.success },
   hint: { fontSize: 12, color: COLORS.textMuted, textAlign: 'center', marginTop: SPACING.md },
 });
