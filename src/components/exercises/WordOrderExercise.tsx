@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { triggerHapticImpact } from '@/utils/haptics';
+import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -16,7 +17,7 @@ interface WordOrderExerciseProps {
   setAvailableWords: (v: string[]) => void;
   onSubmit: (answer: string) => void;
   phase: LessonPhase;
-  requiredCount?: number; // Nouveau : nombre de mots requis pour valider (optionnel)
+  requiredCount?: number; // Nombre de mots requis pour valider (optionnel)
 }
 
 export default function WordOrderExercise({
@@ -30,8 +31,13 @@ export default function WordOrderExercise({
   requiredCount,
 }: WordOrderExerciseProps) {
   const { t } = useTranslation();
+
+  // Par défaut, on attend tous les mots de l'exercice si requiredCount n'est pas fourni
+  const targetCount = requiredCount ?? (exercise.words?.length ?? 0);
+  const isMaxReached = wordOrderAnswer.length >= targetCount;
+
   const addWord = (word: string, index: number) => {
-    if (phase !== 'exercise') return;
+    if (phase !== 'exercise' || isMaxReached) return;
     triggerHapticImpact();
     setWordOrderAnswer([...wordOrderAnswer, word]);
     setAvailableWords(availableWords.filter((_, i) => i !== index));
@@ -50,9 +56,6 @@ export default function WordOrderExercise({
     onSubmit(wordOrderAnswer.join(' '));
   };
 
-  // Par défaut, on attend tous les mots de l'exercice si requiredCount n'est pas fourni
-  const targetCount = requiredCount ?? (exercise.words?.length ?? 0);
-
   return (
     <View style={wo.container}>
       {/* Zone de réponse */}
@@ -62,9 +65,14 @@ export default function WordOrderExercise({
         ) : (
           <View style={wo.wordRow}>
             {wordOrderAnswer.map((word, i) => (
-              <TouchableOpacity key={`ans_${word}_${i}`} style={wo.wordChipAnswer} onPress={() => removeWord(i)}>
+              <ScaleButton
+                key={`ans_${word}_${i}`}
+                style={wo.wordChipAnswer}
+                onPress={() => removeWord(i)}
+                disabled={phase !== 'exercise'}
+              >
                 <Text style={wo.wordChipAnswerText}>{word}</Text>
-              </TouchableOpacity>
+              </ScaleButton>
             ))}
           </View>
         )}
@@ -72,18 +80,26 @@ export default function WordOrderExercise({
 
       {/* Mots disponibles */}
       <View style={wo.wordBank}>
-        {availableWords.map((word, i) => (
-          <TouchableOpacity key={`avail_${word}_${i}`} style={wo.wordChip} onPress={() => addWord(word, i)}>
-            <Text style={wo.wordChipText}>{word}</Text>
-          </TouchableOpacity>
-        ))}
+        {availableWords.map((word, i) => {
+          const isBankDisabled = phase !== 'exercise' || isMaxReached;
+          return (
+            <ScaleButton
+              key={`avail_${word}_${i}`}
+              style={[wo.wordChip, isBankDisabled && wo.wordChipDisabled]}
+              onPress={() => addWord(word, i)}
+              disabled={isBankDisabled}
+            >
+              <Text style={[wo.wordChipText, isBankDisabled && wo.wordChipTextDisabled]}>{word}</Text>
+            </ScaleButton>
+          );
+        })}
       </View>
 
       {/* Bouton valider */}
       {wordOrderAnswer.length === targetCount && phase === 'exercise' && (
-        <TouchableOpacity style={wo.submitBtn} onPress={handleSubmit}>
+        <ScaleButton style={wo.submitBtn} onPress={handleSubmit}>
           <Text style={wo.submitBtnText}>{t('lesson.exercises.word_order_verify')}</Text>
-        </TouchableOpacity>
+        </ScaleButton>
       )}
     </View>
   );
@@ -114,7 +130,14 @@ const wo = StyleSheet.create({
       default: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
     }),
   },
+  wordChipDisabled: {
+    opacity: 0.4,
+    backgroundColor: COLORS.surfaceAlt,
+  },
   wordChipText: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
+  wordChipTextDisabled: {
+    color: COLORS.textMuted,
+  },
   submitBtn: {
     backgroundColor: COLORS.primary, borderRadius: BORDER_RADIUS.full,
     paddingVertical: 14, alignItems: 'center',
