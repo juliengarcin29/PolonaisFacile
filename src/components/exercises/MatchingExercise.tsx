@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { triggerHapticImpact, triggerHapticError } from '@/utils/haptics';
+import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -73,14 +74,14 @@ export default function MatchingExercise({
             const matched = matchedPairs.includes(item);
             const selected = matchSelected.left === item;
             return (
-              <TouchableOpacity
+              <ScaleButton
                 key={`left_${item}_${i}`}
                 style={[mat.chip, selected && mat.chipSelected, matched && mat.chipMatched]}
                 onPress={() => handleLeft(item)}
                 disabled={matched}
               >
                 <Text style={[mat.chipText, matched && mat.chipTextMatched]}>{item}</Text>
-              </TouchableOpacity>
+              </ScaleButton>
             );
           })}
         </View>
@@ -89,14 +90,14 @@ export default function MatchingExercise({
             const matched = matchedPairs.includes(item);
             const selected = matchSelected.right === item;
             return (
-              <TouchableOpacity
+              <ScaleButton
                 key={`right_${item}_${i}`}
                 style={[mat.chip, selected && mat.chipSelected, matched && mat.chipMatched]}
                 onPress={() => handleRight(item)}
                 disabled={matched}
               >
                 <Text style={[mat.chipText, matched && mat.chipTextMatched]}>{item}</Text>
-              </TouchableOpacity>
+              </ScaleButton>
             );
           })}
         </View>
