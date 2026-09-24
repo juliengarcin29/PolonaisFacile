@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { triggerHapticImpact } from '@/utils/haptics';
+import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -46,7 +47,7 @@ export default function MultipleChoiceExercise({
         }
 
         return (
-          <TouchableOpacity
+          <ScaleButton
             key={`${option}_${index}`}
             style={[mc.option, { backgroundColor: bgColor, borderColor }]}
             onPress={() => {
@@ -60,7 +61,7 @@ export default function MultipleChoiceExercise({
             <Text style={[mc.optionText, { color: textColor }]}>{option}</Text>
             {showResult && isCorrect && <Text style={mc.tick}>✓</Text>}
             {showResult && isSelected && !isCorrect && <Text style={mc.cross}>✗</Text>}
-          </TouchableOpacity>
+          </ScaleButton>
         );
       })}
     </View>
