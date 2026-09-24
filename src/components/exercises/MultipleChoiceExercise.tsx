@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { triggerHapticImpact } from '@/utils/haptics';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -48,7 +49,12 @@ export default function MultipleChoiceExercise({
           <TouchableOpacity
             key={`${option}_${index}`}
             style={[mc.option, { backgroundColor: bgColor, borderColor }]}
-            onPress={() => phase === 'exercise' && onAnswer(option)}
+            onPress={() => {
+              if (phase === 'exercise') {
+                triggerHapticImpact();
+                onAnswer(option);
+              }
+            }}
             disabled={phase !== 'exercise'}
           >
             <Text style={[mc.optionText, { color: textColor }]}>{option}</Text>

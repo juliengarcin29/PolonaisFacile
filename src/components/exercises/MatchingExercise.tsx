@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { triggerHapticImpact, triggerHapticError } from '@/utils/haptics';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -26,6 +27,7 @@ export default function MatchingExercise({
 
   const handleLeft = (item: string) => {
     if (matchedPairs.includes(item)) return;
+    triggerHapticImpact();
     const newSelected = { ...matchSelected, left: item };
     setMatchSelected(newSelected);
     tryMatch(newSelected);
@@ -33,6 +35,7 @@ export default function MatchingExercise({
 
   const handleRight = (item: string) => {
     if (matchedPairs.some(p => p === item)) return;
+    triggerHapticImpact();
     const newSelected = { ...matchSelected, right: item };
     setMatchSelected(newSelected);
     tryMatch(newSelected);
@@ -42,6 +45,7 @@ export default function MatchingExercise({
     if (!sel.left || !sel.right) return;
     const pair = pairs.find(p => p.left === sel.left && p.right === sel.right);
     if (pair) {
+      triggerHapticImpact();
       const newMatched = [...matchedPairs, sel.left, sel.right];
       setMatchedPairs(newMatched);
       setMatchSelected({});
@@ -49,6 +53,7 @@ export default function MatchingExercise({
         setTimeout(onComplete, 400);
       }
     } else {
+      triggerHapticError();
       setMatchSelected({});
     }
   };

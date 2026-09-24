@@ -7,6 +7,7 @@ import { BORDER_RADIUS, COLORS, GAMIFICATION, SPACING } from '@/constants';
 import { useUserStore } from '@/store/userStore';
 import { useGamification } from '@/hooks/useGamification';
 import { getLessonById } from '@/content/lessons';
+import { triggerHapticError, triggerHapticImpact } from '@/utils/haptics';
 import MultipleChoiceExercise from '@/components/exercises/MultipleChoiceExercise';
 import MatchingExercise from '@/components/exercises/MatchingExercise';
 import WordOrderExercise from '@/components/exercises/WordOrderExercise';
@@ -124,6 +125,7 @@ export default function LessonScreen() {
       setXpEarned(prev => prev + current.xpReward);
       setPhase('feedback_correct');
     } else {
+      triggerHapticError();
       shake();
       setLives(prev => Math.max(0, prev - 1));
       setPhase('feedback_wrong');
@@ -137,6 +139,7 @@ export default function LessonScreen() {
   };
 
   const nextExercise = () => {
+    triggerHapticImpact();
     feedbackAnim.setValue(0);
     setSelectedAnswer('');
     setMatchSelected({});

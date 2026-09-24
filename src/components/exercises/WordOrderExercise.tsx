@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { triggerHapticImpact } from '@/utils/haptics';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -31,18 +32,21 @@ export default function WordOrderExercise({
   const { t } = useTranslation();
   const addWord = (word: string, index: number) => {
     if (phase !== 'exercise') return;
+    triggerHapticImpact();
     setWordOrderAnswer([...wordOrderAnswer, word]);
     setAvailableWords(availableWords.filter((_, i) => i !== index));
   };
 
   const removeWord = (index: number) => {
     if (phase !== 'exercise') return;
+    triggerHapticImpact();
     const word = wordOrderAnswer[index];
     setAvailableWords([...availableWords, word]);
     setWordOrderAnswer(wordOrderAnswer.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
+    triggerHapticImpact();
     onSubmit(wordOrderAnswer.join(' '));
   };
 
