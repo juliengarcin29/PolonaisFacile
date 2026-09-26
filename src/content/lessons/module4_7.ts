@@ -4,6 +4,7 @@
 // ============================================================
 
 import type { Lesson } from '@/types';
+import { FAMILY_VOCAB } from '@/content/vocabulary/family';
 
 // ── MODULE 4 : LA FAMILLE ────────────────────────────────────
 export const MODULE_4_LESSONS: Lesson[] = [
@@ -154,6 +155,7 @@ export const MODULE_4_LESSONS: Lesson[] = [
     estimatedMinutes: 6,
     isPremium: false,
     tags: ['famille', 'vocabulaire', 'pratique'],
+    discoveryItems: FAMILY_VOCAB,
     exercises: [
       {
         id: 'ex_4_4_1',

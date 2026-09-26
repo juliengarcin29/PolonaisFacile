@@ -61,6 +61,7 @@ export interface Lesson {
   xpReward: number;
   estimatedMinutes: number;
   isPremium: boolean;
+  discoveryItems?: VocabItem[];
   exercises: Exercise[];
   tags: string[];
   createdAt: Date;
