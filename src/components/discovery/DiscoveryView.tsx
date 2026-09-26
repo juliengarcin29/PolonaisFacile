@@ -25,7 +25,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   const currentItem = items[currentIndex];
   const currentStep = steps[currentIndex] ?? 0;
 
-  // Déclencher l'audio automatiquement lors du passage à l'étape 1
+  // Déclencher l'audio du mot principal automatiquement lors du passage à l'étape 1
   useEffect(() => {
     if (currentStep === 1 && currentItem) {
       playCard(currentItem.audioUrl, currentItem.front);
@@ -67,6 +67,12 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   const handleReplayAudio = () => {
     if (currentItem) {
       playCard(currentItem.audioUrl, currentItem.front);
+    }
+  };
+
+  const handlePlayExampleAudio = () => {
+    if (currentItem?.examplePl) {
+      playCard(undefined, currentItem.examplePl);
     }
   };
 
@@ -117,6 +123,11 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
             {currentItem.examplePl && (
               <View style={dv.exampleBox}>
                 <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
+
+                <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
+                  <Text style={dv.exampleAudioBtnTxt}>🔊 Écouter l'exemple</Text>
+                </TouchableOpacity>
+
                 <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
               </View>
             )}
@@ -263,6 +274,20 @@ const dv = StyleSheet.create({
     color: COLORS.textPrimary,
     fontStyle: 'italic',
     textAlign: 'center',
+  },
+  exampleAudioBtn: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '30',
+    marginVertical: 4,
+  },
+  exampleAudioBtnTxt: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   exampleFr: {
     fontSize: 12,
