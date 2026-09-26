@@ -12,6 +12,7 @@ import MultipleChoiceExercise from '@/components/exercises/MultipleChoiceExercis
 import MatchingExercise from '@/components/exercises/MatchingExercise';
 import WordOrderExercise from '@/components/exercises/WordOrderExercise';
 import LessonCompleted from '@/components/exercises/LessonCompleted';
+import { DiscoveryView } from '@/components/discovery/DiscoveryView';
 import type { Exercise, ExerciseAnswer, Lesson } from '@/types';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +33,15 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const { width } = Dimensions.get('window');
 
-type LessonPhase = 'loading' | 'error' | 'exercise' | 'feedback_correct' | 'feedback_wrong' | 'completed';
+type LessonPhase =
+  | 'loading'
+  | 'error'
+  | 'discovery'
+  | 'discovery_transition'
+  | 'exercise'
+  | 'feedback_correct'
+  | 'feedback_wrong'
+  | 'completed';
 
 export default function LessonScreen() {
   const { t } = useTranslation();
@@ -65,7 +74,11 @@ export default function LessonScreen() {
       const data = getLessonById(id);
       if (data) {
         setLesson(data);
-        setPhase('exercise');
+        if (data.discoveryItems && data.discoveryItems.length > 0) {
+          setPhase('discovery');
+        } else {
+          setPhase('exercise');
+        }
       } else {
         setPhase('error');
       }
@@ -160,6 +173,44 @@ export default function LessonScreen() {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>{t('lesson.loading')}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Phase 1 : Découverte contemplative (sans vies ni score)
+  if (phase === 'discovery' && lesson?.discoveryItems) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.discoveryHeader}>
+          <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+            <Text style={styles.closeBtnText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <DiscoveryView
+          items={lesson.discoveryItems}
+          onComplete={() => setPhase('discovery_transition')}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Écran de transition intermédiaire entre Phase 1 et Phase 2
+  if (phase === 'discovery_transition') {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.transitionContainer}>
+          <Text style={styles.transitionEmoji}>🎉</Text>
+          <Text style={styles.transitionTitle}>Mots découverts avec succès !</Text>
+          <Text style={styles.transitionSub}>
+            Tu as exploré le vocabulaire de la leçon. C'est le moment de tester tes connaissances avec les exercices.
+          </Text>
+          <TouchableOpacity
+            style={styles.transitionBtn}
+            onPress={() => setPhase('exercise')}
+          >
+            <Text style={styles.transitionBtnTxt}>Commencer les exercices ➔</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -327,6 +378,44 @@ const styles = StyleSheet.create({
   errorEmoji: { fontSize: 64, marginBottom: SPACING.lg },
   errorTitle: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.sm },
   errorDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', marginBottom: SPACING.xl },
+
+  discoveryHeader: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  transitionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.xl,
+    backgroundColor: COLORS.white,
+  },
+  transitionEmoji: { fontSize: 72, marginBottom: SPACING.md },
+  transitionTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  transitionSub: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xxl,
+    lineHeight: 24,
+  },
+  transitionBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.full,
+    paddingVertical: 16,
+    paddingHorizontal: SPACING.xxl,
+    width: '100%',
+    alignItems: 'center',
+  },
+  transitionBtnTxt: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
   backBtn: { backgroundColor: COLORS.primary, paddingVertical: 14, paddingHorizontal: SPACING.xl, borderRadius: BORDER_RADIUS.full },
   backBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
 
