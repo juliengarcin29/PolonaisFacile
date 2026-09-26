@@ -124,6 +124,27 @@ export interface Flashcard {
   isPremium: boolean;
 }
 
+// ── VOCABULAIRE & DÉCOUVERTE ─────────────────────────────────
+export type VocabItemType = 'word' | 'phrase';
+
+export interface VocabItem {
+  id: string;
+  moduleId: string;
+  itemType: VocabItemType;
+  order: number;
+  front: string;           // Mot ou phrase en polonais
+  back: string;            // Traduction française
+  phonetic: string;        // Transcription phonétique
+  emoji?: string;          // Emoji d'illustration principal
+  audioUrl?: string;       // URL audio optionnelle (Firebase / local)
+  examplePl?: string;      // Exemple de phrase en polonais
+  exampleFr?: string;      // Traduction de l'exemple
+  dependsOnIds?: string[]; // IDs des mots prérequis vus avant (pour les phrases)
+  words?: string[];        // Mots découpés pour l'exercice WordOrder
+  tags: string[];
+  isPremium: boolean;
+}
+
 // ── RÉPÉTITION ESPACÉE (SM-2) ────────────────────────────────
 export interface FlashcardReview {
   flashcardId: string;
