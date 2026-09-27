@@ -142,6 +142,7 @@ export interface VocabItem {
   exampleFr?: string;      // Traduction de l'exemple
   dependsOnIds?: string[]; // IDs des mots prérequis vus avant (pour les phrases)
   words?: string[];        // Mots découpés pour l'exercice WordOrder
+  grammarNote?: string;    // Note de grammaire explicative optionnelle
   tags: string[];
   isPremium: boolean;
 }
