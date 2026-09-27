@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFlashcardAudio } from '@/hooks/useAudio';
 import { triggerHapticImpact } from '@/utils/haptics';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
@@ -31,10 +32,16 @@ export default function WordOrderExercise({
   requiredCount,
 }: WordOrderExerciseProps) {
   const { t } = useTranslation();
+  const { isPlaying, playCard } = useFlashcardAudio();
 
   // Par défaut, on attend tous les mots de l'exercice si requiredCount n'est pas fourni
   const targetCount = requiredCount ?? (exercise.words?.length ?? 0);
   const isMaxReached = wordOrderAnswer.length >= targetCount;
+
+  const handlePlayPrompt = () => {
+    const textToPlay = exercise.audioText || exercise.correctAnswer;
+    playCard(exercise.audioUrl, textToPlay);
+  };
 
   const addWord = (word: string, index: number) => {
     if (phase !== 'exercise' || isMaxReached) return;
@@ -58,6 +65,15 @@ export default function WordOrderExercise({
 
   return (
     <View style={wo.container}>
+      {/* Mode Écoute : Bouton d'action audio principal (sur clic uniquement) */}
+      {exercise.isAudioPrompt && (
+        <TouchableOpacity style={wo.audioPromptBtn} onPress={handlePlayPrompt}>
+          <Text style={wo.audioPromptBtnTxt}>
+            {isPlaying ? '🔊 Lecture en cours...' : '🔊 Écouter la phrase'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Zone de réponse */}
       <View style={wo.answerZone}>
         {wordOrderAnswer.length === 0 ? (
@@ -107,6 +123,21 @@ export default function WordOrderExercise({
 
 const wo = StyleSheet.create({
   container: { marginTop: SPACING.lg },
+  audioPromptBtn: {
+    backgroundColor: COLORS.primary + '15',
+    paddingVertical: 14,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '30',
+  },
+  audioPromptBtnTxt: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
   answerZone: {
     minHeight: 64, backgroundColor: COLORS.surfaceAlt,
     borderRadius: BORDER_RADIUS.lg, padding: SPACING.md,

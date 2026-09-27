@@ -181,9 +181,11 @@ export const MODULE_4_LESSONS: Lesson[] = [
       {
         id: 'ex_4_4_3',
         type: 'word_order',
-        question: 'Reconstituez la phrase : "C\'est mon père."',
+        question: 'Écoutez et reconstituez la phrase :',
         correctAnswer: 'To mój tata.',
         words: ['To', 'mój', 'tata.'],
+        isAudioPrompt: true,
+        audioText: 'To mój tata.',
         xpReward: 15,
       },
       {

@@ -105,6 +105,8 @@ export interface Exercise {
   words?: string[];        // pour word_order et drag_drop
   pairs?: Array<{ left: string; right: string }>; // pour matching
   audioUrl?: string;       // URL Firebase Storage
+  isAudioPrompt?: boolean; // indique que l'exercice est en mode écoute (audio seul)
+  audioText?: string;     // texte à prononcer pour la consigne audio
   hint?: string;
   explanation?: string;    // explication après erreur
   xpReward: number;
