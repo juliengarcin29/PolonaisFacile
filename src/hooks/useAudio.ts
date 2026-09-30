@@ -70,7 +70,7 @@ export function useAudio() {
     try {
       const player = createAudioPlayer(url);
       playerRef.current = player;
-      player.playbackRate = rate;
+      player.setPlaybackRate(rate);
       player.play();
       if (isMountedRef.current) setState({ isLoading: false, isPlaying: true, isError: false });
     } catch (e) {

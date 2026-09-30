@@ -139,6 +139,7 @@ export interface VocabItem {
   back: string;            // Traduction française
   phonetic: string;        // Transcription phonétique
   emoji?: string;          // Emoji d'illustration principal
+  imageUrl?: string;       // URL image optionnelle (Firebase / local)
   audioUrl?: string;       // URL audio optionnelle (Firebase / local)
   examplePl?: string;      // Exemple de phrase en polonais
   exampleFr?: string;      // Traduction de l'exemple

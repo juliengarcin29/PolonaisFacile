@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
@@ -20,10 +20,20 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   // Tableau du niveau de révélation pour chaque carte (0 = caché, 1 = polonais + audio, 2 = traduction)
   const [steps, setSteps] = useState<number[]>(() => items.map(() => 0));
 
+  // États locaux de chargement et d'erreur d'image
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageHasError, setImageHasError] = useState(false);
+
   const { isPlaying, playCard, stop } = useFlashcardAudio();
 
   const currentItem = items[currentIndex];
   const currentStep = steps[currentIndex] ?? 0;
+
+  // Réinitialiser les états d'image lors du changement de carte
+  useEffect(() => {
+    setImageLoading(true);
+    setImageHasError(false);
+  }, [currentIndex]);
 
   // Déclencher l'audio du mot principal automatiquement lors du passage à l'étape 1
   useEffect(() => {
@@ -76,6 +86,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
     }
   };
 
+  const showImage = Boolean(currentItem.imageUrl) && !imageHasError;
+
   return (
     <View style={dv.container}>
       {/* ── En-tête : Progression contemplative ── */}
@@ -88,10 +100,30 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
       {/* ── Carte principale réactive ── */}
       <ScaleButton style={dv.card} onPress={handleCardTap}>
-        {/* Emoji d'illustration */}
-        <Text style={[dv.emoji, currentStep > 0 && dv.emojiSmall]}>
-          {currentItem.emoji ?? '💡'}
-        </Text>
+        {/* Image Firebase Storage ou Fallback Emoji */}
+        {showImage ? (
+          <View style={[dv.imageContainer, currentStep > 0 && dv.imageContainerSmall]}>
+            <Image
+              source={{ uri: currentItem.imageUrl }}
+              style={dv.image}
+              onLoadStart={() => setImageLoading(true)}
+              onLoadEnd={() => setImageLoading(false)}
+              onError={() => setImageHasError(true)}
+              resizeMode="cover"
+            />
+            {imageLoading && (
+              <ActivityIndicator
+                size="small"
+                color={COLORS.primary}
+                style={StyleSheet.absoluteFill}
+              />
+            )}
+          </View>
+        ) : (
+          <Text style={[dv.emoji, currentStep > 0 && dv.emojiSmall]}>
+            {currentItem.emoji ?? '💡'}
+          </Text>
+        )}
 
         {/* Étape 0 : Incitation initiale */}
         {currentStep === 0 && (
@@ -196,6 +228,24 @@ const dv = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     gap: 16,
+  },
+  imageContainer: {
+    width: 180,
+    height: 180,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageContainerSmall: {
+    width: 120,
+    height: 120,
+    borderRadius: 18,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
   },
   emoji: {
     fontSize: 80,
