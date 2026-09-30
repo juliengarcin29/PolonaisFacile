@@ -4,11 +4,18 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { VocabItem } from '@/types';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// 80% de la largeur d'écran (max 340px pour tablettes)
+const LARGE_IMAGE_SIZE = Math.min(340, Math.round(SCREEN_WIDTH * 0.8));
+// 65% de la largeur d'écran (max 260px) pour l'étape révélée
+const SMALL_IMAGE_SIZE = Math.min(260, Math.round(SCREEN_WIDTH * 0.65));
 
 interface DiscoveryViewProps {
   items: VocabItem[];
@@ -230,8 +237,9 @@ const dv = StyleSheet.create({
     gap: 16,
   },
   imageContainer: {
-    width: 180,
-    height: 180,
+    width: LARGE_IMAGE_SIZE,
+    aspectRatio: 1,
+    maxWidth: 340,
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: '#F3F4F6',
@@ -239,9 +247,10 @@ const dv = StyleSheet.create({
     alignItems: 'center',
   },
   imageContainerSmall: {
-    width: 120,
-    height: 120,
-    borderRadius: 18,
+    width: SMALL_IMAGE_SIZE,
+    aspectRatio: 1,
+    maxWidth: 260,
+    borderRadius: 20,
   },
   image: {
     width: '100%',
