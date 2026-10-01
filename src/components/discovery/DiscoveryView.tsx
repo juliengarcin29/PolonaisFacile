@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { ScaleButton } from '@/components/ui/ScaleButton';
+import { getImageUrl, getAudioUrl } from '@/utils/media';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { VocabItem } from '@/types';
 
@@ -45,7 +46,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   // Déclencher l'audio du mot principal automatiquement lors du passage à l'étape 1
   useEffect(() => {
     if (currentStep === 1 && currentItem) {
-      playCard(currentItem.audioUrl, currentItem.front);
+      const targetAudioUrl = currentItem.audioUrl || getAudioUrl(currentItem.id);
+      playCard(targetAudioUrl, currentItem.front);
     }
   }, [currentIndex, currentStep, currentItem, playCard]);
 
@@ -83,7 +85,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
   const handleReplayAudio = () => {
     if (currentItem) {
-      playCard(currentItem.audioUrl, currentItem.front);
+      const targetAudioUrl = currentItem.audioUrl || getAudioUrl(currentItem.id);
+      playCard(targetAudioUrl, currentItem.front);
     }
   };
 
@@ -93,7 +96,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
     }
   };
 
-  const showImage = Boolean(currentItem.imageUrl) && !imageHasError;
+  const targetImageUrl = currentItem?.imageUrl || (currentItem ? getImageUrl(currentItem.id) : '');
+  const showImage = Boolean(targetImageUrl) && !imageHasError;
 
   return (
     <View style={dv.container}>
@@ -111,7 +115,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
         {showImage ? (
           <View style={[dv.imageContainer, currentStep > 0 && dv.imageContainerSmall]}>
             <Image
-              source={{ uri: currentItem.imageUrl }}
+              source={{ uri: targetImageUrl }}
               style={dv.image}
               onLoadStart={() => setImageLoading(true)}
               onLoadEnd={() => setImageLoading(false)}

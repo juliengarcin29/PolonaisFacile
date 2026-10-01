@@ -67,15 +67,23 @@ export function useAudio() {
   const playFromUrl = useCallback(async (url: string, rate = 0.85): Promise<void> => {
     await stop();
     if (isMountedRef.current) setState({ isLoading: true, isPlaying: false, isError: false });
+
     try {
+      // 🚀 Requête HEAD ultra-légère pour vérifier l'existence réelle du fichier (200 OK)
+      const response = await fetch(url, { method: 'HEAD' });
+      if (!response.ok) {
+        throw new Error(`Fichier audio distant introuvable (HTTP ${response.status})`);
+      }
+
       const player = createAudioPlayer(url);
       playerRef.current = player;
       player.setPlaybackRate(rate);
       player.play();
       if (isMountedRef.current) setState({ isLoading: false, isPlaying: true, isError: false });
     } catch (e) {
-      console.warn('[Audio] Erreur de chargement audio distant, fallback sur TTS:', e);
+      console.warn('[Audio] Erreur de chargement audio distant, bascule sur TTS:', e);
       if (isMountedRef.current) setState({ isLoading: false, isPlaying: false, isError: true });
+      throw e; // 🛑 Rejeter l'erreur pour que playCard bascule immédiatement sur playTTS
     }
   }, [stop]);
 
@@ -101,6 +109,7 @@ export function useFlashcardAudio() {
       try {
         await playFromUrl(audioUrl, 0.85);
       } catch {
+        // 🔄 Fallback automatique sur la synthèse vocale TTS si le MP3 distant n'existe pas (404)
         playTTS(text, lang, 0.85);
       }
     } else {
