@@ -163,7 +163,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
         {currentStep === 2 && (
           <View style={dv.translationBox}>
             <Text style={dv.backText}>{currentItem.back}</Text>
-            {currentItem.examplePl && (
+            {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
               <View style={dv.exampleBox}>
                 <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
 
