@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { triggerHapticImpact } from '@/utils/haptics';
 import { ScaleButton } from '@/components/ui/ScaleButton';
+import { getAudioUrl } from '@/utils/media';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
 
@@ -39,8 +40,13 @@ export default function WordOrderExercise({
   const isMaxReached = wordOrderAnswer.length >= targetCount;
 
   const handlePlayPrompt = () => {
-    const textToPlay = exercise.audioText || exercise.correctAnswer;
-    playCard(exercise.audioUrl, textToPlay);
+    if (!exercise.audioText) {
+      console.warn('[Audio] Missing audioText for isAudioPrompt exercise:', exercise.id);
+      return;
+    }
+    const targetKey = exercise.audioKey ?? exercise.id;
+    const audioUrl = exercise.audioUrl || getAudioUrl(targetKey);
+    playCard(audioUrl, exercise.audioText);
   };
 
   const addWord = (word: string, index: number) => {
@@ -69,7 +75,7 @@ export default function WordOrderExercise({
       {exercise.isAudioPrompt && (
         <TouchableOpacity style={wo.audioPromptBtn} onPress={handlePlayPrompt}>
           <Text style={wo.audioPromptBtnTxt}>
-            {isPlaying ? '🔊 Lecture en cours...' : '🔊 Écouter la phrase'}
+            {isPlaying ? t('lesson.exercises.playing_audio') : t('lesson.exercises.play_audio')}
           </Text>
         </TouchableOpacity>
       )}

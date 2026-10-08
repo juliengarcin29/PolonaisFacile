@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { triggerHapticImpact } from '@/utils/haptics';
+import { useFlashcardAudio } from '@/hooks/useAudio';
+import { getAudioUrl } from '@/utils/media';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { Exercise } from '@/types';
@@ -21,10 +24,31 @@ export default function MultipleChoiceExercise({
   phase,
   onAnswer,
 }: MultipleChoiceExerciseProps) {
+  const { t } = useTranslation();
   const options = exercise.options ?? [];
+  const { isPlaying, playCard } = useFlashcardAudio();
+
+  const handlePlayPrompt = () => {
+    if (!exercise.audioText) {
+      console.warn('[Audio] Missing audioText for isAudioPrompt exercise:', exercise.id);
+      return;
+    }
+    const targetKey = exercise.audioKey ?? exercise.id;
+    const audioUrl = exercise.audioUrl || getAudioUrl(targetKey);
+    playCard(audioUrl, exercise.audioText);
+  };
 
   return (
     <View style={mc.container}>
+      {/* Mode Écoute : Bouton d'action audio principal (sur clic uniquement) */}
+      {exercise.isAudioPrompt && (
+        <TouchableOpacity style={mc.audioPromptBtn} onPress={handlePlayPrompt}>
+          <Text style={mc.audioPromptBtnTxt}>
+            {isPlaying ? t('lesson.exercises.playing_audio') : t('lesson.exercises.play_audio')}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {options.map((option, index) => {
         const isSelected = selectedAnswer === option;
         const isCorrect = option === exercise.correctAnswer;
@@ -70,6 +94,21 @@ export default function MultipleChoiceExercise({
 
 const mc = StyleSheet.create({
   container: { gap: 12, marginTop: SPACING.lg },
+  audioPromptBtn: {
+    backgroundColor: COLORS.primary + '15',
+    paddingVertical: 14,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '30',
+  },
+  audioPromptBtnTxt: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',

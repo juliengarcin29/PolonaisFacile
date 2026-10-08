@@ -106,7 +106,8 @@ export interface Exercise {
   pairs?: Array<{ left: string; right: string }>; // pour matching
   audioUrl?: string;       // URL Firebase Storage
   isAudioPrompt?: boolean; // indique que l'exercice est en mode écoute (audio seul)
-  audioText?: string;     // texte à prononcer pour la consigne audio
+  audioText?: string;     // texte à prononcer pour la consigne audio (MANDATAIRE si isAudioPrompt: true)
+  audioKey?: string;      // ID de clé audio alternative pour réutiliser un MP3 existant (ex: 'vocab_cont_03')
   hint?: string;
   explanation?: string;    // explication après erreur
   xpReward: number;

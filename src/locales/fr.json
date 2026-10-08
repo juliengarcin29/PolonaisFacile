@@ -119,7 +119,9 @@
     "exercises": {
       "matching_hint": "Associez chaque mot à sa traduction",
       "word_order_placeholder": "Placez les mots ici",
-      "word_order_verify": "Vérifier →"
+      "word_order_verify": "Vérifier →",
+      "play_audio": "🔊 Lancer l'audio",
+      "playing_audio": "🔊 Lecture en cours..."
     }
   },
   "learn": {
