@@ -122,6 +122,12 @@
       "word_order_verify": "Verify →",
       "play_audio": "🔊 Play audio",
       "playing_audio": "🔊 Playing audio..."
+    },
+    "discovery": {
+      "sound_tap_prompt": "Tap to hear the sound",
+      "sound_sub_prompt": "Tap again for examples",
+      "sound_examples_title": "Words with this sound:",
+      "play_examples": "🔊 Play the examples"
     }
   },
   "learn": {

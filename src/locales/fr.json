@@ -122,6 +122,12 @@
       "word_order_verify": "Vérifier →",
       "play_audio": "🔊 Lancer l'audio",
       "playing_audio": "🔊 Lecture en cours..."
+    },
+    "discovery": {
+      "sound_tap_prompt": "Touchez pour écouter le son",
+      "sound_sub_prompt": "Touchez encore pour les exemples",
+      "sound_examples_title": "Mots avec ce son :",
+      "play_examples": "🔊 Écouter les exemples"
     }
   },
   "learn": {

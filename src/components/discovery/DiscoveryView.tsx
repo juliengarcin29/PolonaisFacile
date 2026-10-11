@@ -4,7 +4,8 @@
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Dimensions, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { getImageUrl, getAudioUrl } from '@/utils/media';
@@ -24,6 +25,7 @@ interface DiscoveryViewProps {
 }
 
 export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   // Tableau du niveau de révélation pour chaque carte (0 = caché, 1 = polonais + audio, 2 = traduction)
   const [steps, setSteps] = useState<number[]>(() => items.map(() => 0));
@@ -36,6 +38,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
   const currentItem = items[currentIndex];
   const currentStep = steps[currentIndex] ?? 0;
+  const isSoundCard = currentItem?.itemType === 'sound';
 
   // Réinitialiser les états d'image lors du changement de carte
   useEffect(() => {
@@ -47,7 +50,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   useEffect(() => {
     if (currentStep === 1 && currentItem) {
       const targetAudioUrl = currentItem.audioUrl || getAudioUrl(currentItem.id);
-      playCard(targetAudioUrl, currentItem.front);
+      const textToSpeak = currentItem.ttsText ?? currentItem.front;
+      playCard(targetAudioUrl, textToSpeak);
     }
   }, [currentIndex, currentStep, currentItem, playCard]);
 
@@ -60,7 +64,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
       nextSteps[currentIndex] = 1;
       setSteps(nextSteps);
     } else if (currentStep === 1) {
-      // Passer à l'étape 2 (Traduction)
+      // Passer à l'étape 2 (Traduction / Exemples)
       const nextSteps = [...steps];
       nextSteps[currentIndex] = 2;
       setSteps(nextSteps);
@@ -86,7 +90,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   const handleReplayAudio = () => {
     if (currentItem) {
       const targetAudioUrl = currentItem.audioUrl || getAudioUrl(currentItem.id);
-      playCard(targetAudioUrl, currentItem.front);
+      const textToSpeak = currentItem.ttsText ?? currentItem.front;
+      playCard(targetAudioUrl, textToSpeak);
     }
   };
 
@@ -96,7 +101,8 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
     }
   };
 
-  const targetImageUrl = currentItem?.imageUrl || (currentItem ? getImageUrl(currentItem.id) : '');
+  // Aucune requête image pour les cartes de type 'sound'
+  const targetImageUrl = !isSoundCard && (currentItem?.imageUrl || (currentItem ? getImageUrl(currentItem.id) : ''));
   const showImage = Boolean(targetImageUrl) && !imageHasError;
 
   return (
@@ -111,70 +117,146 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
       {/* ── Carte principale réactive ── */}
       <ScaleButton style={dv.card} onPress={handleCardTap}>
-        {/* Image Firebase Storage ou Fallback Emoji */}
-        {showImage ? (
-          <View style={[dv.imageContainer, currentStep > 0 && dv.imageContainerSmall]}>
-            <Image
-              source={{ uri: targetImageUrl }}
-              style={dv.image}
-              onLoadStart={() => setImageLoading(true)}
-              onLoadEnd={() => setImageLoading(false)}
-              onError={() => setImageHasError(true)}
-              resizeMode="cover"
-            />
-            {imageLoading && (
-              <ActivityIndicator
-                size="small"
-                color={COLORS.primary}
-                style={StyleSheet.absoluteFill}
-              />
-            )}
-          </View>
-        ) : (
-          <Text style={[dv.emoji, currentStep > 0 && dv.emojiSmall]}>
-            {currentItem.emoji ?? '💡'}
-          </Text>
-        )}
+        {/* Rendu spécifique pour les cartes de type 'sound' (lettres) */}
+        {isSoundCard ? (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={dv.soundScrollContent}
+          >
+            {/* Lettre géante */}
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+              style={[dv.soundLetter, currentStep > 0 && dv.soundLetterSmall]}
+            >
+              {currentItem.front}
+            </Text>
 
-        {/* Étape 0 : Incitation initiale */}
-        {currentStep === 0 && (
-          <View style={dv.stepBox}>
-            <Text style={dv.tapPrompt}>Touchez la carte pour découvrir le mot</Text>
-          </View>
-        )}
-
-        {/* Étape 1 : Polonais + Phonétique */}
-        {currentStep >= 1 && (
-          <View style={dv.stepBox}>
-            <Text style={dv.frontText}>{currentItem.front}</Text>
-            <Text style={dv.phoneticText}>{currentItem.phonetic}</Text>
-
-            <TouchableOpacity style={dv.audioBtn} onPress={handleReplayAudio}>
-              <Text style={dv.audioBtnTxt}>{isPlaying ? '🔊 Lecture...' : '🔊 Réécouter'}</Text>
-            </TouchableOpacity>
-
-            {currentStep === 1 && (
-              <Text style={dv.subPrompt}>Touchez encore pour la traduction</Text>
-            )}
-          </View>
-        )}
-
-        {/* Étape 2 : Traduction française */}
-        {currentStep === 2 && (
-          <View style={dv.translationBox}>
-            <Text style={dv.backText}>{currentItem.back}</Text>
-            {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
-              <View style={dv.exampleBox}>
-                <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
-
-                <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
-                  <Text style={dv.exampleAudioBtnTxt}>🔊 Écouter l'exemple</Text>
-                </TouchableOpacity>
-
-                <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
+            {/* Étape 0 : Incitation initiale */}
+            {currentStep === 0 && (
+              <View style={dv.stepBox}>
+                <Text style={dv.tapPrompt}>
+                  {t('lesson.discovery.sound_tap_prompt', { defaultValue: 'Touchez pour écouter le son' })}
+                </Text>
               </View>
             )}
-          </View>
+
+            {/* Étape 1 : Son principal + Phonétique + Repère français */}
+            {currentStep >= 1 && (
+              <View style={dv.stepBox}>
+                <TouchableOpacity style={dv.audioBtn} onPress={handleReplayAudio}>
+                  <Text style={dv.audioBtnTxt}>{isPlaying ? '🔊 Lecture...' : '🔊 Réécouter'}</Text>
+                </TouchableOpacity>
+
+                {/* Pastille de prononciation */}
+                <View style={dv.phoneticBadge}>
+                  <Text style={dv.phoneticBadgeTxt}>{currentItem.phonetic}</Text>
+                </View>
+
+                {/* Repère français */}
+                <Text style={dv.backText}>{currentItem.back}</Text>
+
+                {currentStep === 1 && (
+                  <Text style={dv.subPrompt}>
+                    {t('lesson.discovery.sound_sub_prompt', { defaultValue: 'Touchez encore pour les exemples' })}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Étape 2 : Bloc d'exemples */}
+            {currentStep === 2 && (
+              <View style={dv.translationBox}>
+                {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
+                  <View style={dv.exampleBox}>
+                    <Text style={dv.exampleHeader}>
+                      {t('lesson.discovery.sound_examples_title', { defaultValue: 'Mots avec ce son :' })}
+                    </Text>
+
+                    <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
+
+                    <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
+                      <Text style={dv.exampleAudioBtnTxt}>
+                        {t('lesson.discovery.play_examples', { defaultValue: '🔊 Écouter les exemples' })}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </ScrollView>
+        ) : (
+          /* Rendu 100% INCHANGÉ pour les cartes de type 'word' et 'phrase' */
+          <>
+            {/* Image Firebase Storage ou Fallback Emoji */}
+            {showImage ? (
+              <View style={[dv.imageContainer, currentStep > 0 && dv.imageContainerSmall]}>
+                <Image
+                  source={{ uri: targetImageUrl as string }}
+                  style={dv.image}
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoadEnd={() => setImageLoading(false)}
+                  onError={() => setImageHasError(true)}
+                  resizeMode="cover"
+                />
+                {imageLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color={COLORS.primary}
+                    style={StyleSheet.absoluteFill}
+                  />
+                )}
+              </View>
+            ) : (
+              <Text style={[dv.emoji, currentStep > 0 && dv.emojiSmall]}>
+                {currentItem.emoji ?? '💡'}
+              </Text>
+            )}
+
+            {/* Étape 0 : Incitation initiale */}
+            {currentStep === 0 && (
+              <View style={dv.stepBox}>
+                <Text style={dv.tapPrompt}>Touchez la carte pour découvrir le mot</Text>
+              </View>
+            )}
+
+            {/* Étape 1 : Polonais + Phonétique */}
+            {currentStep >= 1 && (
+              <View style={dv.stepBox}>
+                <Text style={dv.frontText}>{currentItem.front}</Text>
+                <Text style={dv.phoneticText}>{currentItem.phonetic}</Text>
+
+                <TouchableOpacity style={dv.audioBtn} onPress={handleReplayAudio}>
+                  <Text style={dv.audioBtnTxt}>{isPlaying ? '🔊 Lecture...' : '🔊 Réécouter'}</Text>
+                </TouchableOpacity>
+
+                {currentStep === 1 && (
+                  <Text style={dv.subPrompt}>Touchez encore pour la traduction</Text>
+                )}
+              </View>
+            )}
+
+            {/* Étape 2 : Traduction française */}
+            {currentStep === 2 && (
+              <View style={dv.translationBox}>
+                <Text style={dv.backText}>{currentItem.back}</Text>
+                {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
+                  <View style={dv.exampleBox}>
+                    <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
+
+                    <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
+                      <Text style={dv.exampleAudioBtnTxt}>🔊 Écouter l'exemple</Text>
+                    </TouchableOpacity>
+
+                    <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </>
         )}
       </ScaleButton>
 
@@ -239,6 +321,44 @@ const dv = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     gap: 16,
+  },
+  soundScrollContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    gap: 10,
+    width: '100%',
+  },
+  soundLetter: {
+    fontSize: 110,
+    fontWeight: '900',
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginVertical: 6,
+  },
+  soundLetterSmall: {
+    fontSize: 72,
+    marginVertical: 2,
+  },
+  phoneticBadge: {
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: BORDER_RADIUS.full,
+    marginVertical: 4,
+  },
+  phoneticBadgeTxt: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  exampleHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
   imageContainer: {
     width: LARGE_IMAGE_SIZE,

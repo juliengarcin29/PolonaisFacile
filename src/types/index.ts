@@ -129,7 +129,7 @@ export interface Flashcard {
 }
 
 // ── VOCABULAIRE & DÉCOUVERTE ─────────────────────────────────
-export type VocabItemType = 'word' | 'phrase';
+export type VocabItemType = 'word' | 'phrase' | 'sound';
 
 export interface VocabItem {
   id: string;
@@ -139,6 +139,7 @@ export interface VocabItem {
   front: string;           // Mot ou phrase en polonais
   back: string;            // Traduction française
   phonetic: string;        // Transcription phonétique
+  ttsText?: string;        // Texte alternatif à lire par la synthèse vocale pour les sons/lettres
   emoji?: string;          // Emoji d'illustration principal
   imageUrl?: string;       // URL image optionnelle (Firebase / local)
   audioUrl?: string;       // URL audio optionnelle (Firebase / local)
