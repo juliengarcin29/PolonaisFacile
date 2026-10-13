@@ -109,7 +109,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
     <View style={dv.container}>
       {/* ── En-tête : Progression contemplative ── */}
       <View style={dv.header}>
-        <Text style={dv.headerTag}>🔍 DÉCOUVERTE</Text>
+        <Text style={dv.headerTag}>{t('lesson.discovery.tag')}</Text>
         <Text style={dv.counter}>
           {currentIndex + 1} / {items.length}
         </Text>
@@ -136,9 +136,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
             {/* Étape 0 : Incitation initiale */}
             {currentStep === 0 && (
               <View style={dv.stepBox}>
-                <Text style={dv.tapPrompt}>
-                  {t('lesson.discovery.sound_tap_prompt', { defaultValue: 'Touchez pour écouter le son' })}
-                </Text>
+                <Text style={dv.tapPrompt}>{t('lesson.discovery.sound_tap_prompt')}</Text>
               </View>
             )}
 
@@ -146,7 +144,9 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
             {currentStep >= 1 && (
               <View style={dv.stepBox}>
                 <TouchableOpacity style={dv.audioBtn} onPress={handleReplayAudio}>
-                  <Text style={dv.audioBtnTxt}>{isPlaying ? '🔊 Lecture...' : '🔊 Réécouter'}</Text>
+                  <Text style={dv.audioBtnTxt}>
+                    {isPlaying ? t('lesson.discovery.playing_audio') : t('lesson.discovery.replay_audio')}
+                  </Text>
                 </TouchableOpacity>
 
                 {/* Pastille de prononciation */}
@@ -158,9 +158,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                 <Text style={dv.backText}>{currentItem.back}</Text>
 
                 {currentStep === 1 && (
-                  <Text style={dv.subPrompt}>
-                    {t('lesson.discovery.sound_sub_prompt', { defaultValue: 'Touchez encore pour les exemples' })}
-                  </Text>
+                  <Text style={dv.subPrompt}>{t('lesson.discovery.sound_sub_prompt')}</Text>
                 )}
               </View>
             )}
@@ -170,16 +168,12 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
               <View style={dv.translationBox}>
                 {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
                   <View style={dv.exampleBox}>
-                    <Text style={dv.exampleHeader}>
-                      {t('lesson.discovery.sound_examples_title', { defaultValue: 'Mots avec ce son :' })}
-                    </Text>
+                    <Text style={dv.exampleHeader}>{t('lesson.discovery.sound_examples_title')}</Text>
 
                     <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
-                      <Text style={dv.exampleAudioBtnTxt}>
-                        {t('lesson.discovery.play_examples', { defaultValue: '🔊 Écouter les exemples' })}
-                      </Text>
+                      <Text style={dv.exampleAudioBtnTxt}>{t('lesson.discovery.play_examples')}</Text>
                     </TouchableOpacity>
 
                     <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
@@ -219,7 +213,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
             {/* Étape 0 : Incitation initiale */}
             {currentStep === 0 && (
               <View style={dv.stepBox}>
-                <Text style={dv.tapPrompt}>Touchez la carte pour découvrir le mot</Text>
+                <Text style={dv.tapPrompt}>{t('lesson.discovery.tap_prompt')}</Text>
               </View>
             )}
 
@@ -230,11 +224,13 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                 <Text style={dv.phoneticText}>{currentItem.phonetic}</Text>
 
                 <TouchableOpacity style={dv.audioBtn} onPress={handleReplayAudio}>
-                  <Text style={dv.audioBtnTxt}>{isPlaying ? '🔊 Lecture...' : '🔊 Réécouter'}</Text>
+                  <Text style={dv.audioBtnTxt}>
+                    {isPlaying ? t('lesson.discovery.playing_audio') : t('lesson.discovery.replay_audio')}
+                  </Text>
                 </TouchableOpacity>
 
                 {currentStep === 1 && (
-                  <Text style={dv.subPrompt}>Touchez encore pour la traduction</Text>
+                  <Text style={dv.subPrompt}>{t('lesson.discovery.sub_prompt')}</Text>
                 )}
               </View>
             )}
@@ -248,7 +244,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                     <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
-                      <Text style={dv.exampleAudioBtnTxt}>🔊 Écouter l'exemple</Text>
+                      <Text style={dv.exampleAudioBtnTxt}>{t('lesson.discovery.play_example')}</Text>
                     </TouchableOpacity>
 
                     <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
@@ -264,7 +260,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
       <View style={dv.navRow}>
         {currentIndex > 0 ? (
           <TouchableOpacity style={dv.prevBtn} onPress={handlePrev}>
-            <Text style={dv.prevBtnTxt}>← Précédent</Text>
+            <Text style={dv.prevBtnTxt}>{t('lesson.discovery.prev_btn')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />
@@ -273,7 +269,9 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
         {currentStep === 2 && (
           <TouchableOpacity style={dv.nextBtn} onPress={handleNext}>
             <Text style={dv.nextBtnTxt}>
-              {currentIndex + 1 >= items.length ? 'Terminer la découverte ➔' : 'Suivant →'}
+              {currentIndex + 1 >= items.length
+                ? t('lesson.discovery.finish_btn')
+                : t('lesson.discovery.next_btn')}
             </Text>
           </TouchableOpacity>
         )}

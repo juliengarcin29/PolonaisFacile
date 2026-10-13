@@ -124,10 +124,22 @@
       "playing_audio": "🔊 Playing audio..."
     },
     "discovery": {
+      "tag": "🔍 DISCOVERY",
+      "tap_prompt": "Tap the card to discover the word",
+      "sub_prompt": "Tap again for translation",
       "sound_tap_prompt": "Tap to hear the sound",
       "sound_sub_prompt": "Tap again for examples",
       "sound_examples_title": "Words with this sound:",
-      "play_examples": "🔊 Play the examples"
+      "playing_audio": "🔊 Playing...",
+      "replay_audio": "🔊 Replay",
+      "play_example": "🔊 Listen to example",
+      "play_examples": "🔊 Play the examples",
+      "prev_btn": "← Previous",
+      "next_btn": "Next →",
+      "finish_btn": "Finish discovery ➔",
+      "transition_title": "Words discovered successfully!",
+      "transition_sub": "You have explored the lesson vocabulary. Time to test your knowledge with the exercises.",
+      "transition_btn": "Start exercises ➔"
     }
   },
   "learn": {

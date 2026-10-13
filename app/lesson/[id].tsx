@@ -201,15 +201,13 @@ export default function LessonScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.transitionContainer}>
           <Text style={styles.transitionEmoji}>🎉</Text>
-          <Text style={styles.transitionTitle}>Mots découverts avec succès !</Text>
-          <Text style={styles.transitionSub}>
-            Tu as exploré le vocabulaire de la leçon. C'est le moment de tester tes connaissances avec les exercices.
-          </Text>
+          <Text style={styles.transitionTitle}>{t('lesson.discovery.transition_title')}</Text>
+          <Text style={styles.transitionSub}>{t('lesson.discovery.transition_sub')}</Text>
           <TouchableOpacity
             style={styles.transitionBtn}
             onPress={() => setPhase('exercise')}
           >
-            <Text style={styles.transitionBtnTxt}>Commencer les exercices ➔</Text>
+            <Text style={styles.transitionBtnTxt}>{t('lesson.discovery.transition_btn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

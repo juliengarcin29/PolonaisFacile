@@ -124,10 +124,22 @@
       "playing_audio": "🔊 Lecture en cours..."
     },
     "discovery": {
+      "tag": "🔍 DÉCOUVERTE",
+      "tap_prompt": "Touchez la carte pour découvrir le mot",
+      "sub_prompt": "Touchez encore pour la traduction",
       "sound_tap_prompt": "Touchez pour écouter le son",
       "sound_sub_prompt": "Touchez encore pour les exemples",
       "sound_examples_title": "Mots avec ce son :",
-      "play_examples": "🔊 Écouter les exemples"
+      "playing_audio": "🔊 Lecture...",
+      "replay_audio": "🔊 Réécouter",
+      "play_example": "🔊 Écouter l'exemple",
+      "play_examples": "🔊 Écouter les exemples",
+      "prev_btn": "← Précédent",
+      "next_btn": "Suivant →",
+      "finish_btn": "Terminer la découverte ➔",
+      "transition_title": "Mots découverts avec succès !",
+      "transition_sub": "Tu as exploré le vocabulaire de la leçon. C'est le moment de tester tes connaissances avec les exercices.",
+      "transition_btn": "Commencer les exercices ➔"
     }
   },
   "learn": {
