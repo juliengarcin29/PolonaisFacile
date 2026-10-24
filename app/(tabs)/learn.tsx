@@ -24,13 +24,26 @@ type LearnTab = 'modules' | 'dialogues' | 'dictees';
 
 // ── Configuration des Modules (Metadata) ─────────────────────
 const MODULE_METADATA = [
-  { id: 'module_1', emoji: '🔤', title: 'Alphabet & Prononciation', color: COLORS.primary, free: true },
-  { id: 'module_2', emoji: '👋', title: 'Salutations essentielles', color: '#3B82F6', free: true },
-  { id: 'module_3', emoji: '🔢', title: 'Chiffres et nombres', color: '#22C55E', free: true },
-  { id: 'module_4', emoji: '👨‍👩‍👧', title: 'La famille', color: '#F59E0B', free: true },
-  { id: 'module_5', emoji: '🍕', title: 'Nourriture & Boissons', color: '#8B5CF6', free: true },
-  { id: 'module_6', emoji: '🏙️', title: 'Ville & Transport', color: '#06B6D4', free: false },
-  { id: 'module_7', emoji: '⏰', title: 'Temps & Dates', color: '#EC4899', free: false },
+  { id: 'module_1', emoji: '🔤', title: 'Sons du polonais', color: COLORS.primary, free: true },
+  { id: 'module_2', emoji: '👋', title: 'Salutations et présentation', color: '#3B82F6', free: true },
+  { id: 'module_3', emoji: '❓', title: 'Demander et répondre', color: '#22C55E', free: true },
+  { id: 'module_4', emoji: '☕', title: 'Café et restaurant', color: '#F59E0B', free: true },
+  { id: 'module_5', emoji: '💬', title: 'Verbes essentiels', color: '#8B5CF6', free: true },
+  { id: 'module_6', emoji: '🔢', title: 'Premiers nombres', color: '#06B6D4', free: true },
+  { id: 'module_7', emoji: '👨‍👩‍👧', title: 'Famille et relations', color: '#EC4899', free: true },
+  { id: 'module_8', emoji: '🍽️', title: 'Nourriture', color: '#10B981', free: true },
+  { id: 'module_9', emoji: '💶', title: 'Nombres et argent', color: '#F43F5E', free: true },
+  { id: 'module_10', emoji: '🛍️', title: 'Magasins et paiement', color: '#6366F1', free: true },
+  { id: 'module_11', emoji: '👗', title: 'Couleurs et vêtements', color: '#84CC16', free: true },
+  { id: 'module_12', emoji: '🕐', title: "L'heure", color: '#14B8A6', free: true },
+  { id: 'module_13', emoji: '📅', title: 'Jours et mois', color: '#A855F7', free: true },
+  { id: 'module_14', emoji: '🚌', title: 'Ville et transports', color: '#EAB308', free: true },
+  { id: 'module_15', emoji: '🏠', title: 'Logement et maison', color: '#F97316', free: true },
+  { id: 'module_16', emoji: '💼', title: 'Travail et quotidien', color: '#0EA5E9', free: true },
+  { id: 'module_17', emoji: '📱', title: 'Téléphone et démarches', color: '#D946EF', free: true },
+  { id: 'module_18', emoji: '🏥', title: 'Santé et urgences', color: '#EF4444', free: true },
+  { id: 'module_19', emoji: '🌤️', title: 'Météo, saisons et voyages', color: '#3B82F6', free: true },
+  { id: 'module_20', emoji: '🚀', title: 'Début A2', color: '#8B5CF6', free: true },
 ];
 
 // ── Dialogues ────────────────────────────────────────────────
@@ -91,7 +104,7 @@ export default function LearnScreen() {
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
 
-  // Dériver les modules avec leurs stats réelles
+  // Dériver les modules avec leurs stats réelles (un module sans aucune leçon n'est PAS affiché)
   const modules = useMemo(() => {
     return MODULE_METADATA.map(meta => {
       const lessons = getLessonsByModule(meta.id);
@@ -102,9 +115,9 @@ export default function LearnScreen() {
         ...meta,
         lessonCount: lessons.length,
         progress,
-        difficulty: lessons[0]?.difficulty || 'A1' as DifficultyLevel,
+        difficulty: lessons[0]?.difficulty || ('A1' as DifficultyLevel),
       };
-    });
+    }).filter(mod => mod.lessonCount > 0);
   }, [user?.progress.completedLessons]);
 
   const totalLessons = ALL_LOCAL_LESSONS.length;

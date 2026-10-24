@@ -158,13 +158,26 @@
     }
   },
   "modules": {
-    "module_1": "Alphabet & Pronunciation",
-    "module_2": "Essential Greetings",
-    "module_3": "Numbers",
-    "module_4": "Family",
-    "module_5": "Food & Drinks",
-    "module_6": "City & Transport",
-    "module_7": "Time & Dates"
+    "module_1": "Polish Sounds",
+    "module_2": "Greetings & Introductions",
+    "module_3": "Asking & Answering",
+    "module_4": "Café & Restaurant",
+    "module_5": "Essential Verbs",
+    "module_6": "First Numbers",
+    "module_7": "Family & Relationships",
+    "module_8": "Food",
+    "module_9": "Numbers & Money",
+    "module_10": "Shops & Payment",
+    "module_11": "Colors & Clothes",
+    "module_12": "Telling Time",
+    "module_13": "Days & Months",
+    "module_14": "City & Transport",
+    "module_15": "Housing & Home",
+    "module_16": "Work & Daily Life",
+    "module_17": "Phone & Paperwork",
+    "module_18": "Health & Emergencies",
+    "module_19": "Weather, Seasons & Travel",
+    "module_20": "Starting A2"
   },
   "dialogues": {
     "dialogue_01": "First meeting",
