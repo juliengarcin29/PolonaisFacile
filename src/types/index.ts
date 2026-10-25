@@ -144,6 +144,7 @@ export interface VocabItem {
   imageUrl?: string;       // URL image optionnelle (Firebase / local)
   audioUrl?: string;       // URL audio optionnelle (Firebase / local)
   examplePl?: string;      // Exemple de phrase en polonais
+  examplePlMarked?: string;// Exemple avec marqueurs { } pour la coloration de terminaison
   exampleFr?: string;      // Traduction de l'exemple
   dependsOnIds?: string[]; // IDs des mots prérequis vus avant (pour les phrases)
   words?: string[];        // Mots découpés pour l'exercice WordOrder

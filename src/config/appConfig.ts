@@ -16,6 +16,7 @@ export const IS_PROD = ENV === 'production';
 
 // ── Globale ──────────────────────────────────────────────────
 export const MONETIZATION_ENABLED = false; // Désactiver pour la phase de test initiale
+export const SHOW_ENDING_HIGHLIGHT = true; // Activer la mise en valeur orange des terminaisons dans Découverte
 
 // ── Configuration Firebase ────────────────────────────────────
 export const FIREBASE_CONFIG = {

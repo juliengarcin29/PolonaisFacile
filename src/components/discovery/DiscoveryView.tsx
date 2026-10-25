@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useFlashcardAudio } from '@/hooks/useAudio';
 import { ScaleButton } from '@/components/ui/ScaleButton';
 import { getImageUrl, getAudioUrl } from '@/utils/media';
+import { SHOW_ENDING_HIGHLIGHT } from '@/config/appConfig';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 import type { VocabItem } from '@/types';
 
@@ -22,6 +23,38 @@ const SMALL_IMAGE_SIZE = Math.min(260, Math.round(SCREEN_WIDTH * 0.65));
 interface DiscoveryViewProps {
   items: VocabItem[];
   onComplete: () => void;
+}
+
+/**
+ * Rendu d'une phrase d'exemple avec coloration orange (#C55A11) des terminaisons entre { }
+ */
+function renderMarkedExample(markedText: string | undefined, defaultText: string) {
+  if (!SHOW_ENDING_HIGHLIGHT || !markedText || !markedText.includes('{')) {
+    // Retirer préventivement toute accolade orpheline restante du texte affiché
+    return <Text style={dv.examplePl}>{defaultText.replace(/[\{\}]/g, '')}</Text>;
+  }
+
+  // Découper sur les accolades { et } tout en conservant les contenus capturés
+  const parts = markedText.split(/\{([^}]+)\}/g);
+
+  return (
+    <Text style={dv.examplePl}>
+      {parts.map((part, index) => {
+        const cleanPart = part.replace(/[\{\}]/g, '');
+        if (!cleanPart) return null;
+
+        const isHighlight = index % 2 === 1; // Index impair = segment capturé entre { }
+        if (isHighlight) {
+          return (
+            <Text key={index} style={dv.exampleHighlight}>
+              {cleanPart}
+            </Text>
+          );
+        }
+        return cleanPart;
+      })}
+    </Text>
+  );
 }
 
 export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
@@ -39,6 +72,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
   const currentItem = items[currentIndex];
   const currentStep = steps[currentIndex] ?? 0;
   const isSoundCard = currentItem?.itemType === 'sound';
+  const hasHighlight = SHOW_ENDING_HIGHLIGHT && Boolean(currentItem?.examplePlMarked && /\{[^}]+\}/.test(currentItem.examplePlMarked));
 
   // Réinitialiser les états d'image lors du changement de carte
   useEffect(() => {
@@ -97,7 +131,9 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
   const handlePlayExampleAudio = () => {
     if (currentItem?.examplePl) {
-      playCard(undefined, currentItem.examplePl);
+      // Toujours lire le texte d'exemple propre (sans accolades)
+      const cleanExample = currentItem.examplePl.replace(/[\{\}]/g, '');
+      playCard(undefined, cleanExample);
     }
   };
 
@@ -170,7 +206,11 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                   <View style={dv.exampleBox}>
                     <Text style={dv.exampleHeader}>{t('lesson.discovery.sound_examples_title')}</Text>
 
-                    <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
+                    {renderMarkedExample(currentItem.examplePlMarked, currentItem.examplePl)}
+
+                    {hasHighlight && (
+                      <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                    )}
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
                       <Text style={dv.exampleAudioBtnTxt}>{t('lesson.discovery.play_examples')}</Text>
@@ -241,7 +281,11 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                 <Text style={dv.backText}>{currentItem.back}</Text>
                 {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
                   <View style={dv.exampleBox}>
-                    <Text style={dv.examplePl}>{currentItem.examplePl}</Text>
+                    {renderMarkedExample(currentItem.examplePlMarked, currentItem.examplePl)}
+
+                    {hasHighlight && (
+                      <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                    )}
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
                       <Text style={dv.exampleAudioBtnTxt}>{t('lesson.discovery.play_example')}</Text>
@@ -455,6 +499,19 @@ const dv = StyleSheet.create({
     color: COLORS.textPrimary,
     fontStyle: 'italic',
     textAlign: 'center',
+  },
+  exampleHighlight: {
+    color: '#C55A11',
+    fontWeight: '900',
+    fontStyle: 'normal',
+  },
+  endingLegend: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 2,
+    marginBottom: 4,
   },
   exampleAudioBtn: {
     backgroundColor: COLORS.white,

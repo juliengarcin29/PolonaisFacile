@@ -137,6 +137,7 @@
       "prev_btn": "← Previous",
       "next_btn": "Next →",
       "finish_btn": "Finish discovery ➔",
+      "ending_legend": "Orange: the ending that changes",
       "transition_title": "Words discovered successfully!",
       "transition_sub": "You have explored the lesson vocabulary. Time to test your knowledge with the exercises.",
       "transition_btn": "Start exercises ➔"

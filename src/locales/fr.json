@@ -137,6 +137,7 @@
       "prev_btn": "← Précédent",
       "next_btn": "Suivant →",
       "finish_btn": "Terminer la découverte ➔",
+      "ending_legend": "Orange : la terminaison qui change",
       "transition_title": "Mots découverts avec succès !",
       "transition_sub": "Tu as exploré le vocabulaire de la leçon. C'est le moment de tester tes connaissances avec les exercices.",
       "transition_btn": "Commencer les exercices ➔"
