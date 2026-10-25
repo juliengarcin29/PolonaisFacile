@@ -26,19 +26,25 @@ interface DiscoveryViewProps {
 }
 
 /**
- * Rendu d'une phrase d'exemple avec coloration orange (#C55A11) des terminaisons entre { }
+ * Rendu d'un texte (phrase ou note) avec coloration orange (#C55A11) des segments entre { }
  */
-function renderMarkedExample(markedText: string | undefined, defaultText: string) {
-  if (!SHOW_ENDING_HIGHLIGHT || !markedText || !markedText.includes('{')) {
+function renderMarkedText(
+  markedText: string | undefined,
+  defaultText: string,
+  style: any,
+  highlightStyle: any
+) {
+  const textToRender = markedText || defaultText;
+  if (!SHOW_ENDING_HIGHLIGHT || !textToRender || !textToRender.includes('{')) {
     // Retirer préventivement toute accolade orpheline restante du texte affiché
-    return <Text style={dv.examplePl}>{defaultText.replace(/[\{\}]/g, '')}</Text>;
+    return <Text style={style}>{textToRender.replace(/[\{\}]/g, '')}</Text>;
   }
 
   // Découper sur les accolades { et } tout en conservant les contenus capturés
-  const parts = markedText.split(/\{([^}]+)\}/g);
+  const parts = textToRender.split(/\{([^}]+)\}/g);
 
   return (
-    <Text style={dv.examplePl}>
+    <Text style={style}>
       {parts.map((part, index) => {
         const cleanPart = part.replace(/[\{\}]/g, '');
         if (!cleanPart) return null;
@@ -46,7 +52,7 @@ function renderMarkedExample(markedText: string | undefined, defaultText: string
         const isHighlight = index % 2 === 1; // Index impair = segment capturé entre { }
         if (isHighlight) {
           return (
-            <Text key={index} style={dv.exampleHighlight}>
+            <Text key={index} style={highlightStyle}>
               {cleanPart}
             </Text>
           );
@@ -206,10 +212,26 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                   <View style={dv.exampleBox}>
                     <Text style={dv.exampleHeader}>{t('lesson.discovery.sound_examples_title')}</Text>
 
-                    {renderMarkedExample(currentItem.examplePlMarked, currentItem.examplePl)}
+                    {renderMarkedText(
+                      currentItem.examplePlMarked,
+                      currentItem.examplePl,
+                      dv.examplePl,
+                      dv.exampleHighlight
+                    )}
 
                     {hasHighlight && (
-                      <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                      currentItem.endingNote ? (
+                        <View style={dv.endingNoteBox}>
+                          {renderMarkedText(
+                            currentItem.endingNote,
+                            currentItem.endingNote,
+                            dv.endingNoteTxt,
+                            dv.exampleHighlight
+                          )}
+                        </View>
+                      ) : (
+                        <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                      )
                     )}
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
@@ -281,10 +303,26 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                 <Text style={dv.backText}>{currentItem.back}</Text>
                 {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
                   <View style={dv.exampleBox}>
-                    {renderMarkedExample(currentItem.examplePlMarked, currentItem.examplePl)}
+                    {renderMarkedText(
+                      currentItem.examplePlMarked,
+                      currentItem.examplePl,
+                      dv.examplePl,
+                      dv.exampleHighlight
+                    )}
 
                     {hasHighlight && (
-                      <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                      currentItem.endingNote ? (
+                        <View style={dv.endingNoteBox}>
+                          {renderMarkedText(
+                            currentItem.endingNote,
+                            currentItem.endingNote,
+                            dv.endingNoteTxt,
+                            dv.exampleHighlight
+                          )}
+                        </View>
+                      ) : (
+                        <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+                      )
                     )}
 
                     <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
@@ -512,6 +550,23 @@ const dv = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
     marginBottom: 4,
+  },
+  endingNoteBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 6,
+    marginBottom: 4,
+    width: '100%',
+  },
+  endingNoteTxt: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   exampleAudioBtn: {
     backgroundColor: COLORS.white,
