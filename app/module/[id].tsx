@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { contentService } from '@/services/firebase/contentService';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
@@ -17,6 +18,7 @@ import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import type { Module, Lesson } from '@/types';
 
 export default function ModuleScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useUserStore();
@@ -56,7 +58,7 @@ export default function ModuleScreen() {
         <TouchableOpacity onPress={() => router.back()} style={m.backBtn}>
           <Text style={m.backTxt}>← Retour</Text>
         </TouchableOpacity>
-        <Text style={m.headerTitle}>{module?.title ?? 'Module'}</Text>
+        <Text style={m.headerTitle}>{t((`modules.${id}`) as any, { defaultValue: module?.title ?? 'Module' })}</Text>
         <View style={{ width: 60 }} />
       </View>
 
