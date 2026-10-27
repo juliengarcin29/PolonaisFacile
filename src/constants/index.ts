@@ -37,6 +37,16 @@ export const COLORS = {
   darkBg: '#0F172A',
   darkSurface: '#1E293B',
   darkBorder: '#334155',
+
+  // Cartes de Découverte
+  translationBg: '#E9F0F8',
+  sentenceBg: '#F7F9FC',
+  sentenceBorder: '#E3E9F2',
+  sentenceHeader: '#5B7090',
+  sentenceFr: '#4E6585',
+  grammarBg: '#FFF7F0',
+  grammarBorder: '#FFE1C7',
+  grammarAccent: '#C55A11',
 } as const;
 
 export const FONTS = {

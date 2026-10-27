@@ -143,6 +143,31 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
     }
   };
 
+  /**
+   * Rendu de la note de grammaire avec titre (ligne 1 si \n) et corps (ligne 2+)
+   */
+  const renderEndingNote = (noteText: string) => {
+    if (!noteText) return null;
+
+    const lines = noteText.split('\n');
+    const titleLine = lines.length > 1 ? lines[0] : null;
+    const bodyText = lines.length > 1 ? lines.slice(1).join('\n') : lines[0];
+
+    return (
+      <View style={dv.grammarBox}>
+        <Text style={dv.grammarHeader}>💡 {t('lesson.discovery.grammar_title')}</Text>
+        {titleLine && (
+          <View style={dv.grammarTitleRow}>
+            {renderMarkedText(titleLine, titleLine, dv.grammarTitleTxt, dv.exampleHighlight)}
+          </View>
+        )}
+        <View style={dv.grammarBodyRow}>
+          {renderMarkedText(bodyText, bodyText, dv.grammarBodyTxt, dv.exampleHighlight)}
+        </View>
+      </View>
+    );
+  };
+
   // Aucune requête image pour les cartes de type 'sound'
   const targetImageUrl = !isSoundCard && (currentItem?.imageUrl || (currentItem ? getImageUrl(currentItem.id) : ''));
   const showImage = Boolean(targetImageUrl) && !imageHasError;
@@ -158,7 +183,11 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
       </View>
 
       {/* ── Carte principale réactive ── */}
-      <ScaleButton style={dv.card} onPress={handleCardTap}>
+      <ScaleButton
+        style={[dv.card, !isSoundCard && currentStep === 2 && dv.cardWordStep2]}
+        onPress={handleCardTap}
+        disabled={currentStep === 2}
+      >
         {/* Rendu spécifique pour les cartes de type 'sound' (lettres) */}
         {isSoundCard ? (
           <ScrollView
@@ -221,14 +250,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
                     {hasHighlight && (
                       currentItem.endingNote ? (
-                        <View style={dv.endingNoteBox}>
-                          {renderMarkedText(
-                            currentItem.endingNote,
-                            currentItem.endingNote,
-                            dv.endingNoteTxt,
-                            dv.exampleHighlight
-                          )}
-                        </View>
+                        renderEndingNote(currentItem.endingNote)
                       ) : (
                         <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
                       )
@@ -244,8 +266,86 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
               </View>
             )}
           </ScrollView>
+        ) : currentStep === 2 ? (
+          /* ÉTAPE 2 RÉVÉLÉE POUR CARTES 'WORD' / 'PHRASE' : Structure resserrée avec ScrollView */
+          <ScrollView
+            style={{ flex: 1, width: '100%' }}
+            showsVerticalScrollIndicator={true}
+            persistentScrollbar={true}
+            nestedScrollEnabled={true}
+            contentContainerStyle={dv.wordStep2Scroll}
+          >
+            {/* En-tête resserré : Emoji/Image à ~48px, Mot 24px, Phonétique 14px, Bouton Réécouter aminci */}
+            <View style={dv.wordStep2HeaderBox}>
+              {showImage ? (
+                <View style={dv.wordImageContainerSmall}>
+                  <Image
+                    source={{ uri: targetImageUrl as string }}
+                    style={dv.image}
+                    onLoadStart={() => setImageLoading(true)}
+                    onLoadEnd={() => setImageLoading(false)}
+                    onError={() => setImageHasError(true)}
+                    resizeMode="cover"
+                  />
+                  {imageLoading && (
+                    <ActivityIndicator size="small" color={COLORS.primary} style={StyleSheet.absoluteFill} />
+                  )}
+                </View>
+              ) : (
+                <Text style={dv.wordEmojiSmall}>{currentItem.emoji ?? '💡'}</Text>
+              )}
+
+              <Text style={dv.wordFrontTextSmall}>{currentItem.front}</Text>
+              <Text style={dv.wordPhoneticTextSmall}>{currentItem.phonetic}</Text>
+
+              <TouchableOpacity style={dv.wordAudioBtnSmall} onPress={handleReplayAudio}>
+                <Text style={dv.wordAudioBtnTxtSmall}>
+                  {isPlaying ? t('lesson.discovery.playing_audio') : t('lesson.discovery.replay_audio')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 1. Bloc Traduction du mot (fond #E9F0F8, pas de bordure, texte rouge primary) */}
+            <View style={dv.wordTranslationBox}>
+              <Text style={dv.wordBackText}>{currentItem.back}</Text>
+            </View>
+
+            {/* 2. Bloc « Dans une phrase » (si examplePl non vide) */}
+            {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
+              <View style={dv.sentenceBlock}>
+                <View style={dv.sentenceHeaderRow}>
+                  <Text style={dv.sentenceHeaderLabel}>{t('lesson.discovery.in_a_sentence')}</Text>
+                  <TouchableOpacity style={dv.shortAudioBtn} onPress={handlePlayExampleAudio}>
+                    <Text style={dv.shortAudioBtnTxt}>{t('lesson.discovery.play_short')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Phrase polonaise (droite, taille 20, gras, orange si marqueur) */}
+                <View style={dv.sentencePlWrap}>
+                  {renderMarkedText(
+                    currentItem.examplePlMarked,
+                    currentItem.examplePl,
+                    dv.sentencePlTxt,
+                    dv.exampleHighlight
+                  )}
+                </View>
+
+                {/* Traduction française (taille 16, couleur #4E6585, centrée) */}
+                <Text style={dv.sentenceFrTxt}>{currentItem.exampleFr}</Text>
+              </View>
+            )}
+
+            {/* 3. Bloc « Grammaire en contexte » (si segment orange) */}
+            {hasHighlight && (
+              currentItem.endingNote ? (
+                renderEndingNote(currentItem.endingNote)
+              ) : (
+                <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
+              )
+            )}
+          </ScrollView>
         ) : (
-          /* Rendu 100% INCHANGÉ pour les cartes de type 'word' et 'phrase' */
+          /* ÉTAPES 0 ET 1 POUR CARTES 'WORD' / 'PHRASE' : Rendu 100% INCHANGÉ */
           <>
             {/* Image Firebase Storage ou Fallback Emoji */}
             {showImage ? (
@@ -259,11 +359,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                   resizeMode="cover"
                 />
                 {imageLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color={COLORS.primary}
-                    style={StyleSheet.absoluteFill}
-                  />
+                  <ActivityIndicator size="small" color={COLORS.primary} style={StyleSheet.absoluteFill} />
                 )}
               </View>
             ) : (
@@ -280,7 +376,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
             )}
 
             {/* Étape 1 : Polonais + Phonétique */}
-            {currentStep >= 1 && (
+            {currentStep === 1 && (
               <View style={dv.stepBox}>
                 <Text style={dv.frontText}>{currentItem.front}</Text>
                 <Text style={dv.phoneticText}>{currentItem.phonetic}</Text>
@@ -291,47 +387,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
                   </Text>
                 </TouchableOpacity>
 
-                {currentStep === 1 && (
-                  <Text style={dv.subPrompt}>{t('lesson.discovery.sub_prompt')}</Text>
-                )}
-              </View>
-            )}
-
-            {/* Étape 2 : Traduction française */}
-            {currentStep === 2 && (
-              <View style={dv.translationBox}>
-                <Text style={dv.backText}>{currentItem.back}</Text>
-                {Boolean(currentItem.examplePl && currentItem.examplePl.trim()) && (
-                  <View style={dv.exampleBox}>
-                    {renderMarkedText(
-                      currentItem.examplePlMarked,
-                      currentItem.examplePl,
-                      dv.examplePl,
-                      dv.exampleHighlight
-                    )}
-
-                    {hasHighlight && (
-                      currentItem.endingNote ? (
-                        <View style={dv.endingNoteBox}>
-                          {renderMarkedText(
-                            currentItem.endingNote,
-                            currentItem.endingNote,
-                            dv.endingNoteTxt,
-                            dv.exampleHighlight
-                          )}
-                        </View>
-                      ) : (
-                        <Text style={dv.endingLegend}>{t('lesson.discovery.ending_legend')}</Text>
-                      )
-                    )}
-
-                    <TouchableOpacity style={dv.exampleAudioBtn} onPress={handlePlayExampleAudio}>
-                      <Text style={dv.exampleAudioBtnTxt}>{t('lesson.discovery.play_example')}</Text>
-                    </TouchableOpacity>
-
-                    <Text style={dv.exampleFr}>{currentItem.exampleFr}</Text>
-                  </View>
-                )}
+                <Text style={dv.subPrompt}>{t('lesson.discovery.sub_prompt')}</Text>
               </View>
             )}
           </>
@@ -350,11 +406,7 @@ export function DiscoveryView({ items, onComplete }: DiscoveryViewProps) {
 
         {currentStep === 2 && (
           <TouchableOpacity style={dv.nextBtn} onPress={handleNext}>
-            <Text style={dv.nextBtnTxt}>
-              {currentIndex + 1 >= items.length
-                ? t('lesson.discovery.finish_btn')
-                : t('lesson.discovery.next_btn')}
-            </Text>
+            <Text style={dv.nextBtnTxt}>{t('lesson.discovery.next_btn')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -390,7 +442,7 @@ const dv = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.xl,
+    padding: SPACING.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: SPACING.md,
@@ -400,7 +452,11 @@ const dv = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-    gap: 16,
+  },
+  cardWordStep2: {
+    paddingTop: 16,
+    paddingBottom: 8,
+    paddingHorizontal: SPACING.md,
   },
   soundScrollContent: {
     alignItems: 'center',
@@ -408,6 +464,70 @@ const dv = StyleSheet.create({
     flexGrow: 1,
     gap: 10,
     width: '100%',
+  },
+  wordStep2HeaderBox: {
+    alignItems: 'center',
+    gap: 2,
+    width: '100%',
+  },
+  wordEmojiSmall: {
+    fontSize: 48,
+    textAlign: 'center',
+    marginVertical: 2,
+  },
+  wordImageContainerSmall: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  wordFrontTextSmall: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  wordPhoneticTextSmall: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  wordAudioBtnSmall: {
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.full,
+    marginTop: 4,
+  },
+  wordAudioBtnTxtSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  wordStep2Scroll: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    width: '100%',
+    gap: 10,
+    paddingBottom: 8,
+  },
+  wordTranslationBox: {
+    backgroundColor: COLORS.translationBg,
+    borderRadius: BORDER_RADIUS.lg,
+    paddingVertical: 10,
+    paddingHorizontal: SPACING.md,
+    width: '100%',
+    alignItems: 'center',
+  },
+  wordBackText: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.primary,
+    textAlign: 'center',
   },
   soundLetter: {
     fontSize: 110,
@@ -515,13 +635,67 @@ const dv = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     gap: 8,
-    marginTop: 8,
   },
   backText: {
     fontSize: 22,
     fontWeight: '800',
     color: COLORS.primary,
     textAlign: 'center',
+  },
+  sentenceBlock: {
+    backgroundColor: COLORS.sentenceBg,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: COLORS.sentenceBorder,
+    padding: 12,
+    width: '100%',
+    gap: 6,
+  },
+  sentenceHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 2,
+  },
+  sentenceHeaderLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.sentenceHeader,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  shortAudioBtn: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '30',
+  },
+  shortAudioBtnTxt: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  sentencePlWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 4,
+  },
+  sentencePlTxt: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  sentenceFrTxt: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.sentenceFr,
+    textAlign: 'center',
+    alignSelf: 'stretch',
+    width: '100%',
   },
   exampleBox: {
     marginTop: 6,
@@ -551,22 +725,44 @@ const dv = StyleSheet.create({
     marginTop: 2,
     marginBottom: 4,
   },
-  endingNoteBox: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: BORDER_RADIUS.md,
+  grammarBox: {
+    backgroundColor: COLORS.grammarBg,
+    borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 6,
-    marginBottom: 4,
+    borderColor: COLORS.grammarBorder,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.grammarAccent,
+    padding: 12,
+    width: '100%',
+    alignItems: 'flex-start',
+    gap: 4,
+  },
+  grammarHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: COLORS.grammarAccent,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  grammarTitleRow: {
     width: '100%',
   },
-  endingNoteTxt: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
+  grammarTitleTxt: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    textAlign: 'left',
+  },
+  grammarBodyRow: {
+    width: '100%',
+  },
+  grammarBodyTxt: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+    textAlign: 'left',
+    lineHeight: 20,
   },
   exampleAudioBtn: {
     backgroundColor: COLORS.white,
