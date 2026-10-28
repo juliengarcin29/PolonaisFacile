@@ -5,6 +5,7 @@
 
 import type { Lesson } from '@/types';
 import { VOCAB_2_1, VOCAB_2_2, VOCAB_2_3, VOCAB_2_4, VOCAB_2_5, VOCAB_2_6, VOCAB_2_7, MEETING_VOCAB } from '@/content/vocabulary/module2';
+import { VOCAB_3_1 } from '@/content/vocabulary/module3';
 
 export const MODULE_2_LESSONS: Lesson[] = [
   {
@@ -648,4 +649,85 @@ export const MODULE_2_LESSONS: Lesson[] = [
 // Module 3 — Demander et répondre (Officiel)
 // ============================================================
 
-export const MODULE_3_LESSONS: Lesson[] = [];
+export const MODULE_3_LESSONS: Lesson[] = [
+  {
+    id: 'lesson_3_1',
+    moduleId: 'module_3',
+    title: 'Demander quelque chose',
+    description: 'Formuler une demande polie. « Poproszę… » est la structure centrale, réutilisée dans tout le cursus.',
+    type: 'vocabulary',
+    difficulty: 'A1',
+    order: 1,
+    xpReward: 50,
+    estimatedMinutes: 3,
+    isPremium: false,
+    tags: ['demandes', 'politesse', 'bases'],
+    discoveryItems: VOCAB_3_1,
+    exercises: [
+      {
+        id: 'ex_3_1_01',
+        type: 'multiple_choice',
+        question: 'Que veut dire « Poproszę… » ?',
+        correctAnswer: 'Je voudrais…',
+        options: ['Peut-on s\'asseoir ?', 'Je voudrais…', 'toilettes'],
+        explanation: 'Poproszę… = Je voudrais…',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_3_1_02',
+        type: 'matching',
+        question: 'Associe chaque mot polonais à sa traduction.',
+        correctAnswer: 'correct',
+        pairs: [
+          { left: 'woda', right: 'eau' },
+          { left: 'Poproszę…', right: 'Je voudrais…' },
+          { left: 'Gdzie jest…?', right: 'Où est… ?' },
+          { left: 'Czy jest…?', right: 'Y a-t-il… ?' },
+        ],
+        explanation: 'Bonnes associations : woda = eau ; Poproszę… = Je voudrais… ; Gdzie jest…? = Où est… ? ; Czy jest…? = Y a-t-il… ?',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_3_1_03',
+        type: 'word_order',
+        question: 'Remets dans l\'ordre : « Où sont les toilettes ? »',
+        correctAnswer: 'Gdzie jest toaleta?',
+        words: ['Gdzie', 'jest', 'toaleta?'],
+        explanation: 'Gdzie jest toaleta? = Où sont les toilettes ?',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_3_1_04',
+        type: 'fill_blank',
+        question: 'Complète : Proszę usiąść ___. (« Asseyez-vous ici, s\'il vous plaît. »)',
+        correctAnswer: 'tutaj',
+        options: ['woda', 'toaleta', 'tutaj'],
+        explanation: 'tutaj = ici.',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_3_1_05',
+        type: 'multiple_choice',
+        question: 'Comment dit-on « toilettes » ?',
+        correctAnswer: 'toaleta',
+        options: ['toaleta', 'Czy można usiąść?', 'Czy jest…?'],
+        explanation: 'toaleta = toilettes.',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_3_1_06',
+        type: 'word_order',
+        question: 'Écoute la phrase puis remets les mots dans l\'ordre.',
+        correctAnswer: 'Czy jest woda?',
+        words: ['Czy', 'jest', 'woda?'],
+        isAudioPrompt: true,
+        audioText: 'Czy jest woda?',
+        audioKey: 'v_3_1_01_example',
+        explanation: 'Czy jest woda? = Y a-t-il de l\'eau ?',
+        xpReward: 15,
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
