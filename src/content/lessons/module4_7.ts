@@ -5,6 +5,7 @@
 
 import type { Lesson } from '@/types';
 import { VOCAB_4_1, VOCAB_4_2, VOCAB_4_3, VOCAB_4_4 } from '@/content/vocabulary/module4';
+import { VOCAB_5_1 } from '@/content/vocabulary/module5';
 
 // ── MODULE 4 : CAFÉ ET RESTAURANT (Officiel) ────────────────
 export const MODULE_4_LESSONS: Lesson[] = [
@@ -345,7 +346,102 @@ export const MODULE_4_LESSONS: Lesson[] = [
 ];
 
 // ── MODULE 5 : VERBES ESSENTIELS (Officiel) ─────────────────
-export const MODULE_5_LESSONS: Lesson[] = [];
+export const MODULE_5_LESSONS: Lesson[] = [
+  {
+    id: 'lesson_5_1',
+    moduleId: 'module_5',
+    title: 'Vouloir, pouvoir, devoir',
+    description: 'On apprend d\'abord les formes à employer (Chcę…, Mogę…, Muszę…) ; les infinitifs viendront ensuite. Ces verbes multiplient les phrases possibles.',
+    type: 'vocabulary',
+    difficulty: 'A1',
+    order: 1,
+    xpReward: 50,
+    estimatedMinutes: 3,
+    isPremium: false,
+    tags: ['verbes', 'modalité', 'bases'],
+    discoveryItems: VOCAB_5_1,
+    exercises: [
+      {
+        id: 'ex_5_1_01',
+        type: 'multiple_choice',
+        question: 'Que veut dire « Umiem… » ?',
+        correctAnswer: 'Je sais (faire)…',
+        options: ['Je peux…', 'Je sais (faire)…', 'Je veux…'],
+        explanation: 'Umiem… = Je sais (faire)…',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_5_1_02',
+        type: 'matching',
+        question: 'Associe chaque mot polonais à sa traduction.',
+        correctAnswer: 'correct',
+        pairs: [
+          { left: 'Chcę…', right: 'Je veux…' },
+          { left: 'Nie chcę…', right: 'Je ne veux pas…' },
+          { left: 'Czy mogę…?', right: 'Puis-je… ?' },
+          { left: 'Muszę…', right: 'Je dois…' },
+        ],
+        explanation: 'Bonnes associations : Chcę… = Je veux… ; Nie chcę… = Je ne veux pas… ; Czy mogę…? = Puis-je… ? ; Muszę… = Je dois…',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_5_1_03',
+        type: 'fill_blank',
+        question: 'Complète : ___ kawę. (« Je veux un café. »)',
+        correctAnswer: 'Chcę',
+        options: ['Mogę', 'mogę', 'Chcę'],
+        explanation: 'Chcę… = Je veux… Dans « Chcę kawę. », la forme est « Chcę ».',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_5_1_04',
+        type: 'word_order',
+        question: 'Remets dans l\'ordre : « Je peux boire de l\'eau. »',
+        correctAnswer: 'Mogę pić wodę.',
+        words: ['Mogę', 'pić', 'wodę.'],
+        explanation: 'Mogę pić wodę. = Je peux boire de l\'eau.',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_5_1_05',
+        type: 'multiple_choice',
+        question: 'Comment dit-on « Je veux… » ?',
+        correctAnswer: 'Chcę…',
+        options: ['Chcę…', 'Mogę…', 'Czy mogę…?'],
+        explanation: 'Chcę… = Je veux…',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_5_1_06',
+        type: 'matching',
+        question: 'Associe chaque mot polonais à sa traduction.',
+        correctAnswer: 'correct',
+        pairs: [
+          { left: 'Mogę…', right: 'Je peux…' },
+          { left: 'Nie mogę…', right: 'Je ne peux pas…' },
+          { left: 'Czy mogę…?', right: 'Puis-je… ?' },
+          { left: 'Muszę…', right: 'Je dois…' },
+        ],
+        explanation: 'Bonnes associations : Mogę… = Je peux… ; Nie mogę… = Je ne peux pas… ; Czy mogę…? = Puis-je… ? ; Muszę… = Je dois…',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_5_1_07',
+        type: 'word_order',
+        question: 'Écoute la phrase puis remets les mots dans l\'ordre.',
+        correctAnswer: 'Nie chcę cukru.',
+        words: ['Nie', 'chcę', 'cukru.'],
+        isAudioPrompt: true,
+        audioText: 'Nie chcę cukru.',
+        audioKey: 'v_5_1_02_example',
+        explanation: 'Nie chcę cukru. = Je ne veux pas de sucre.',
+        xpReward: 15,
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
 // ── MODULE 6 : PREMIERS NOMBRES (Officiel) ──────────────────
 export const MODULE_6_LESSONS: Lesson[] = [];
