@@ -6,6 +6,7 @@
 import type { Lesson } from '@/types';
 import { VOCAB_4_1, VOCAB_4_2, VOCAB_4_3, VOCAB_4_4 } from '@/content/vocabulary/module4';
 import { VOCAB_5_1, VOCAB_5_2, VOCAB_5_3, VOCAB_5_4 } from '@/content/vocabulary/module5';
+import { VOCAB_6_1 } from '@/content/vocabulary/module6';
 
 // ── MODULE 4 : CAFÉ ET RESTAURANT (Officiel) ────────────────
 export const MODULE_4_LESSONS: Lesson[] = [
@@ -726,7 +727,102 @@ export const MODULE_5_LESSONS: Lesson[] = [
 ];
 
 // ── MODULE 6 : PREMIERS NOMBRES (Officiel) ──────────────────
-export const MODULE_6_LESSONS: Lesson[] = [];
+export const MODULE_6_LESSONS: Lesson[] = [
+  {
+    id: 'lesson_6_1',
+    moduleId: 'module_6',
+    title: 'Nombres de 0 à 5',
+    description: 'Compter jusqu\'à cinq, en situation de commande.',
+    type: 'vocabulary',
+    difficulty: 'A1',
+    order: 1,
+    xpReward: 50,
+    estimatedMinutes: 3,
+    isPremium: false,
+    tags: ['nombres', 'chiffres', 'bases'],
+    discoveryItems: VOCAB_6_1,
+    exercises: [
+      {
+        id: 'ex_6_1_01',
+        type: 'multiple_choice',
+        question: 'Que veut dire « trzy » ?',
+        correctAnswer: 'trois',
+        options: ['numéro', 'trois', 'quatre'],
+        explanation: 'trzy = trois.',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_6_1_02',
+        type: 'matching',
+        question: 'Associe chaque mot polonais à sa traduction.',
+        correctAnswer: 'correct',
+        pairs: [
+          { left: 'jeden', right: 'un' },
+          { left: 'dwa', right: 'deux' },
+          { left: 'cztery', right: 'quatre' },
+          { left: 'pięć', right: 'cinq' },
+        ],
+        explanation: 'Bonnes associations : jeden = un ; dwa = deux ; cztery = quatre ; pięć = cinq.',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_6_1_03',
+        type: 'fill_blank',
+        question: 'Complète : Poproszę ___ wody. (« Je voudrais trois eaux. »)',
+        correctAnswer: 'trzy',
+        options: ['zero', 'cztery', 'trzy'],
+        explanation: 'trzy = trois.',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_6_1_04',
+        type: 'word_order',
+        question: 'Remets dans l\'ordre : « Numéro zéro, s\'il vous plaît. »',
+        correctAnswer: 'Numer zero, proszę.',
+        words: ['Numer', 'zero,', 'proszę.'],
+        explanation: 'Numer zero, proszę. = Numéro zéro, s\'il vous plaît.',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_6_1_05',
+        type: 'multiple_choice',
+        question: 'Comment dit-on « quatre » ?',
+        correctAnswer: 'cztery',
+        options: ['cztery', 'numer', 'jeden'],
+        explanation: 'cztery = quatre.',
+        xpReward: 10,
+      },
+      {
+        id: 'ex_6_1_06',
+        type: 'matching',
+        question: 'Associe chaque mot polonais à sa traduction.',
+        correctAnswer: 'correct',
+        pairs: [
+          { left: 'numer', right: 'numéro' },
+          { left: 'zero', right: 'zéro' },
+          { left: 'jeden', right: 'un' },
+          { left: 'dwa', right: 'deux' },
+        ],
+        explanation: 'Bonnes associations : numer = numéro ; zero = zéro ; jeden = un ; dwa = deux.',
+        xpReward: 15,
+      },
+      {
+        id: 'ex_6_1_07',
+        type: 'word_order',
+        question: 'Écoute la phrase puis remets les mots dans l\'ordre.',
+        correctAnswer: 'Jaki to numer?',
+        words: ['Jaki', 'to', 'numer?'],
+        isAudioPrompt: true,
+        audioText: 'Jaki to numer?',
+        audioKey: 'v_6_1_01_example',
+        explanation: 'Jaki to numer? = Quel est ce numéro ?',
+        xpReward: 15,
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
 // ── MODULE 7 : FAMILLE ET RELATIONS (Officiel) ──────────────
 export const MODULE_7_LESSONS: Lesson[] = [];
