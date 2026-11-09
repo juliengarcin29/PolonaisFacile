@@ -3,6 +3,8 @@
 // Utilitaires généraux — dates, chaînes, validation, formatage
 // ============================================================
 
+export * from './activityUtils';
+
 // ── DATES ────────────────────────────────────────────────────
 
 export function formatDate(date: Date | string, locale = 'fr-FR'): string {

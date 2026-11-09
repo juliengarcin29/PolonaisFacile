@@ -6,7 +6,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { User, Subscription } from '@/types';
+import type { User, Subscription, ActivityLogDay } from '@/types';
+import { toDateKey, pruneActivityLog, mergeActivityLogs } from '@/utils/activityUtils';
 
 interface UserStore {
   user: User | null;
@@ -20,6 +21,12 @@ interface UserStore {
   updateUser: (updates: Partial<User>) => void;
   setSubscription: (subscription: Subscription | null) => void;
   addXP: (amount: number) => void;
+  recordActivity: (delta: {
+    seconds?: number;
+    lessonsCompleted?: number;
+    xp?: number;
+    exercisesDone?: number;
+  }) => void;
   updateStreak: () => void;
   loseHeart: () => void;
   refillHearts: () => void;
@@ -65,6 +72,7 @@ export const useUserStore = create<UserStore>()(
               ...(currentUser.achievements || []),
               ...(user.achievements || []),
             ])),
+            activityLog: mergeActivityLogs(currentUser.activityLog, user.activityLog),
             progress: {
               ...user.progress,
               completedLessons: Array.from(new Set([
@@ -110,17 +118,80 @@ export const useUserStore = create<UserStore>()(
 
       setSubscription: (subscription) => set({ subscription }),
 
+      recordActivity: (delta) =>
+        set((state) => {
+          if (!state.user) return {};
+          const dateKey = toDateKey();
+          const currentLog = state.user.activityLog ?? {};
+          const currentDay = currentLog[dateKey] ?? {
+            seconds: 0,
+            lessonsCompleted: 0,
+            xp: 0,
+            exercisesDone: 0,
+          };
+
+          const updatedDay: ActivityLogDay = {
+            ...currentDay,
+            seconds: (currentDay.seconds ?? 0) + (delta.seconds ?? 0),
+            lessonsCompleted: (currentDay.lessonsCompleted ?? 0) + (delta.lessonsCompleted ?? 0),
+            xp: (currentDay.xp ?? 0) + (delta.xp ?? 0),
+            exercisesDone: (currentDay.exercisesDone ?? 0) + (delta.exercisesDone ?? 0),
+          };
+
+          if (__DEV__) {
+            console.log('[activityLog]', dateKey, JSON.stringify(updatedDay));
+          }
+
+          const updatedLog = pruneActivityLog({
+            ...currentLog,
+            [dateKey]: updatedDay,
+          }, 400);
+
+          return {
+            user: {
+              ...state.user,
+              activityLog: updatedLog,
+              updatedAt: new Date(),
+            },
+          };
+        }),
+
       addXP: (amount) =>
         set((state) => {
           if (!state.user) return {};
           const newXp = (state.user.xp || 0) + amount;
           const { level, xpToNextLevel } = calculateLevel(newXp);
+
+          const dateKey = toDateKey();
+          const currentLog = state.user.activityLog ?? {};
+          const currentDay = currentLog[dateKey] ?? {
+            seconds: 0,
+            lessonsCompleted: 0,
+            xp: 0,
+            exercisesDone: 0,
+          };
+
+          const updatedDay: ActivityLogDay = {
+            ...currentDay,
+            xp: (currentDay.xp ?? 0) + amount,
+          };
+
+          if (__DEV__) {
+            console.log('[activityLog]', dateKey, JSON.stringify(updatedDay));
+          }
+
+          const updatedLog = pruneActivityLog({
+            ...currentLog,
+            [dateKey]: updatedDay,
+          }, 400);
+
           return {
             user: {
               ...state.user,
               xp: newXp,
               level,
               xpToNextLevel,
+              activityLog: updatedLog,
               progress: {
                 ...state.user.progress,
                 totalXpEarned: (state.user.progress?.totalXpEarned || 0) + amount,

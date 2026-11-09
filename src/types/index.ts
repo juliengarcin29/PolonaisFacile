@@ -4,6 +4,17 @@
 // ============================================================
 
 // ── UTILISATEUR ──────────────────────────────────────────────
+export interface ActivityLogDay {
+  seconds: number;
+  lessonsCompleted: number;
+  xp: number;
+  exercisesDone: number;
+  missionDone?: boolean;
+  cardsReviewed?: number;
+}
+
+export type ActivityLog = Record<string, ActivityLogDay>;
+
 export interface User {
   id: string;
   email: string | null;
@@ -23,6 +34,7 @@ export interface User {
   progress: UserProgress;
   achievements: string[];
   dailyGoal: number; // minutes par jour
+  activityLog?: ActivityLog;
   createdAt: Date;
   updatedAt: Date;
   lastLoginAt: Date;
