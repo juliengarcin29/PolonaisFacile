@@ -100,6 +100,14 @@ export function getWeek(dateKey: string): string[] {
 }
 
 /**
+ * Plafonne le temps d'une séance (1200 secondes / 20 min max par défaut).
+ */
+export function capSessionSeconds(seconds: number, max: number = 1200): number {
+  if (seconds < 0) return 0;
+  return Math.min(seconds, max);
+}
+
+/**
  * Compte le nombre de jours d'activité entre fromKey et toKey inclusivement.
  */
 export function getActiveDaysCount(
@@ -185,6 +193,17 @@ export function selfCheckActivityUtils(): void {
   const prunedKeys = Object.keys(pruned);
   if (prunedKeys.length !== 400 || prunedKeys.includes('2025-01-01')) {
     throw new Error(`pruneActivityLog échoué: ${prunedKeys.length} clés`);
+  }
+
+  // 5. capSessionSeconds (cas de tests)
+  if (
+    capSessionSeconds(-10) !== 0 ||
+    capSessionSeconds(0) !== 0 ||
+    capSessionSeconds(600) !== 600 ||
+    capSessionSeconds(1200) !== 1200 ||
+    capSessionSeconds(2500) !== 1200
+  ) {
+    throw new Error('capSessionSeconds échoué');
   }
 }
 

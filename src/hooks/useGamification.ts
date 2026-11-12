@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '@/store/userStore';
 import { GAMIFICATION } from '@/constants';
+import { capSessionSeconds } from '@/utils/activityUtils';
 import type { Achievement } from '@/types';
 
 const STORAGE_KEYS = {
@@ -163,7 +164,11 @@ export function useGamification() {
   }, [user]);
 
   // ── Enregistrer l'activité quotidienne ──────────────────
-  const recordDailyActivity = useCallback(async (minutesSpent: number) => {
+  const recordDailyActivity = useCallback(async (minutesSpent: number, exactSeconds?: number) => {
+    // Consigner les secondes dans activityLog
+    const secondsToRecord = exactSeconds ?? (minutesSpent * 60);
+    useUserStore.getState().recordActivity({ seconds: capSessionSeconds(secondsToRecord) });
+
     const today = new Date().toDateString();
     const storedDate = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_DATE);
     const storedXP = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_XP);
@@ -182,7 +187,7 @@ export function useGamification() {
     }
 
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, today);
-  }, [user]);
+  }, [user, awardXP]);
 
   // ── Octroyer des XP ──────────────────────────────────────
   const awardXP = useCallback(async (amount: number, reason?: string) => {
@@ -210,7 +215,21 @@ export function useGamification() {
     timeSpentSeconds: number,
   ) => {
     if (!user) return;
-    if (user.progress.completedLessons.includes(lessonId)) return;
+
+    if (user.progress.completedLessons.includes(lessonId)) {
+      // Relecture d'une leçon déjà terminée : consigner uniquement secondes et exercices dans activityLog
+      useUserStore.getState().recordActivity({
+        seconds: capSessionSeconds(timeSpentSeconds),
+        exercisesDone: total,
+      });
+      return;
+    }
+
+    // Première complétion : consigner 1 leçon et les exercices dans activityLog
+    useUserStore.getState().recordActivity({
+      lessonsCompleted: 1,
+      exercisesDone: total,
+    });
 
     const isPerfect = score === total;
     const baseXP = GAMIFICATION.XP_PER_LESSON;
@@ -226,14 +245,14 @@ export function useGamification() {
 
     updateUser({ progress: updatedProgress });
     await awardXP(totalXP, isPerfect ? '🏆 Leçon parfaite !' : '📚 Leçon terminée !');
-    await recordDailyActivity(Math.round(timeSpentSeconds / 60));
+    await recordDailyActivity(Math.round(timeSpentSeconds / 60), timeSpentSeconds);
     await checkAchievements({
       lessons: updatedProgress.totalLessonsCompleted,
       xp: user.xp + totalXP,
     });
 
     return { xpEarned: totalXP, isPerfect };
-  }, [user]);
+  }, [user, updateUser, awardXP, recordDailyActivity, checkAchievements]);
 
   // ── Terminer un quiz ─────────────────────────────────────
   const completeQuiz = useCallback(async (
@@ -258,14 +277,14 @@ export function useGamification() {
     }
 
     await awardXP(xpReward, passed ? '🎯 Quiz réussi !' : '🎯 Quiz terminé');
-    await recordDailyActivity(Math.round(timeSpentSeconds / 60));
+    await recordDailyActivity(Math.round(timeSpentSeconds / 60), timeSpentSeconds);
 
     if (percentage === 100) {
       await checkAchievements({ quizScore: 100 });
     }
 
     return { xpEarned: xpReward, passed };
-  }, [user]);
+  }, [user, updateUser, awardXP, recordDailyActivity, checkAchievements]);
 
   // ── Vérifier et débloquer les badges ────────────────────
   const checkAchievements = useCallback(async (params: {
