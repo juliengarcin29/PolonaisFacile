@@ -132,7 +132,98 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
 export function useGamification() {
   const { user, addXP, updateUser, updateStreak } = useUserStore();
 
-  // ── Vérifier et mettre à jour le streak ──────────────────
+  // 1. Vérifier et débloquer les badges
+  const checkAchievements = useCallback(async (params: {
+    streak?: number;
+    xp?: number;
+    lessons?: number;
+    flashcards?: number;
+    quizScore?: number;
+  }) => {
+    if (!user) return [];
+
+    const newlyUnlocked: Achievement[] = [];
+
+    for (const achievement of ALL_ACHIEVEMENTS) {
+      if (user.achievements.includes(achievement.id)) continue;
+
+      let unlocked = false;
+
+      switch (achievement.condition.type) {
+        case 'streak':
+          unlocked = (params.streak ?? user.streak) >= achievement.condition.value;
+          break;
+        case 'xp':
+          unlocked = (params.xp ?? user.xp) >= achievement.condition.value;
+          break;
+        case 'lessons':
+          unlocked = (params.lessons ?? user.progress.totalLessonsCompleted) >= achievement.condition.value;
+          break;
+        case 'flashcards':
+          unlocked = (params.flashcards ?? user.progress.masteredFlashcards.length) >= achievement.condition.value;
+          break;
+        case 'quiz_score':
+          unlocked = (params.quizScore ?? 0) >= achievement.condition.value;
+          break;
+      }
+
+      if (unlocked) {
+        newlyUnlocked.push(achievement);
+        updateUser({
+          achievements: [...user.achievements, achievement.id],
+        });
+        addXP(achievement.xpReward);
+      }
+    }
+
+    return newlyUnlocked;
+  }, [user, updateUser, addXP]);
+
+  // 2. Octroyer des XP
+  const awardXP = useCallback(async (amount: number, reason?: string) => {
+    if (!user) return { newTotal: 0, leveledUp: false };
+
+    const oldLevel = user.level;
+    addXP(amount);
+    const newTotal = user.xp + amount;
+
+    // Vérifier un level up
+    const newLevel = calculateLevel(newTotal);
+    const leveledUp = newLevel > oldLevel;
+
+    // Vérifier badges XP
+    await checkAchievements({ xp: newTotal });
+
+    return { newTotal, leveledUp, newLevel, reason };
+  }, [user, addXP, checkAchievements]);
+
+  // 3. Enregistrer l'activité quotidienne
+  const recordDailyActivity = useCallback(async (minutesSpent: number, exactSeconds?: number) => {
+    // Consigner les secondes dans activityLog
+    const secondsToRecord = exactSeconds ?? (minutesSpent * 60);
+    useUserStore.getState().recordActivity({ seconds: capSessionSeconds(secondsToRecord) });
+
+    const today = new Date().toDateString();
+    const storedDate = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_DATE);
+    const storedXP = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_XP);
+
+    if (storedDate !== today) {
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_DATE, today);
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_XP, String(minutesSpent));
+    } else {
+      const totalMin = (parseInt(storedXP ?? '0') + minutesSpent);
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_XP, String(totalMin));
+
+      // Objectif quotidien atteint ?
+      if (totalMin >= (user?.dailyGoal ?? 10) && parseInt(storedXP ?? '0') < (user?.dailyGoal ?? 10)) {
+        await awardXP(50, '🎯 Objectif du jour atteint !');
+      }
+    }
+
+    await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, today);
+  }, [user, awardXP]);
+
+  // 4. Vérifier et mettre à jour le streak
   const checkAndUpdateStreak = useCallback(async () => {
     if (!user) return;
 
@@ -161,53 +252,9 @@ export function useGamification() {
 
     // Vérifier badges streak
     await checkAchievements({ streak: newStreak });
-  }, [user]);
+  }, [user, updateUser, awardXP, checkAchievements]);
 
-  // ── Enregistrer l'activité quotidienne ──────────────────
-  const recordDailyActivity = useCallback(async (minutesSpent: number, exactSeconds?: number) => {
-    // Consigner les secondes dans activityLog
-    const secondsToRecord = exactSeconds ?? (minutesSpent * 60);
-    useUserStore.getState().recordActivity({ seconds: capSessionSeconds(secondsToRecord) });
-
-    const today = new Date().toDateString();
-    const storedDate = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_DATE);
-    const storedXP = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_XP);
-
-    if (storedDate !== today) {
-      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_DATE, today);
-      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_XP, String(minutesSpent));
-    } else {
-      const totalMin = (parseInt(storedXP ?? '0') + minutesSpent);
-      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_XP, String(totalMin));
-
-      // Objectif quotidien atteint ?
-      if (totalMin >= (user?.dailyGoal ?? 10) && parseInt(storedXP ?? '0') < (user?.dailyGoal ?? 10)) {
-        await awardXP(50, '🎯 Objectif du jour atteint !');
-      }
-    }
-
-    await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, today);
-  }, [user, awardXP]);
-
-  // ── Octroyer des XP ──────────────────────────────────────
-  const awardXP = useCallback(async (amount: number, reason?: string) => {
-    if (!user) return { newTotal: 0, leveledUp: false };
-
-    const oldLevel = user.level;
-    addXP(amount);
-    const newTotal = user.xp + amount;
-
-    // Vérifier un level up
-    const newLevel = calculateLevel(newTotal);
-    const leveledUp = newLevel > oldLevel;
-
-    // Vérifier badges XP
-    await checkAchievements({ xp: newTotal });
-
-    return { newTotal, leveledUp, newLevel, reason };
-  }, [user, addXP]);
-
-  // ── Terminer une leçon ───────────────────────────────────
+  // 5. Terminer une leçon
   const completeLesson = useCallback(async (
     lessonId: string,
     score: number,
@@ -254,7 +301,7 @@ export function useGamification() {
     return { xpEarned: totalXP, isPerfect };
   }, [user, updateUser, awardXP, recordDailyActivity, checkAchievements]);
 
-  // ── Terminer un quiz ─────────────────────────────────────
+  // 6. Terminer un quiz
   const completeQuiz = useCallback(async (
     quizId: string,
     score: number,
@@ -286,54 +333,7 @@ export function useGamification() {
     return { xpEarned: xpReward, passed };
   }, [user, updateUser, awardXP, recordDailyActivity, checkAchievements]);
 
-  // ── Vérifier et débloquer les badges ────────────────────
-  const checkAchievements = useCallback(async (params: {
-    streak?: number;
-    xp?: number;
-    lessons?: number;
-    flashcards?: number;
-    quizScore?: number;
-  }) => {
-    if (!user) return [];
-
-    const newlyUnlocked: Achievement[] = [];
-
-    for (const achievement of ALL_ACHIEVEMENTS) {
-      if (user.achievements.includes(achievement.id)) continue;
-
-      let unlocked = false;
-
-      switch (achievement.condition.type) {
-        case 'streak':
-          unlocked = (params.streak ?? user.streak) >= achievement.condition.value;
-          break;
-        case 'xp':
-          unlocked = (params.xp ?? user.xp) >= achievement.condition.value;
-          break;
-        case 'lessons':
-          unlocked = (params.lessons ?? user.progress.totalLessonsCompleted) >= achievement.condition.value;
-          break;
-        case 'flashcards':
-          unlocked = (params.flashcards ?? user.progress.masteredFlashcards.length) >= achievement.condition.value;
-          break;
-        case 'quiz_score':
-          unlocked = (params.quizScore ?? 0) >= achievement.condition.value;
-          break;
-      }
-
-      if (unlocked) {
-        newlyUnlocked.push(achievement);
-        updateUser({
-          achievements: [...user.achievements, achievement.id],
-        });
-        addXP(achievement.xpReward);
-      }
-    }
-
-    return newlyUnlocked;
-  }, [user]);
-
-  // ── Calculer l'objectif quotidien ────────────────────────
+  // 7. Calculer l'objectif quotidien
   const getDailyProgress = useCallback(async () => {
     const today = new Date().toDateString();
     const storedDate = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_DATE);
@@ -346,7 +346,7 @@ export function useGamification() {
     return { done, goal, percentage: Math.min(100, Math.round((done / goal) * 100)) };
   }, [user]);
 
-  // ── XP pour les exercices individuels ───────────────────
+  // 8. XP pour les exercices individuels
   const awardExerciseXP = useCallback(async (isCorrect: boolean) => {
     if (isCorrect) {
       await awardXP(GAMIFICATION.XP_PER_EXERCISE);
