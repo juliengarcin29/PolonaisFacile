@@ -16,6 +16,7 @@ export default function LessonCompleted({ score, total, xpEarned, lessonId }: Le
   const { t } = useTranslation();
   const percentage = Math.round((score / total) * 100);
   const isPerfect = score === total;
+  const isReplay = xpEarned === 0;
 
   return (
     <SafeAreaView style={res.safe} edges={['top', 'bottom']}>
@@ -30,17 +31,19 @@ export default function LessonCompleted({ score, total, xpEarned, lessonId }: Le
             <Text style={[res.statValue, { color: COLORS.success }]}>{score}/{total}</Text>
             <Text style={res.statLabel}>{t('lesson.completed.stats.correct')}</Text>
           </View>
-          <View style={res.statBox}>
-            <Text style={[res.statValue, { color: COLORS.xpGold }]}>+{xpEarned}</Text>
-            <Text style={res.statLabel}>{t('lesson.completed.stats.xp')}</Text>
-          </View>
+          {!isReplay && (
+            <View style={res.statBox}>
+              <Text style={[res.statValue, { color: COLORS.xpGold }]}>+{xpEarned}</Text>
+              <Text style={res.statLabel}>{t('lesson.completed.stats.xp')}</Text>
+            </View>
+          )}
           <View style={res.statBox}>
             <Text style={[res.statValue, { color: COLORS.primary }]}>{percentage}%</Text>
             <Text style={res.statLabel}>{t('lesson.completed.stats.score')}</Text>
           </View>
         </View>
 
-        {isPerfect && (
+        {isPerfect && !isReplay && (
           <View style={res.bonusBox}>
             <Text style={res.bonusText}>{t('lesson.completed.bonus_perfect', { count: GAMIFICATION.XP_PER_PERFECT })}</Text>
           </View>

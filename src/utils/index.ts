@@ -192,15 +192,17 @@ export function isValidPassword(password: string): {
 
 // ── GAMIFICATION ─────────────────────────────────────────────
 
+import { GAMIFICATION } from '@/constants';
+
 export function getXPForLevel(level: number): number {
-  const levels = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500];
-  return levels[level - 1] ?? levels[levels.length - 1];
+  const levels = GAMIFICATION.LEVELS;
+  return levels[level - 1]?.xpRequired ?? levels[levels.length - 1].xpRequired;
 }
 
 export function getLevelFromXP(xp: number): number {
-  const levels = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500];
+  const levels = GAMIFICATION.LEVELS;
   for (let i = levels.length - 1; i >= 0; i--) {
-    if (xp >= levels[i]) return i + 1;
+    if (xp >= levels[i].xpRequired) return i + 1;
   }
   return 1;
 }

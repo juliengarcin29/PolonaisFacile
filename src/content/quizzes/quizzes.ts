@@ -12,7 +12,7 @@ export const QUIZZES: Quiz[] = [
     description: 'Testez vos connaissances sur les formules de politesse de base.',
     moduleId: 'module_2',
     difficulty: 'A1',
-    xpReward: 100,
+    xpReward: 10,
     isPremium: false,
     passingScore: 70,
     timeLimit: 120,
@@ -60,7 +60,7 @@ export const QUIZZES: Quiz[] = [
     description: 'Maîtrisez les chiffres de 0 à 100.',
     moduleId: 'module_3',
     difficulty: 'A1',
-    xpReward: 100,
+    xpReward: 10,
     isPremium: false,
     passingScore: 70,
     questions: [
@@ -100,7 +100,7 @@ export const QUIZZES: Quiz[] = [
     description: 'Un quiz mixte pour consolider vos acquis.',
     moduleId: 'module_2',
     difficulty: 'A1',
-    xpReward: 150,
+    xpReward: 15,
     isPremium: false,
     passingScore: 60,
     questions: [

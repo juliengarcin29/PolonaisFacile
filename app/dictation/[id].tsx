@@ -17,7 +17,7 @@ import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDictationById, DictationExercise, DictationSentence } from '@/content/dictations/dictations';
 import WordOrderExercise from '@/components/exercises/WordOrderExercise';
-import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
+import { COLORS, SPACING, BORDER_RADIUS, GAMIFICATION } from '@/constants';
 
 type DictationPhase = 'loading' | 'error' | 'intro' | 'listening' | 'writing' | 'feedback' | 'completed';
 
@@ -159,7 +159,7 @@ export default function DictationScreen() {
     const result = { sentence: current, userAnswer: finalAnswer.trim(), score, isCorrect };
     setResults(prev => [...prev, result]);
 
-    const xpEarned = isCorrect ? 30 : 5;
+    const xpEarned = isCorrect ? GAMIFICATION.XP_PER_EXERCISE : 0;
     setTotalXP(prev => prev + xpEarned);
 
     if (isCorrect) {
@@ -220,7 +220,7 @@ export default function DictationScreen() {
           <Text style={s.completedTitle}>{t('dictation_screen.completed_title')}</Text>
           <View style={s.completedStats}>
             <View style={s.completedStat}>
-              <Text style={[s.completedStatVal, { color: COLORS.xpGold }]}>+{totalXP + dictation.xpReward}</Text>
+              <Text style={[s.completedStatVal, { color: COLORS.xpGold }]}>+{totalXP + (dictation?.xpReward ?? 0)}</Text>
               <Text style={s.completedStatLabel}>{t('dictation_screen.stat_xp')}</Text>
             </View>
           </View>

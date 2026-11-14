@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import * as Speech from 'expo-speech';
 import { useGamification } from '@/hooks/useGamification';
 import { getDialogueById, DialogueLine, Dialogue } from '@/content/dialogues/dialogues';
-import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
+import { COLORS, SPACING, BORDER_RADIUS, GAMIFICATION } from '@/constants';
 
 type DialogueMode = 'loading' | 'error' | 'read' | 'quiz' | 'completed';
 
@@ -121,7 +121,7 @@ export default function DialogueScreen() {
     setTimeout(() => {
       if (quizIndex + 1 >= quizQuestions.length) {
         setMode('completed');
-        const finalXP = dialogue.xpReward + quizScore * 10;
+        const finalXP = dialogue.xpReward + quizScore * GAMIFICATION.XP_PER_EXERCISE;
         awardXP(finalXP, '🤝 Dialogue maîtrisé !');
         const timeSpent = Math.round((Date.now() - startTime) / 1000);
         recordDailyActivity(Math.round(timeSpent / 60));
@@ -332,7 +332,7 @@ export default function DialogueScreen() {
             <Text style={s.completedLabel}>{t('dialogue_screen.stat_correct')}</Text>
           </View>
           <View style={s.completedStat}>
-            <Text style={[s.completedVal, { color: COLORS.xpGold }]}>+{dialogue.xpReward + quizScore * 10}</Text>
+            <Text style={[s.completedVal, { color: COLORS.xpGold }]}>+{dialogue.xpReward + quizScore * GAMIFICATION.XP_PER_EXERCISE}</Text>
             <Text style={s.completedLabel}>{t('dialogue_screen.stat_xp')}</Text>
           </View>
         </View>

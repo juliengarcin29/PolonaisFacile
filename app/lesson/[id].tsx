@@ -53,6 +53,7 @@ export default function LessonScreen() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<LessonPhase>('loading');
+  const completingRef = useRef(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [score, setScore] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
@@ -151,16 +152,29 @@ export default function LessonScreen() {
     }).start();
   };
 
-  const nextExercise = () => {
+  const nextExercise = async () => {
     triggerHapticImpact();
     feedbackAnim.setValue(0);
     setSelectedAnswer('');
     setMatchSelected({});
 
     if (currentIndex + 1 >= exercises.length) {
+      if (completingRef.current) return;
+      completingRef.current = true;
+
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      completeLesson(id, score, exercises.length, timeSpent);
-      setPhase('completed');
+      let realXp = 0;
+      try {
+        const res = await completeLesson(id, score, exercises.length, timeSpent);
+        if (res) {
+          realXp = res.xpEarned;
+        }
+      } catch (err) {
+        console.error('[lesson] completeLesson error:', err);
+      } finally {
+        setXpEarned(realXp);
+        setPhase('completed');
+      }
     } else {
       setCurrentIndex(prev => prev + 1);
       setPhase('exercise');
@@ -332,9 +346,6 @@ export default function LessonScreen() {
             </View>
             {current.explanation && (
               <Text style={styles.feedbackExplanation}>{current.explanation}</Text>
-            )}
-            {phase === 'feedback_correct' && (
-              <Text style={styles.feedbackXP}>+{current.xpReward} XP</Text>
             )}
             <TouchableOpacity
               style={[styles.continueBtn, phase === 'feedback_wrong' && styles.continueBtnWrong]}

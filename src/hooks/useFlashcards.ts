@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '@/store/userStore';
 import { useGamification } from '@/hooks/useGamification';
+import { GAMIFICATION } from '@/constants';
 import { calculateNextReview, getDefaultReview, isDueForReview } from '@/utils/srs';
 import { shuffleArray } from '@/utils';
 import type { Flashcard, FlashcardReview } from '@/types';
@@ -104,8 +105,8 @@ export function useFlashcards(cards: Flashcard[]) {
     setReviews(newReviews);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newReviews));
 
-    // XP selon la note
-    const xp = rating === 5 ? 15 : rating >= 3 ? 10 : 5;
+    // XP selon la note (1 XP par carte réussie >= 3)
+    const xp = rating >= 3 ? 1 : 0;
     setXpEarned(prev => prev + xp);
     setSessionDone(prev => [...prev, card.id]);
 
@@ -125,7 +126,13 @@ export function useFlashcards(cards: Flashcard[]) {
     // Passer à la carte suivante
     setIsFlipped(false);
     if (currentIndex + 1 >= sessionCards.length) {
-      await awardXP(xpEarned + xp, '🃏 Session terminée !');
+      const sessionXp = Math.min(
+        GAMIFICATION.XP_PER_LESSON,
+        Math.ceil((xpEarned + xp) / 2)
+      );
+      if (sessionXp > 0) {
+        await awardXP(sessionXp, '🃏 Session terminée !');
+      }
       return 'completed';
     } else {
       setCurrentIndex(prev => prev + 1);

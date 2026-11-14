@@ -30,7 +30,7 @@ export const DIALOGUES: Dialogue[] = [
     context: 'Anna et Piotr se rencontrent pour la première fois à Varsovie.',
     emoji: '🤝',
     difficulty: 'A1',
-    xpReward: 80,
+    xpReward: 8,
     vocabulary: [
       { pl: 'Nazywam się', fr: 'Je m\'appelle' },
       { pl: 'Skąd jesteś?', fr: 'D\'où es-tu ?' },
@@ -53,7 +53,7 @@ export const DIALOGUES: Dialogue[] = [
     context: 'Marie commande un repas dans un restaurant polonais.',
     emoji: '🍽️',
     difficulty: 'A1',
-    xpReward: 100,
+    xpReward: 10,
     vocabulary: [
       { pl: 'Poproszę', fr: 'Je voudrais / S\'il vous plaît' },
       { pl: 'Ile kosztuje?', fr: 'Combien ça coûte ?' },
@@ -78,7 +78,7 @@ export const DIALOGUES: Dialogue[] = [
     context: 'Thomas demande son chemin dans un bus à Cracovie.',
     emoji: '🚌',
     difficulty: 'A2',
-    xpReward: 120,
+    xpReward: 12,
     vocabulary: [
       { pl: 'Przepraszam', fr: 'Excusez-moi' },
       { pl: 'Czy jedzie...?', fr: 'Est-ce que ça va à... ?' },
@@ -102,7 +102,7 @@ export const DIALOGUES: Dialogue[] = [
     context: 'Marek arrive à la réception d\'un hôtel à Cracovie pour s\'enregistrer.',
     emoji: '🏨',
     difficulty: 'A2',
-    xpReward: 110,
+    xpReward: 11,
     vocabulary: [
       { pl: 'Rezerwacja', fr: 'Réservation' },
       { pl: 'Pokój', fr: 'Chambre' },

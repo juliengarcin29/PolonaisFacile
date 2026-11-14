@@ -88,29 +88,31 @@ export const FREE_LIMITS = {
   HEARTS_REFILL_MINUTES: 30,
 };
 
+import { GAMIFICATION } from '@/constants';
+
 // ── Configuration gamification ────────────────────────────────
 export const GAMIFICATION_CONFIG = {
-  XP_PER_EXERCISE: 10,
-  XP_PER_LESSON: 50,
-  XP_PER_QUIZ: 100,
-  XP_PER_PERFECT_LESSON: 150,
-  XP_PER_DIALOGUE: 80,
-  XP_PER_DICTATION: 100,
-  XP_PER_CONVERSATION_TURN: 15,
-  XP_DAILY_GOAL_BONUS: 50,
-  XP_STREAK_WEEKLY_BONUS: 100,
+  XP_PER_EXERCISE: GAMIFICATION.XP_PER_EXERCISE,
+  XP_PER_LESSON: GAMIFICATION.XP_PER_LESSON,
+  XP_PER_QUIZ: GAMIFICATION.XP_PER_QUIZ,
+  XP_PER_PERFECT_LESSON: GAMIFICATION.XP_PER_PERFECT,
+  XP_PER_DIALOGUE: GAMIFICATION.XP_PER_DIALOGUE,
+  XP_PER_DICTATION: GAMIFICATION.XP_PER_DICTATION,
+  XP_PER_CONVERSATION_TURN: GAMIFICATION.XP_PER_CONVERSATION_TURN,
+  XP_DAILY_GOAL_BONUS: GAMIFICATION.XP_DAILY_GOAL_BONUS,
+  XP_STREAK_WEEKLY_BONUS: 10,
   STREAK_FREEZE_MAX: 2,
   LEVELS: [
-    { level: 1,  xpRequired: 0,     title: 'Débutant' },
-    { level: 2,  xpRequired: 100,   title: 'Curieux' },
-    { level: 3,  xpRequired: 300,   title: 'Apprenant' },
-    { level: 4,  xpRequired: 600,   title: 'Progressant' },
-    { level: 5,  xpRequired: 1000,  title: 'Assidu' },
-    { level: 6,  xpRequired: 1500,  title: 'Sérieux' },
-    { level: 7,  xpRequired: 2200,  title: 'Expert' },
-    { level: 8,  xpRequired: 3000,  title: 'Maître' },
-    { level: 9,  xpRequired: 4000,  title: 'Champion' },
-    { level: 10, xpRequired: 5500,  title: 'Légende' },
+    { level: 1,  xpRequired: GAMIFICATION.LEVELS[0].xpRequired,  title: 'Débutant' },
+    { level: 2,  xpRequired: GAMIFICATION.LEVELS[1].xpRequired,  title: 'Curieux' },
+    { level: 3,  xpRequired: GAMIFICATION.LEVELS[2].xpRequired,  title: 'Apprenant' },
+    { level: 4,  xpRequired: GAMIFICATION.LEVELS[3].xpRequired,  title: 'Progressant' },
+    { level: 5,  xpRequired: GAMIFICATION.LEVELS[4].xpRequired,  title: 'Assidu' },
+    { level: 6,  xpRequired: GAMIFICATION.LEVELS[5].xpRequired,  title: 'Sérieux' },
+    { level: 7,  xpRequired: GAMIFICATION.LEVELS[6].xpRequired,  title: 'Expert' },
+    { level: 8,  xpRequired: GAMIFICATION.LEVELS[7].xpRequired,  title: 'Maître' },
+    { level: 9,  xpRequired: GAMIFICATION.LEVELS[8].xpRequired,  title: 'Champion' },
+    { level: 10, xpRequired: GAMIFICATION.LEVELS[9].xpRequired, title: 'Légende' },
   ],
 };
 

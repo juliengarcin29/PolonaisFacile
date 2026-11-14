@@ -37,18 +37,19 @@ interface UserStore {
   reset: () => void;
 }
 
-const XP_LEVELS = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500];
+import { GAMIFICATION } from '@/constants';
 
 function calculateLevel(xp: number): { level: number; xpToNextLevel: number } {
   let level = 1;
-  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= XP_LEVELS[i]) {
+  const levels = GAMIFICATION.LEVELS;
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (xp >= levels[i].xpRequired) {
       level = i + 1;
       break;
     }
   }
-  const nextLevelXp = XP_LEVELS[level] ?? XP_LEVELS[XP_LEVELS.length - 1];
-  return { level, xpToNextLevel: nextLevelXp - xp };
+  const nextLevelObj = levels[level] ?? levels[levels.length - 1];
+  return { level, xpToNextLevel: nextLevelObj.xpRequired - xp };
 }
 
 export const useUserStore = create<UserStore>()(

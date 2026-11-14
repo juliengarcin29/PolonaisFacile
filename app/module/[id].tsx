@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { contentService } from '@/services/firebase/contentService';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
-import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
+import { COLORS, SPACING, BORDER_RADIUS, GAMIFICATION } from '@/constants';
 import type { Module, Lesson } from '@/types';
 
 export default function ModuleScreen() {
@@ -106,7 +106,7 @@ export default function ModuleScreen() {
                     {lesson.title}
                   </Text>
                   <Text style={m.lessonMeta}>
-                    ⏱ {lesson.estimatedMinutes} min · ⭐ {lesson.xpReward} XP · {lesson.difficulty}
+                    ⏱ {lesson.estimatedMinutes} min · ⭐ {GAMIFICATION.XP_PER_LESSON}-{GAMIFICATION.XP_PER_LESSON + GAMIFICATION.XP_PER_PERFECT} XP · {lesson.difficulty}
                   </Text>
                 </View>
                 {isLocked

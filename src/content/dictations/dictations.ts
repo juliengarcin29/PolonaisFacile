@@ -23,7 +23,7 @@ export const DICTATIONS: DictationExercise[] = [
     id: 'dictation_01',
     title: 'Salutations du quotidien',
     difficulty: 'A1',
-    xpReward: 100,
+    xpReward: 10,
     sentences: [
       {
         id: 'd01_s1',
@@ -61,7 +61,7 @@ export const DICTATIONS: DictationExercise[] = [
     id: 'dictation_02',
     title: 'Au café polonais',
     difficulty: 'A1',
-    xpReward: 120,
+    xpReward: 12,
     sentences: [
       {
         id: 'd02_s1',
@@ -93,7 +93,7 @@ export const DICTATIONS: DictationExercise[] = [
     id: 'dictation_03',
     title: 'Se présenter',
     difficulty: 'A1',
-    xpReward: 150,
+    xpReward: 15,
     sentences: [
       {
         id: 'd03_s1',

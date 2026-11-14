@@ -14,7 +14,7 @@ export const ADVANCED_QUIZZES: Quiz[] = [
     description: 'Testez votre maîtrise des cas nominatif, génitif et accusatif.',
     moduleId: 'module_8',
     difficulty: 'A2',
-    xpReward: 150,
+    xpReward: 15,
     isPremium: true,
     passingScore: 65,
     timeLimit: 180,
@@ -83,7 +83,7 @@ export const ADVANCED_QUIZZES: Quiz[] = [
     description: 'Maîtrisez la conjugaison des verbes les plus courants.',
     moduleId: 'module_9',
     difficulty: 'A2',
-    xpReward: 150,
+    xpReward: 15,
     isPremium: true,
     passingScore: 70,
     questions: [
@@ -156,7 +156,7 @@ export const ADVANCED_QUIZZES: Quiz[] = [
     description: 'Maîtrisez la distinction perfectif / imperfectif.',
     moduleId: 'module_9',
     difficulty: 'B1',
-    xpReward: 200,
+    xpReward: 20,
     isPremium: true,
     passingScore: 60,
     questions: [
@@ -232,7 +232,7 @@ export const ADVANCED_QUIZZES: Quiz[] = [
     description: 'Vocabulaire pour se déplacer dans une ville polonaise.',
     moduleId: 'module_6',
     difficulty: 'A2',
-    xpReward: 120,
+    xpReward: 12,
     isPremium: true,
     passingScore: 70,
     questions: [
@@ -296,7 +296,7 @@ export const ADVANCED_QUIZZES: Quiz[] = [
     description: 'Expressions idiomatiques et culture de la Pologne.',
     moduleId: 'module_10',
     difficulty: 'B1',
-    xpReward: 200,
+    xpReward: 20,
     isPremium: true,
     passingScore: 60,
     questions: [

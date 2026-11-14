@@ -82,24 +82,29 @@ export const BORDER_RADIUS = {
 } as const;
 
 export const GAMIFICATION = {
-  XP_PER_EXERCISE: 10,
-  XP_PER_LESSON: 50,
-  XP_PER_QUIZ: 100,
-  XP_PER_PERFECT: 150,       // leçon sans erreur
+  XP_PER_LESSON: 10,
+  XP_PER_PERFECT: 5,       // bonus (total leçon parfaite = 15)
+  XP_PER_EXERCISE: 1,
+  XP_PER_QUIZ: 10,
+  XP_DAILY_GOAL_BONUS: 5,
+  XP_PER_DIALOGUE: 5,
+  XP_PER_DICTATION: 5,
+  XP_PER_CONVERSATION_TURN: 2,
+  XP_STREAK_PER_DAY: 1,      // bonus de série tous les 7 jours (jours x 1)
   HEARTS_MAX: 5,
   HEARTS_REFILL_MINUTES: 30,
   STREAK_FREEZE_MAX: 2,
   LEVELS: [
     { level: 1,  xpRequired: 0 },
-    { level: 2,  xpRequired: 100 },
-    { level: 3,  xpRequired: 300 },
-    { level: 4,  xpRequired: 600 },
-    { level: 5,  xpRequired: 1000 },
-    { level: 6,  xpRequired: 1500 },
-    { level: 7,  xpRequired: 2200 },
-    { level: 8,  xpRequired: 3000 },
-    { level: 9,  xpRequired: 4000 },
-    { level: 10, xpRequired: 5500 },
+    { level: 2,  xpRequired: 10 },
+    { level: 3,  xpRequired: 30 },
+    { level: 4,  xpRequired: 60 },
+    { level: 5,  xpRequired: 100 },
+    { level: 6,  xpRequired: 150 },
+    { level: 7,  xpRequired: 220 },
+    { level: 8,  xpRequired: 300 },
+    { level: 9,  xpRequired: 400 },
+    { level: 10, xpRequired: 550 },
   ],
 } as const;
 
@@ -158,9 +163,9 @@ export const ONBOARDING_GOALS = [
 
 export const DAILY_GOALS = [
   { minutes: 5,  labelKey: 'onboarding.time.casual',  emoji: '🌿', xpBonus: 0 },
-  { minutes: 10, labelKey: 'onboarding.time.regular',     emoji: '⭐', xpBonus: 10 },
-  { minutes: 15, labelKey: 'onboarding.time.serious',      emoji: '🔥', xpBonus: 20 },
-  { minutes: 20, labelKey: 'onboarding.time.intensive',     emoji: '💪', xpBonus: 30 },
+  { minutes: 10, labelKey: 'onboarding.time.regular',     emoji: '⭐', xpBonus: 1 },
+  { minutes: 15, labelKey: 'onboarding.time.serious',      emoji: '🔥', xpBonus: 2 },
+  { minutes: 20, labelKey: 'onboarding.time.intensive',     emoji: '💪', xpBonus: 3 },
 ] as const;
 
 export const LEVELS_LABELS = [
