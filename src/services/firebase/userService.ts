@@ -8,7 +8,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db } from './config';
-import { FIREBASE_COLLECTIONS } from '@/constants';
+import { FIREBASE_COLLECTIONS, GAMIFICATION } from '@/constants';
 import type { User, UserProgress } from '@/types';
 
 export const userService = {
@@ -26,7 +26,7 @@ export const userService = {
       email: defaults.email ?? null,
       displayName: defaults.displayName ?? 'Apprenant',
       photoURL: defaults.photoURL ?? null,
-      level: 1, xp: 0, xpToNextLevel: 100,
+      level: 1, xp: 0, xpToNextLevel: GAMIFICATION.LEVELS[1].xpRequired,
       streak: 0, longestStreak: 0,
       hearts: 5, maxHearts: 5,
       premium: false, premiumExpiresAt: null,

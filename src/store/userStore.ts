@@ -52,6 +52,60 @@ function calculateLevel(xp: number): { level: number; xpToNextLevel: number } {
   return { level, xpToNextLevel: nextLevelObj.xpRequired - xp };
 }
 
+function mergeUsers(current: User, incoming: User): User {
+  const mergedXp = Math.max(current.xp || 0, incoming.xp || 0);
+  const { level, xpToNextLevel } = calculateLevel(mergedXp);
+
+  return {
+    ...incoming,
+    xp: mergedXp,
+    level,
+    xpToNextLevel,
+    streak: Math.max(current.streak || 0, incoming.streak || 0),
+    longestStreak: Math.max(current.longestStreak || 0, incoming.longestStreak || 0),
+    hearts: current.hearts ?? incoming.hearts ?? 5,
+    maxHearts: current.maxHearts ?? incoming.maxHearts ?? 5,
+    language: current.language ?? incoming.language ?? 'fr',
+    dailyGoal: current.dailyGoal ?? incoming.dailyGoal ?? 10,
+    achievements: Array.from(new Set([
+      ...(current.achievements || []),
+      ...(incoming.achievements || []),
+    ])),
+    activityLog: mergeActivityLogs(current.activityLog, incoming.activityLog),
+    progress: {
+      ...incoming.progress,
+      completedLessons: Array.from(new Set([
+        ...(current.progress?.completedLessons || []),
+        ...(incoming.progress?.completedLessons || []),
+      ])),
+      completedModules: Array.from(new Set([
+        ...(current.progress?.completedModules || []),
+        ...(incoming.progress?.completedModules || []),
+      ])),
+      completedQuizzes: Array.from(new Set([
+        ...(current.progress?.completedQuizzes || []),
+        ...(incoming.progress?.completedQuizzes || []),
+      ])),
+      masteredFlashcards: Array.from(new Set([
+        ...(current.progress?.masteredFlashcards || []),
+        ...(incoming.progress?.masteredFlashcards || []),
+      ])),
+      totalLessonsCompleted: Math.max(
+        current.progress?.totalLessonsCompleted || 0,
+        incoming.progress?.totalLessonsCompleted || 0
+      ),
+      totalXpEarned: Math.max(
+        current.progress?.totalXpEarned || 0,
+        incoming.progress?.totalXpEarned || 0
+      ),
+      totalTimeSpent: Math.max(
+        current.progress?.totalTimeSpent || 0,
+        incoming.progress?.totalTimeSpent || 0
+      ),
+    },
+  };
+}
+
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
@@ -62,54 +116,36 @@ export const useUserStore = create<UserStore>()(
       _hasHydrated: false,
 
       setUser: (user) => {
-        // Fusion intelligente pour éviter de reset l'XP locale si Firestore est en retard
         const currentUser = get().user;
-        if (currentUser && user && currentUser.id === user.id) {
-          const merged = {
-            ...user,
-            xp: Math.max(currentUser.xp || 0, user.xp || 0),
-            streak: Math.max(currentUser.streak || 0, user.streak || 0),
-            achievements: Array.from(new Set([
-              ...(currentUser.achievements || []),
-              ...(user.achievements || []),
-            ])),
-            activityLog: mergeActivityLogs(currentUser.activityLog, user.activityLog),
-            progress: {
-              ...user.progress,
-              completedLessons: Array.from(new Set([
-                ...(currentUser.progress?.completedLessons || []),
-                ...(user.progress?.completedLessons || []),
-              ])),
-              completedModules: Array.from(new Set([
-                ...(currentUser.progress?.completedModules || []),
-                ...(user.progress?.completedModules || []),
-              ])),
-              completedQuizzes: Array.from(new Set([
-                ...(currentUser.progress?.completedQuizzes || []),
-                ...(user.progress?.completedQuizzes || []),
-              ])),
-              masteredFlashcards: Array.from(new Set([
-                ...(currentUser.progress?.masteredFlashcards || []),
-                ...(user.progress?.masteredFlashcards || []),
-              ])),
-              totalLessonsCompleted: Math.max(
-                currentUser.progress?.totalLessonsCompleted || 0,
-                user.progress?.totalLessonsCompleted || 0
-              ),
-              totalXpEarned: Math.max(
-                currentUser.progress?.totalXpEarned || 0,
-                user.progress?.totalXpEarned || 0
-              ),
-              totalTimeSpent: Math.max(
-                currentUser.progress?.totalTimeSpent || 0,
-                user.progress?.totalTimeSpent || 0
-              ),
-            }
-          };
-          set({ user: merged });
-        } else {
-          set({ user });
+        let mode: 'merge' | 'adoption' | 'replace' = 'replace';
+        let newUserObj: User | null = user;
+
+        if (currentUser && user) {
+          if (currentUser.id === user.id) {
+            mode = 'merge';
+            newUserObj = mergeUsers(currentUser, user);
+          } else if (currentUser.id.startsWith('anon_')) {
+            mode = 'adoption';
+            newUserObj = mergeUsers(currentUser, user);
+          }
         }
+
+        if (__DEV__) {
+          console.log('[setUser debug]', {
+            mode,
+            oldId: currentUser?.id,
+            newId: user?.id,
+            oldXp: currentUser?.xp,
+            newXp: user?.xp,
+            oldLessons: currentUser?.progress?.completedLessons?.length ?? 0,
+            newLessons: user?.progress?.completedLessons?.length ?? 0,
+            level: newUserObj?.level,
+            language: newUserObj?.language,
+            dailyGoal: newUserObj?.dailyGoal,
+          });
+        }
+
+        set({ user: newUserObj });
       },
 
       updateUser: (updates) =>
@@ -268,7 +304,12 @@ export const useUserStore = create<UserStore>()(
       setLoading: (isLoading) => set({ isLoading }),
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
-      reset: () => set({ user: null, subscription: null, isOnboarded: false }),
+      reset: () => {
+        if (__DEV__) {
+          console.log('[reset] appelé');
+        }
+        set({ user: null, subscription: null, isOnboarded: false });
+      },
     }),
     {
       name: 'user-storage',

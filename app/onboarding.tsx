@@ -14,7 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { MONETIZATION_ENABLED } from '@/config/appConfig';
 import { setupNotifications } from '@/services/notifications';
-import { COLORS, SPACING, BORDER_RADIUS, ONBOARDING_GOALS, DAILY_GOALS, LEVELS_LABELS } from '@/constants';
+import { auth } from '@/services/firebase/config';
+import { COLORS, SPACING, BORDER_RADIUS, ONBOARDING_GOALS, DAILY_GOALS, LEVELS_LABELS, GAMIFICATION } from '@/constants';
 
 const { width } = Dimensions.get('window');
 
@@ -47,13 +48,13 @@ export default function OnboardingScreen() {
 
   const handleFinish = async () => {
     const newUser = {
-      id: `anon_${Date.now()}`,
+      id: auth.currentUser?.uid ?? `anon_${Date.now()}`,
       email: null,
       displayName: 'Apprenant',
       photoURL: null,
       level: 1,
       xp: 0,
-      xpToNextLevel: 100,
+      xpToNextLevel: GAMIFICATION.LEVELS[1].xpRequired,
       streak: 0,
       longestStreak: 0,
       hearts: 5,
