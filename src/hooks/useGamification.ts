@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '@/store/userStore';
 import { GAMIFICATION } from '@/constants';
-import { capSessionSeconds } from '@/utils/activityUtils';
+import { capSessionSeconds, toDateKey, computeStreak } from '@/utils/activityUtils';
 import type { Achievement } from '@/types';
 
 const STORAGE_KEYS = {
@@ -130,7 +130,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
 
 // ── Hook principal ───────────────────────────────────────────
 export function useGamification() {
-  const { user, addXP, updateUser, updateStreak } = useUserStore();
+  const { addXP, updateUser } = useUserStore();
 
   // 1. Vérifier et débloquer les badges (Passe unique sur état frais)
   const checkAchievements = useCallback(async (params?: {
@@ -235,36 +235,22 @@ export function useGamification() {
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, today);
   }, [awardXP]);
 
-  // 4. Vérifier et mettre à jour le streak
-  const checkAndUpdateStreak = useCallback(async () => {
-    const freshUser = useUserStore.getState().user;
-    if (!freshUser) return;
+  // 4. Évaluer le progrès de série
+  const applyStreakProgress = useCallback(async (streakBefore: number) => {
+    const latestUser = useUserStore.getState().user;
+    if (!latestUser) return;
 
-    const today = new Date().toDateString();
-    const lastActivity = await AsyncStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY);
+    const streakAfter = computeStreak(latestUser.activityLog, toDateKey()).currentStreak;
+    if (streakAfter > streakBefore) {
+      const newLongest = Math.max(latestUser.longestStreak ?? 0, streakAfter);
+      updateUser({ streak: streakAfter, longestStreak: newLongest });
 
-    if (lastActivity === today) return; // déjà mis à jour aujourd'hui
+      if (streakAfter % 7 === 0) {
+        await awardXP(streakAfter * GAMIFICATION.XP_STREAK_PER_DAY, `🔥 ${streakAfter} jours de suite !`);
+      }
 
-    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
-    let newStreak = freshUser.streak;
-
-    if (lastActivity === yesterday) {
-      newStreak = freshUser.streak + 1;
-    } else if (lastActivity !== today) {
-      newStreak = 1; // série cassée
+      await checkAchievements({ streak: streakAfter });
     }
-
-    const longestStreak = Math.max(newStreak, freshUser.longestStreak);
-    updateUser({ streak: newStreak, longestStreak, lastLoginAt: new Date() });
-    await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, today);
-
-    // Bonus XP pour les jalons de streak
-    if (newStreak % 7 === 0) {
-      await awardXP(newStreak * GAMIFICATION.XP_STREAK_PER_DAY, `🔥 ${newStreak} jours de suite !`);
-    }
-
-    // Vérifier badges streak
-    await checkAchievements({ streak: newStreak });
   }, [updateUser, awardXP, checkAchievements]);
 
   // 5. Terminer une leçon
@@ -277,12 +263,15 @@ export function useGamification() {
     const freshUser = useUserStore.getState().user;
     if (!freshUser) return;
 
+    const streakBefore = computeStreak(freshUser.activityLog, toDateKey()).currentStreak;
+
     if (freshUser.progress.completedLessons.includes(lessonId)) {
       // Relecture d'une leçon déjà terminée : consigner uniquement secondes et exercices dans activityLog
       useUserStore.getState().recordActivity({
         seconds: capSessionSeconds(timeSpentSeconds),
         exercisesDone: total,
       });
+      await applyStreakProgress(streakBefore);
       return;
     }
 
@@ -307,9 +296,10 @@ export function useGamification() {
     updateUser({ progress: updatedProgress });
     await awardXP(totalXP, isPerfect ? '🏆 Leçon parfaite !' : '📚 Leçon terminée !');
     await recordDailyActivity(Math.round(timeSpentSeconds / 60), timeSpentSeconds);
+    await applyStreakProgress(streakBefore);
 
     return { xpEarned: totalXP, isPerfect };
-  }, [updateUser, awardXP, recordDailyActivity]);
+  }, [updateUser, awardXP, recordDailyActivity, applyStreakProgress]);
 
   // 6. Terminer un quiz
   const completeQuiz = useCallback(async (
@@ -366,7 +356,6 @@ export function useGamification() {
   }, [awardXP]);
 
   return {
-    checkAndUpdateStreak,
     recordDailyActivity,
     awardXP,
     completeLesson,

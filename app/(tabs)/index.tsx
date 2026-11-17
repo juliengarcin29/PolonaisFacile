@@ -13,7 +13,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
-import { useGamification } from '@/hooks/useGamification';
 import { useProgress } from '@/hooks/useProgress';
 import { useSync } from '@/hooks/useSync';
 import { ALL_LOCAL_LESSONS } from '@/content/lessons';
@@ -42,7 +41,6 @@ export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
-  const { checkAndUpdateStreak } = useGamification();
   const {
     streakDays, totalXp, dailyMinutes, targetMinutes, dailyPercentage,
     refreshDailyStats
@@ -58,11 +56,6 @@ export default function HomeScreen() {
       refreshDailyStats();
     }, [refreshDailyStats])
   );
-
-  // Vérifier le streak au montage
-  useEffect(() => {
-    checkAndUpdateStreak();
-  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

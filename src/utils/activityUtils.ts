@@ -16,6 +16,88 @@ export function toDateKey(date: Date = new Date()): string {
 }
 
 /**
+ * Calcule la clé du jour précédent sans utiliser Date.now() - 86400000 (immunisé contre les changements d'heure DST).
+ */
+export function getPreviousDateKey(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const prev = new Date(year, month - 1, day - 1);
+  return toDateKey(prev);
+}
+
+/**
+ * Indique si une journée comporte au moins une activité significative (leçons / révisions / missions).
+ */
+function isDayActive(day?: ActivityLogDay): boolean {
+  if (!day) return false;
+  return (day.exercisesDone ?? 0) > 0 || (day.cardsReviewed ?? 0) > 0 || day.missionDone === true;
+}
+
+/**
+ * Calcule la série actuelle (currentStreak) et la meilleure série (longestStreak) dérivées de activityLog.
+ */
+export function computeStreak(
+  activityLog: ActivityLog | undefined,
+  todayKey: string = toDateKey()
+): { currentStreak: number; longestStreak: number } {
+  if (!activityLog) {
+    return { currentStreak: 0, longestStreak: 0 };
+  }
+
+  // 1. Calcul de la série actuelle (currentStreak)
+  let currentStreak = 0;
+  let startKey: string | null = null;
+
+  if (isDayActive(activityLog[todayKey])) {
+    startKey = todayKey;
+  } else {
+    const yesterdayKey = getPreviousDateKey(todayKey);
+    if (isDayActive(activityLog[yesterdayKey])) {
+      startKey = yesterdayKey;
+    }
+  }
+
+  if (startKey) {
+    let checkKey = startKey;
+    while (isDayActive(activityLog[checkKey])) {
+      currentStreak++;
+      checkKey = getPreviousDateKey(checkKey);
+    }
+  }
+
+  // 2. Calcul de la meilleure série historique (longestStreak)
+  let longestStreak = 0;
+  let runningStreak = 0;
+
+  const activeKeysSet = new Set(
+    Object.keys(activityLog).filter(k => isDayActive(activityLog[k]))
+  );
+
+  if (activeKeysSet.size > 0) {
+    const sortedKeys = Array.from(activeKeysSet).sort();
+    for (let i = 0; i < sortedKeys.length; i++) {
+      if (i === 0) {
+        runningStreak = 1;
+      } else {
+        const prevKey = getPreviousDateKey(sortedKeys[i]);
+        if (prevKey === sortedKeys[i - 1]) {
+          runningStreak++;
+        } else {
+          runningStreak = 1;
+        }
+      }
+      if (runningStreak > longestStreak) {
+        longestStreak = runningStreak;
+      }
+    }
+  }
+
+  return {
+    currentStreak,
+    longestStreak: Math.max(currentStreak, longestStreak),
+  };
+}
+
+/**
  * Conserve uniquement les 400 derniers jours dans l'historique d'activité.
  */
 export function pruneActivityLog(
@@ -205,6 +287,87 @@ export function selfCheckActivityUtils(): void {
   ) {
     throw new Error('capSessionSeconds échoué');
   }
+
+  // 6. computeStreak (cas de tests)
+  // Cas 1 : vide
+  if (computeStreak(undefined, '2026-05-17').currentStreak !== 0) throw new Error('computeStreak vide');
+
+  // Cas 2 : aujourd'hui seul
+  const log2 = { '2026-05-17': { seconds: 100, exercisesDone: 5, lessonsCompleted: 1, xp: 10 } };
+  if (computeStreak(log2, '2026-05-17').currentStreak !== 1) throw new Error('computeStreak aujourd\'hui');
+
+  // Cas 3 : hier + aujourd'hui
+  const log3 = {
+    '2026-05-16': { seconds: 100, exercisesDone: 5, lessonsCompleted: 1, xp: 10 },
+    '2026-05-17': { seconds: 100, exercisesDone: 5, lessonsCompleted: 1, xp: 10 },
+  };
+  if (computeStreak(log3, '2026-05-17').currentStreak !== 2) throw new Error('computeStreak hier+aujourd\'hui');
+
+  // Cas 4 : hier seul (série à maintenir)
+  const log4 = { '2026-05-16': { seconds: 100, exercisesDone: 5, lessonsCompleted: 1, xp: 10 } };
+  if (computeStreak(log4, '2026-05-17').currentStreak !== 1) throw new Error('computeStreak hier seul');
+
+  // Cas 5 : avant-hier seul (série brisée)
+  const log5 = { '2026-05-15': { seconds: 100, exercisesDone: 5, lessonsCompleted: 1, xp: 10 } };
+  if (computeStreak(log5, '2026-05-17').currentStreak !== 0) throw new Error('computeStreak avant-hier seul');
+
+  // Cas 6 : trou dans la série
+  const log6 = {
+    '2026-05-10': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-11': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-12': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-14': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-15': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-16': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-17': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  const res6 = computeStreak(log6, '2026-05-17');
+  if (res6.currentStreak !== 4 || res6.longestStreak !== 4) throw new Error('computeStreak trou');
+
+  // Cas 7 : passage de mois
+  const log7 = {
+    '2026-04-30': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-01': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  if (computeStreak(log7, '2026-05-01').currentStreak !== 2) throw new Error('computeStreak mois');
+
+  // Cas 8 : passage d'année
+  const log8 = {
+    '2025-12-31': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-01-01': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  if (computeStreak(log8, '2026-01-01').currentStreak !== 2) throw new Error('computeStreak année');
+
+  // Cas 9 : DST été (29 mars 2026)
+  const logDSTSpring = {
+    '2026-03-28': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-03-29': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-03-30': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  if (computeStreak(logDSTSpring, '2026-03-30').currentStreak !== 3) throw new Error('computeStreak DST été');
+
+  // Cas 10 : DST hiver (25 octobre 2026)
+  const logDSTAutumn = {
+    '2026-10-24': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-10-25': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-10-26': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  if (computeStreak(logDSTAutumn, '2026-10-26').currentStreak !== 3) throw new Error('computeStreak DST hiver');
+
+  // Cas 11 : un jour avec seconds > 0 mais exercisesDone 0 n'est pas actif
+  const logNoExercises = { '2026-05-17': { seconds: 600, exercisesDone: 0, lessonsCompleted: 0, xp: 10 } };
+  if (computeStreak(logNoExercises, '2026-05-17').currentStreak !== 0) throw new Error('computeStreak no exercises');
+
+  // Cas 12 : log {05-01, 05-02, 05-03, 05-04, 05-10} avec todayKey = 05-17 => currentStreak = 0, longestStreak = 4
+  const logOldRange = {
+    '2026-05-01': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-02': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-03': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-04': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+    '2026-05-10': { seconds: 10, exercisesDone: 1, lessonsCompleted: 1, xp: 10 },
+  };
+  const res12 = computeStreak(logOldRange, '2026-05-17');
+  if (res12.currentStreak !== 0 || res12.longestStreak !== 4) throw new Error('computeStreak old range');
 }
 
 // ── Auto-vérification sous __DEV__ au chargement du module ────

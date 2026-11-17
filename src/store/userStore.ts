@@ -27,7 +27,6 @@ interface UserStore {
     xp?: number;
     exercisesDone?: number;
   }) => void;
-  updateStreak: () => void;
   loseHeart: () => void;
   refillHearts: () => void;
   setLanguage: (lang: 'fr' | 'en') => void;
@@ -233,36 +232,6 @@ export const useUserStore = create<UserStore>()(
                 ...state.user.progress,
                 totalXpEarned: (state.user.progress?.totalXpEarned || 0) + amount,
               },
-              updatedAt: new Date(),
-            },
-          };
-        }),
-
-      updateStreak: () =>
-        set((state) => {
-          if (!state.user) return {};
-          const today = new Date().toDateString();
-          const lastLoginDate = state.user.lastLoginAt ? new Date(state.user.lastLoginAt) : new Date(0);
-          const lastLogin = lastLoginDate.toDateString();
-
-          const yesterdayDate = new Date();
-          yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-          const yesterday = yesterdayDate.toDateString();
-
-          let newStreak = state.user.streak || 0;
-          if (lastLogin === yesterday) {
-            newStreak += 1;
-          } else if (lastLogin !== today) {
-            newStreak = 1;
-          }
-
-          const longestStreak = Math.max(newStreak, state.user.longestStreak || 0);
-          return {
-            user: {
-              ...state.user,
-              streak: newStreak,
-              longestStreak,
-              lastLoginAt: new Date(),
               updatedAt: new Date(),
             },
           };
