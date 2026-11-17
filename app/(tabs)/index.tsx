@@ -3,10 +3,10 @@
 // Écran Accueil — Focus sur la progression et l'action
 // ============================================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   ScrollView, View, Text, TouchableOpacity,
-  StyleSheet, RefreshControl, Image,
+  StyleSheet, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -15,40 +15,58 @@ import { useUserStore } from '@/store/userStore';
 import { usePremiumGate } from '@/hooks/usePremiumGate';
 import { useProgress } from '@/hooks/useProgress';
 import { useSync } from '@/hooks/useSync';
+import { useFlashcardAudio } from '@/hooks/useAudio';
+import { getAudioUrl } from '@/utils/media';
 import { ALL_LOCAL_LESSONS } from '@/content/lessons';
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
-import { getStreakEmoji, formatNumber } from '@/utils';
-
-// ── Mot du jour (rotatif) ─────────────────────────────────────
-const WORDS_OF_DAY = [
-  { pl: 'Dziękuję', fr: 'Merci', phonetic: '[dʑɛŋkujɛ]' },
-  { pl: 'Przepraszam', fr: 'Pardon', phonetic: '[pʂɛpraʂam]' },
-  { pl: 'Proszę', fr: 'S\'il vous plaît', phonetic: '[prɔʂɛ]' },
-  { pl: 'Dobrze', fr: 'Bien / D\'accord', phonetic: '[dɔbʐɛ]' },
-  { pl: 'Tak', fr: 'Oui', phonetic: '[tak]' },
-  { pl: 'Nie', fr: 'Non', phonetic: '[ɲɛ]' },
-  { pl: 'Cześć', fr: 'Salut', phonetic: '[tʂɛɕtɕ]' },
-];
-
-function getTodayWord() {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  return WORDS_OF_DAY[dayOfYear % WORDS_OF_DAY.length];
-}
+import { formatNumber } from '@/utils';
+import type { VocabItem } from '@/types';
 
 export default function HomeScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useUserStore();
   const { isPremium } = usePremiumGate();
   const {
-    streakDays, totalXp, dailyMinutes, targetMinutes, dailyPercentage,
+    streakDays, todayKey, totalXp, dailyMinutes, targetMinutes, dailyPercentage,
     refreshDailyStats
   } = useProgress();
   const { triggerSync } = useSync();
+  const { playCard, isPlaying } = useFlashcardAudio();
 
   const [refreshing, setRefreshing] = useState(false);
-  const wordOfDay = useMemo(() => getTodayWord(), []);
+
+  const wordOfDay = useMemo<VocabItem | null>(() => {
+    const completedIds = user?.progress?.completedLessons ?? [];
+    const completedLessons = ALL_LOCAL_LESSONS.filter(
+      l => completedIds.includes(l.id) && l.discoveryItems && l.discoveryItems.length > 0
+    );
+
+    let candidateItems: VocabItem[] = [];
+
+    if (completedLessons.length > 0) {
+      candidateItems = completedLessons
+        .flatMap(l => l.discoveryItems ?? [])
+        .filter(i => i.itemType !== 'sound');
+    }
+
+    // Repli : première leçon dans ALL_LOCAL_LESSONS ayant au moins un item hors 'sound' (ex: 2.1)
+    if (candidateItems.length === 0) {
+      const firstLessonWithVocab = ALL_LOCAL_LESSONS.find(
+        l => l.discoveryItems && l.discoveryItems.some(i => i.itemType !== 'sound')
+      );
+      if (firstLessonWithVocab?.discoveryItems) {
+        candidateItems = firstLessonWithVocab.discoveryItems.filter(i => i.itemType !== 'sound');
+      }
+    }
+
+    if (candidateItems.length === 0) return null;
+
+    const [year, month, day] = todayKey.split('-').map(Number);
+    const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86400000);
+    const candidateIndex = dayNumber % candidateItems.length;
+
+    return candidateItems[candidateIndex] ?? null;
+  }, [user?.progress?.completedLessons, todayKey]);
 
   // Rafraîchir les stats quand l'écran gagne le focus
   useFocusEffect(
@@ -143,16 +161,35 @@ export default function HomeScreen() {
         </View>
 
         {/* ── MOT DU JOUR (Bottom) ── */}
-        <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>📖 {t('home.word_of_day')}</Text>
-        </View>
-        <View style={s.wordCard}>
-          <View style={s.wordMain}>
-            <Text style={s.wordPl}>{wordOfDay.pl}</Text>
-            <Text style={s.wordFr}>{i18n.language === 'fr' ? wordOfDay.fr : 'Translation pending'}</Text>
-          </View>
-          <Text style={s.wordPhonetic}>{wordOfDay.phonetic}</Text>
-        </View>
+        {wordOfDay && (
+          <>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>📖 {t('home.word_of_day')}</Text>
+            </View>
+            <View style={s.wordCard}>
+              <View style={s.wordMain}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={s.wordPl}>{wordOfDay.front}</Text>
+                    {wordOfDay.emoji && <Text style={{ fontSize: 18 }}>{wordOfDay.emoji}</Text>}
+                  </View>
+                  <Text style={s.wordFr}>{wordOfDay.back}</Text>
+                </View>
+                <TouchableOpacity
+                  style={s.audioBtn}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    playCard(wordOfDay.audioUrl || getAudioUrl(wordOfDay.id), wordOfDay.ttsText ?? wordOfDay.front);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 20 }}>{isPlaying ? '🔊' : '🔈'}</Text>
+                </TouchableOpacity>
+              </View>
+              {wordOfDay.phonetic && <Text style={s.wordPhonetic}>{wordOfDay.phonetic}</Text>}
+            </View>
+          </>
+        )}
 
         {/* Spacer pour le tab bar */}
         <View style={{ height: 40 }} />
@@ -244,4 +281,14 @@ const s = StyleSheet.create({
   wordPl: { fontSize: 20, fontWeight: '800', color: COLORS.primary },
   wordFr: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
   wordPhonetic: { fontSize: 12, color: COLORS.textMuted, fontStyle: 'italic' },
+  audioBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

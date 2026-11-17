@@ -42,6 +42,7 @@ export function useProgress() {
 
   return {
     streakDays,
+    todayKey,
     totalXp: user?.xp ?? 0,
     level: user?.level ?? 1,
     completedLessonsCount: user?.progress.totalLessonsCompleted ?? 0,
