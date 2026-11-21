@@ -2,6 +2,9 @@
   "name": "polish-with-kasia",
   "main": "expo-router/entry",
   "version": "57.0.12",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "@expo/ui": "~57.0.9",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -48,6 +51,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@react-native/jest-preset": "^0.86.3",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
     "babel-plugin-module-resolver": "^5.0.3",

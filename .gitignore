@@ -9,7 +9,8 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# IDE & caches
+.idea/caches/
 .kotlin/
 *.orig.*
 *.jks
